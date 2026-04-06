@@ -3,93 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agendamento - Nilo Pet</title>
+    <title>Nilo Pet - Agendamento</title>
     <script src="https://tailwindcss.com"></script>
     <style>
+        body { background-color: #e0f2fe; color: #ff0000; font-family: 'Arial Black', sans-serif; }
+        .border-black-bold { border: 3px solid #000000; }
         .step { display: none; }
         .step.active { display: block; }
+        input, select, textarea { border: 2px solid #000000 !important; color: #ff0000 !important; font-weight: bold; background: white; }
+        label { color: #ff0000; text-transform: uppercase; font-size: 0.8rem; }
+        .btn-next { background-color: #ff0000; color: #ffffff; border: 2px solid #000000; transition: transform 0.1s; }
+        .btn-next:active { transform: scale(0.95); }
+        .slot-card { border: 2px solid #000000; background: white; cursor: pointer; margin-bottom: 8px; padding: 10px; }
+        input:checked + .slot-card { background-color: #ff0000; color: white; }
+        input:checked + .slot-card p { color: white; }
     </style>
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="p-4">
 
-    <div class="max-w-md mx-auto bg-white min-h-screen shadow-lg pb-10">
-        <!-- Header -->
-        <header class="bg-blue-600 text-white p-6 text-center rounded-b-3xl">
-            <h1 class="text-2xl font-bold italic">Nilo Pet</h1>
-            <p class="text-sm">Banho e Tosa</p>
+    <div class="max-w-md mx-auto border-black-bold bg-[#e0f2fe] min-h-screen p-6 shadow-[10px_10px_0px_0px_rgba(0,0,0,1)]">
+        
+        <header class="text-center border-b-4 border-black pb-4 mb-6">
+            <h1 class="text-3xl font-black italic uppercase tracking-tighter">NILO PET</h1>
+            <p class="text-sm font-bold">BANHO E TOSA - SOL NASCENTE</p>
         </header>
 
-        <form id="formAgendamento" class="p-6">
+        <form id="niloForm">
             
-            <!-- ETAPA 1: Dados do Cliente -->
+            <!-- ETAPA 1: CLIENTE -->
             <div id="step1" class="step active">
-                <h2 class="text-xl font-semibold mb-4">Seus Dados</h2>
+                <h2 class="text-xl font-black mb-4 underline">ETAPA 1: SEUS DADOS</h2>
                 <div class="space-y-4">
-                    <input type="text" id="nomeCliente" placeholder="Nome Completo *" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500">
-                    <input type="tel" id="whatsapp" placeholder="WhatsApp (11 dígitos) *" required pattern="\d{11}" class="w-full p-3 border rounded-lg">
-                    <input type="text" id="endereco" placeholder="Endereço Completo (Apenas Sol Nascente) *" required class="w-full p-3 border rounded-lg">
-                    <p class="text-xs text-red-500">* Atendemos apenas no bairro Sol Nascente.</p>
+                    <div>
+                        <label>NOME COMPLETO *</label>
+                        <input type="text" id="nome" required class="w-full p-2">
+                    </div>
+                    <div>
+                        <label>WHATSAPP (11 DÍGITOS) *</label>
+                        <input type="tel" id="tel" required maxlength="11" placeholder="11912345678" class="w-full p-2">
+                    </div>
+                    <div>
+                        <label>ENDEREÇO (SÓ SOL NASCENTE) *</label>
+                        <input type="text" id="end" required placeholder="Rua, Número" class="w-full p-2">
+                    </div>
                 </div>
-                <button type="button" onclick="nextStep(2)" class="w-full mt-6 bg-blue-600 text-white py-3 rounded-xl font-bold">Próximo: Pets</button>
+                <button type="button" onclick="mudarEtapa(2)" class="btn-next w-full mt-8 p-4 font-black">PROXIMO >>></button>
             </div>
 
-            <!-- ETAPA 2: Dados dos Pets -->
+            <!-- ETAPA 2: PETS -->
             <div id="step2" class="step">
-                <h2 class="text-xl font-semibold mb-4">Dados dos Pets</h2>
-                <label class="block mb-2">Quantos pets? (Máx 4)</label>
-                <select id="qtdPets" onchange="gerarCamposPets()" class="w-full p-3 border rounded-lg mb-4">
-                    <option value="1">1 Pet</option>
-                    <option value="2">2 Pets</option>
-                    <option value="3">3 Pets</option>
-                    <option value="4">4 Pets</option>
+                <h2 class="text-xl font-black mb-4 underline">ETAPA 2: OS PETS</h2>
+                <label>QUANTOS PETS? (MÁX 4)</label>
+                <select id="qtdPets" onchange="gerarPets()" class="w-full p-2 mb-6">
+                    <option value="1">1 PET</option>
+                    <option value="2">2 PETS</option>
+                    <option value="3">3 PETS</option>
+                    <option value="4">4 PETS</option>
                 </select>
                 
-                <div id="containerPets" class="space-y-6">
-                    <!-- Campos gerados via JS -->
-                </div>
+                <div id="petsContainer" class="space-y-4"></div>
 
-                <div class="flex gap-2 mt-6">
-                    <button type="button" onclick="prevStep(1)" class="w-1/2 bg-gray-300 py-3 rounded-xl">Voltar</button>
-                    <button type="button" onclick="nextStep(3)" class="w-1/2 bg-blue-600 text-white py-3 rounded-xl font-bold">Próximo: Serviço</button>
+                <div class="flex gap-2 mt-8">
+                    <button type="button" onclick="mudarEtapa(1)" class="w-1/3 border-2 border-black p-4 font-black">VOLTAR</button>
+                    <button type="button" onclick="mudarEtapa(3)" class="btn-next w-2/3 p-4 font-black">PROXIMO >>></button>
                 </div>
             </div>
 
-            <!-- ETAPA 3: Escolha do Plano e Data -->
+            <!-- ETAPA 3: REGRAS DE HORÁRIOS -->
             <div id="step3" class="step">
-                <h2 class="text-xl font-semibold mb-4">Serviço e Data</h2>
+                <h2 class="text-xl font-black mb-4 underline">ETAPA 3: TIPO E DATA</h2>
                 
-                <select id="tipoPlano" class="w-full p-3 border rounded-lg mb-4">
-                    <option value="avulso">Avulso (Banho / Higiênica / Tosa)</option>
-                    <option value="basico">Básico (1 Banho + 1 Higiênica)</option>
-                    <option value="basico_tosa">Básico com Tosa (1 Banho + 1 Tosa)</option>
-                    <option value="premium">Premium (3 Banhos + 1 Higiênica)</option>
+                <label>TIPO DE PACOTE</label>
+                <select id="pacote" class="w-full p-2 mb-4">
+                    <option value="avulso">AVULSO (BANHO, HIGIÊNICA OU TOSA)</option>
+                    <option value="basico">BÁSICO (1 BANHO + 1 HIGIÊNICA)</option>
+                    <option value="basico_tosa">BÁSICO COM TOSA (1 BANHO + 1 TOSA)</option>
+                    <option value="premium">PREMIUM (3 BANHOS + 1 HIGIÊNICA)</option>
                 </select>
 
-                <label class="block mb-2 font-medium">Escolha o dia:</label>
-                <input type="date" id="dataAgendamento" class="w-full p-3 border rounded-lg mb-4" onchange="filtrarHorarios()">
+                <label>ESCOLHA A DATA</label>
+                <input type="date" id="data" onchange="carregarHorarios()" class="w-full p-2 mb-4">
 
-                <label class="block mb-2 font-medium">Horários Disponíveis:</label>
-                <div id="listaHorarios" class="grid grid-cols-2 gap-2 text-center">
-                    <!-- Horários injetados via JS conforme o dia da semana -->
+                <div id="horariosGrid" class="mt-4">
+                    <p class="text-center font-bold">SELECIONE UMA DATA VÁLIDA</p>
                 </div>
 
-                <div class="flex gap-2 mt-6">
-                    <button type="button" onclick="prevStep(2)" class="w-1/2 bg-gray-300 py-3 rounded-xl">Voltar</button>
-                    <button type="button" onclick="finalizar()" class="w-1/2 bg-green-600 text-white py-3 rounded-xl font-bold shadow-lg">Confirmar</button>
+                <div class="flex gap-2 mt-8">
+                    <button type="button" onclick="mudarEtapa(2)" class="w-1/3 border-2 border-black p-4 font-black">VOLTAR</button>
+                    <button type="button" onclick="finalizar()" class="btn-next w-2/3 p-4 font-black">FINALIZAR AGENDAMENTO</button>
                 </div>
             </div>
 
-            <!-- ETAPA 4: Confirmação Surpresa -->
+            <!-- ETAPA 4: CONFIRMAÇÃO -->
             <div id="step4" class="step text-center">
-                <div class="py-10">
-                    <div class="text-green-500 text-6xl mb-4">✓</div>
-                    <h2 class="text-2xl font-bold mb-2">Agendamento Confirmado!</h2>
-                    <p class="text-gray-600 mb-6">Logo mais nossa equipe entrará em contato para passar valores. **Envie uma foto do pet agora para acelerar o processo!**</p>
+                <div class="border-4 border-black p-6 bg-white">
+                    <h2 class="text-2xl font-black mb-4 italic">AGENDAMENTO CONFIRMADO!</h2>
+                    <p class="mb-6 font-bold uppercase">Logo mais nossa equipe entrará em contato para passar valores de imediato envie um foto do pet para acelerar o processo.</p>
                     
-                    <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200 mb-6">
-                        <p class="text-sm font-semibold text-yellow-800">Precisa cancelar ou alterar?</p>
-                        <p class="text-xs text-yellow-700 mb-3">Gerencie seu agendamento de forma inteligente abaixo.</p>
-                        <button type="button" onclick="cancelarDinamico()" class="bg-red-500 text-white px-4 py-2 rounded-lg text-sm">Botão Inteligente de Cancelamento</button>
+                    <div id="areaCancelamento" class="mt-8 border-t-2 border-black pt-4">
+                        <!-- O Botão inteligente aparece aqui -->
                     </div>
                 </div>
             </div>
@@ -98,102 +110,109 @@
     </div>
 
     <script>
-        // Lógica de Datas
-        const dataInput = document.getElementById('dataAgendamento');
+        // --- LOGICA DE CALENDÁRIO ---
+        const inputData = document.getElementById('data');
         const hoje = new Date();
-        const diaHoje = hoje.getDate();
+        inputData.min = hoje.toISOString().split('T')[0];
         
-        // Bloqueio de calendário
-        const minData = hoje.toISOString().split('T')[0];
-        dataInput.setAttribute('min', minData);
-
-        // Bloqueio mês seguinte (Só libera após dia 20)
-        if (diaHoje < 20) {
-            const ultimoDiaMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).toISOString().split('T')[0];
-            dataInput.setAttribute('max', ultimoDiaMes);
+        // Bloqueio do mês seguinte se for antes do dia 20
+        if (hoje.getDate() < 20) {
+            const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+            inputData.max = ultimoDia.toISOString().split('T')[0];
         }
 
-        function nextStep(n) {
+        function mudarEtapa(n) {
             document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
-            document.getElementById('step' + n).classList.add('active');
-            if(n === 2) gerarCamposPets();
+            document.getElementById('step'+n).classList.add('active');
+            if(n === 2) gerarPets();
         }
 
-        function prevStep(n) {
-            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
-            document.getElementById('step' + n).classList.add('active');
-        }
-
-        function gerarCamposPets() {
+        function gerarPets() {
             const qtd = document.getElementById('qtdPets').value;
-            const container = document.getElementById('containerPets');
+            const container = document.getElementById('petsContainer');
             container.innerHTML = '';
-            
             for(let i=1; i<=qtd; i++) {
                 container.innerHTML += `
-                    <div class="p-4 border-2 border-blue-50 rounded-xl bg-blue-50/30">
-                        <p class="font-bold mb-2 text-blue-800">Pet #${i}</p>
-                        <input type="text" placeholder="Nome do Pet *" required class="w-full p-2 mb-2 border rounded">
-                        <select class="w-full p-2 mb-2 border rounded" onchange="togglePorte(this, ${i})">
-                            <option value="cachorro">Cachorro</option>
-                            <option value="gato">Gato</option>
+                <div class="border-2 border-black p-3 bg-white/50">
+                    <p class="font-black underline mb-2">PET #${i}</p>
+                    <input type="text" placeholder="NOME DO PET *" required class="w-full p-2 mb-2">
+                    <select class="w-full p-2 mb-2">
+                        <option>CACHORRO</option>
+                        <option>GATO</option>
+                    </select>
+                    <select class="w-full p-2 mb-2">
+                        <option>PEQUENO</option>
+                        <option>MÉDIO</option>
+                        <option>GRANDE PELO CURTO</option>
+                        <option>GRANDE PELUDO</option>
+                    </select>
+                    <div class="flex items-center gap-2">
+                        <label>ALERGIA?</label>
+                        <select onchange="this.nextElementSibling.classList.toggle('hidden')" class="p-1">
+                            <option>NÃO</option>
+                            <option>SIM</option>
                         </select>
-                        <select id="porte-${i}" class="w-full p-2 mb-2 border rounded">
-                            <option value="pequeno">Pequeno</option>
-                            <option value="medio">Médio</option>
-                            <option value="grande_curto">Grande (Pelo Curto)</option>
-                            <option value="grande_peludo">Grande (Peludo)</option>
-                        </select>
-                        <div class="flex items-center gap-2 mb-2">
-                            <span class="text-sm">Alergia?</span>
-                            <input type="checkbox" onchange="this.nextElementSibling.classList.toggle('hidden')">
-                            <input type="text" placeholder="Qual?" class="hidden border rounded p-1 text-sm flex-1">
-                        </div>
+                        <input type="text" placeholder="OBSERVAÇÃO" class="hidden flex-1 p-1">
                     </div>
-                `;
+                </div>`;
             }
         }
 
-        function filtrarHorarios() {
-            const data = new Date(dataInput.value + 'T00:00:00');
-            const diaSemana = data.getDay();
-            const container = document.getElementById('listaHorarios');
-            container.innerHTML = '';
+        function carregarHorarios() {
+            const dataSel = new Date(inputData.value + 'T00:00:00');
+            const dia = dataSel.getDay(); // 0 Dom, 3 Qua, 6 Sab
+            const grid = document.getElementById('horariosGrid');
+            grid.innerHTML = '';
 
-            let horarios = [];
-            // 0 = Domingo, 1 = Segunda, 2 = Terça...
-            if (diaSemana >= 3 && diaSemana <= 6) { // Quarta a Sábado
-                horarios = ['09:00', '10:00', '11:00', '13:30', '14:30', '15:30', '16:00'];
-            } else if (diaSemana === 0) { // Domingo
-                horarios = ['09:00', '10:00', '11:00', '12:00'];
+            let slots = [];
+            if (dia >= 3 && dia <= 6) { // Quarta a Sábado
+                slots = [
+                    {h:'09:00', d:'3 Banhos/Higiênica + 1 Tosa'},
+                    {h:'10:00', d:'3 Banhos/Higiênica + 1 Grande Curto (Só Banho)'},
+                    {h:'11:00', d:'3 Banhos/Higiênica + 1 Tosa'},
+                    {h:'13:30', d:'4 Banhos/Higiênica'},
+                    {h:'14:30', d:'3 Banhos/Higiênica + 1 Tosa'},
+                    {h:'15:30', d:'3 Banhos/Higiênica + 1 Grande Peludo (Só Banho)'},
+                    {h:'16:00', d:'3 Banhos/Higiênica + 1 Gato (Só Banho)'}
+                ];
+            } else if (dia === 0) { // Domingo
+                slots = [
+                    {h:'09:00', d:'3 Banhos/Higiênica + 1 Tosa'},
+                    {h:'10:00', d:'3 Banhos/Higiênica + 1 Grande Curto (Só Banho)'},
+                    {h:'11:00', d:'3 Banhos/Higiênica + 1 Tosa'},
+                    {h:'12:00', d:'3 Banhos/Higiênica + 1 Grande Peludo (Só Banho)'}
+                ];
             } else {
-                container.innerHTML = '<p class="col-span-2 text-red-500 font-bold">Fechado para agendamentos</p>';
+                grid.innerHTML = '<p class="font-black text-center border-2 border-black p-2 bg-yellow-300">NILO PET FECHADO (SEG E TER)</p>';
                 return;
             }
 
-            horarios.forEach(h => {
-                container.innerHTML += `
-                    <label class="border p-2 rounded cursor-pointer hover:bg-blue-100">
-                        <input type="radio" name="horario" value="${h}" class="hidden peer">
-                        <span class="peer-checked:font-bold peer-checked:text-blue-600">${h}</span>
-                    </label>
-                `;
+            slots.forEach(s => {
+                grid.innerHTML += `
+                <label>
+                    <input type="radio" name="hora" value="${s.h}" class="hidden">
+                    <div class="slot-card">
+                        <div class="flex justify-between font-black italic"><span>${s.h}</span><span>DISPONÍVEL</span></div>
+                        <p class="text-[10px] uppercase font-bold text-black">${s.d}</p>
+                    </div>
+                </label>`;
             });
         }
 
         function finalizar() {
-            const horario = document.querySelector('input[name="horario"]:checked');
-            if(!horario) { alert('Escolha um horário!'); return; }
-            nextStep(4);
-        }
-
-        function cancelarDinamico() {
-            const plano = document.getElementById('tipoPlano').value;
-            if(plano === 'avulso') {
-                alert('Cancelamento solicitado: Seu serviço AVULSO será removido da agenda. Confirmar?');
+            if(!document.querySelector('input[name="hora"]:checked')) return alert('ESCOLHA UM HORÁRIO!');
+            
+            const tipo = document.getElementById('pacote').value;
+            const btnArea = document.getElementById('areaCancelamento');
+            
+            // Lógica Surpresa do Botão de Cancelamento
+            if(tipo === 'avulso') {
+                btnArea.innerHTML = `<button type="button" onclick="alert('AVULSO: Cancelamento solicitado! A vaga foi aberta.')" class="w-full border-2 border-black p-2 font-black bg-white hover:bg-black hover:text-white">CANCELAR AGENDAMENTO AVULSO</button>`;
             } else {
-                alert('Atenção: Você possui um PACOTE. O cancelamento agora afetará as próximas sessões. Nossa equipe entrará em contato para estornar ou reagendar.');
+                btnArea.innerHTML = `<button type="button" onclick="alert('PACOTE: Para cancelar pacotes, fale com o suporte para manter seus créditos!')" class="w-full border-2 border-black p-2 font-black bg-black text-yellow-400">CANCELAR / REAGENDAR PACOTE</button>`;
             }
+            
+            mudarEtapa(4);
         }
     </script>
 </body>
