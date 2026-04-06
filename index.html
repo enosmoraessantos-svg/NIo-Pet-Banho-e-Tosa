@@ -22,7 +22,7 @@
         .status-bar { display: flex; gap: 5px; margin-bottom: 15px; }
         .ponto { height: 8px; flex: 1; border: 2px solid var(--preto); background: white; border-radius: 5px; }
         .ponto.ativo { background: var(--vermelho); }
-        .bloqueado { background: #eee !important; color: #666 !important; cursor: not-allowed; }
+        .bloqueado { background: #e0e0e0 !important; color: #888 !important; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -33,7 +33,6 @@
         <div id="p1" class="ponto ativo"></div><div id="p2" class="ponto"></div><div id="p3" class="ponto"></div><div id="p4" class="ponto"></div>
     </div>
 
-    <!-- ETAPA 1: CLIENTE -->
     <div class="etapa ativa" id="e1">
         <label>NOME DO CLIENTE*</label>
         <input type="text" id="nome_cli" required>
@@ -45,7 +44,6 @@
         <button onclick="irPara(2)">PRÓXIMO 🐾</button>
     </div>
 
-    <!-- ETAPA 2: PETS -->
     <div class="etapa" id="e2">
         <label>QUANTIDADE DE PETS (MÁX 4)</label>
         <select id="qtd_pets" onchange="renderizarPets()">
@@ -56,14 +54,12 @@
         <button style="background:#666" onclick="irPara(1)">VOLTAR</button>
     </div>
 
-    <!-- ETAPA 3: SERVIÇOS E PACOTES -->
     <div class="etapa" id="e3">
         <div id="container_servicos"></div>
         <button onclick="irPara(4)">ESCOLHER DATA 📅</button>
         <button style="background:#666" onclick="irPara(2)">VOLTAR</button>
     </div>
 
-    <!-- ETAPA 4: CALENDÁRIO -->
     <div class="etapa" id="e4">
         <label>DATA (Próximo mês só após dia 20):</label>
         <input type="date" id="data_final" onchange="validarRegraData(this)">
@@ -91,7 +87,7 @@
             div.innerHTML += `<div class="pet-box">
                 <label>NOME DO PET ${i}*</label><input type="text" class="p_nome" id="nome_pet_${i}" required>
                 <label>ESPÉCIE</label><select><option>Cachorro</option><option>Gato</option></select>
-                <label>PORTE</label><select><option>Pequeno</option><option>Médio</option><option>Grande pelo curto</option><option>Grande peludo</option></select>
+                <label>PORTE</label><select id="porte_${i}"><option>Pequeno</option><option>Médio</option><option>Grande pelo curto</option><option>Grande peludo</option></select>
                 <label>ALERGIA?</label><select><option>Não</option><option>Sim</option></select>
                 <textarea placeholder="Obs de alergia"></textarea>
             </div>`;
@@ -103,13 +99,11 @@
         const div = document.getElementById('container_servicos');
         div.innerHTML = "<h2>Escolha o Plano</h2>";
         for(let i=1; i<=qtd; i++) {
-            // Pega o nome digitado no input anterior
             const nomePet = document.getElementById(`nome_pet_${i}`).value || `Pet ${i}`;
-            
             div.innerHTML += `<div class="pet-box">
                 <strong>PET: ${nomePet.toUpperCase()}</strong>
                 <label>TIPO DE PLANO:</label>
-                <select id="plano_${i}" onchange="ajustarServico(${i})">
+                <select id="plano_${i}" onchange="aplicarRegraPacote(${i})">
                     <option value="avulso">Avulso (Escolher serviço abaixo)</option>
                     <option value="basico">Básico (1 Banho + 1 Higiênica)</option>
                     <option value="basico_tosa">Básico com Tosa (1 Banho + 1 Tosa)</option>
@@ -125,16 +119,20 @@
         }
     }
 
-    function ajustarServico(id) {
+    function aplicarRegraPacote(id) {
         const plano = document.getElementById(`plano_${id}`).value;
         const servicoSelect = document.getElementById(`servico_${id}`);
         
-        if(plano === "basico" || plano === "premium") {
+        if (plano === "basico") {
             servicoSelect.value = "higiene";
             servicoSelect.disabled = true;
             servicoSelect.classList.add("bloqueado");
-        } else if(plano === "basico_tosa") {
+        } else if (plano === "basico_tosa") {
             servicoSelect.value = "tosa";
+            servicoSelect.disabled = true;
+            servicoSelect.classList.add("bloqueado");
+        } else if (plano === "premium") {
+            servicoSelect.value = "higiene";
             servicoSelect.disabled = true;
             servicoSelect.classList.add("bloqueado");
         } else {
