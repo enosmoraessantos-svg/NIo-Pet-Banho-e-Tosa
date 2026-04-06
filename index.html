@@ -5,17 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>Nilo Pet - Agendamento Oficial</title>
     <script src="https://tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cloudflare.com">
     <style>
         body { background-color: #f0f9ff; font-family: sans-serif; color: #1e293b; }
         .card { background: white; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); margin: 15px; padding: 25px; border: 1px solid #e2e8f0; }
         input, select { width: 100%; padding: 14px; border-radius: 10px; border: 2px solid #e2e8f0; margin-bottom: 12px; font-size: 16px; color: black; }
-        .btn-next { background-color: #dc2626; color: white; width: 100%; padding: 18px; border-radius: 12px; font-weight: 800; font-size: 18px; border: none; }
-        .btn-cancel { background-color: #64748b; color: white; width: 100%; padding: 12px; border-radius: 10px; font-weight: 700; margin-top: 10px; }
+        .btn-next { background-color: #dc2626; color: white; width: 100%; padding: 18px; border-radius: 12px; font-weight: 800; font-size: 18px; border: none; cursor: pointer; }
+        .btn-cancel { background-color: #64748b; color: white; width: 100%; padding: 12px; border-radius: 10px; font-weight: 700; margin-top: 10px; cursor: pointer; text-align: center; display: block; width: 100%; }
         .step-content { display: none; }
         .step-content.active { display: block; }
         .pet-box { border: 2px solid #e2e8f0; padding: 15px; border-radius: 15px; margin-bottom: 15px; background: #f8fafc; }
-        .label-req { display: block; text-xs: font-black; margin-bottom: 4px; text-transform: uppercase; font-weight: 900; }
+        .label-req { display: block; font-size: 10px; margin-bottom: 4px; text-transform: uppercase; font-weight: 900; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
@@ -42,7 +42,7 @@
                     <input type="text" value="Sol Nascente" readonly class="w-32 bg-slate-100 font-bold text-slate-400 text-center border-none">
                 </div>
                 <button type="button" onclick="validaPasso1()" class="btn-next mt-4">PRÓXIMO</button>
-                <button type="button" class="btn-cancel">CANCELAR AGENDAMENTO</button>
+                <button type="button" onclick="cancelarAgendamento()" class="btn-cancel">CANCELAR AGENDAMENTO</button>
             </div>
         </div>
 
@@ -104,10 +104,21 @@
             window.scrollTo(0,0);
         }
 
+        function cancelarAgendamento() {
+            if(confirm("Deseja cancelar e limpar os dados preenchidos?")) {
+                const tipoAtual = document.getElementById('tipo').value;
+                document.getElementById('niloForm').reset();
+                document.getElementById('tipo').value = tipoAtual; // Mantém a escolha do tipo
+                document.getElementById('petsContainer').innerHTML = '';
+                document.getElementById('datasContainer').innerHTML = '';
+                next(1);
+            }
+        }
+
         function validaPasso1() {
             const w = document.getElementById('whatsapp').value;
             if(w.length !== 11) return alert("WhatsApp deve ter exatamente 11 dígitos!");
-            if(!document.getElementById('nome').value || !document.getElementById('rua').value) return alert("Preencha todos os campos obrigatórios!");
+            if(!document.getElementById('nome').value || !document.getElementById('rua').value) return alert("Preencha todos os campos!");
             next(2);
         }
 
@@ -118,66 +129,67 @@
             for(let i=1; i<=qtd; i++) {
                 container.innerHTML += `
                 <div class="pet-box">
-                    <label class="label-req">ESPÉCIE DO PET ${i}</label>
-                    <select onchange="const p = this.parentElement.querySelector('.porte-div'); const a = this.parentElement.querySelector('.aviso-gato'); if(this.value==='Gato'){p.style.display='none'; a.style.display='block';}else{p.style.display='block'; a.style.display='none';}">
+                    <h3 class="font-bold text-red-600 mb-2">PET #${i}: <span id="nomeDisplay${i}">...</span></h3>
+                    <label class="label-req">ESPÉCIE</label>
+                    <select onchange="togglePorte(this, ${i})">
                         <option value="Cachorro">Cachorro</option><option value="Gato">Gato</option>
                     </select>
                     <label class="label-req">NOME DO PET ${i} *</label>
-                    <input type="text" required placeholder="Ex: Bob">
+                    <input type="text" class="pet-nome-input" required placeholder="Ex: Bob" oninput="document.getElementById('nomeDisplay${i}').innerText = this.value">
                     <div class="porte-div">
                         <label class="label-req">PORTE</label>
                         <select><option>Pequeno</option><option>Médio</option><option>Grande Pelo Curto</option><option>Grande Peludo</option></select>
                     </div>
                     <div class="aviso-gato hidden bg-black text-white p-2 text-[10px] font-bold mb-3">GATO: SÓ BANHO</div>
-                    <label class="label-req text-[10px]">POSSUI ALERGIA?</label>
-                    <select onchange="this.nextElementSibling.classList.toggle('hidden', this.value === 'Não')"><option>Não</option><option>Sim</option></select>
-                    <input type="text" class="hidden mt-2" placeholder="Descreva a alergia">
                 </div>`;
             }
+        }
+
+        function togglePorte(el, i) {
+            const p = el.parentElement.querySelector('.porte-div');
+            const a = el.parentElement.querySelector('.aviso-gato');
+            if(el.value === 'Gato') { p.style.display='none'; a.classList.remove('hidden'); }
+            else { p.style.display='block'; a.classList.add('hidden'); }
         }
 
         function renderServicos() {
             const t = document.getElementById('tipo').value;
             const b = document.getElementById('boxServico');
             if(t === 'avulso') {
-                b.innerHTML = `<label class="label-req">Escolha o serviço avulso:</label><select><option>Banho</option><option>Banho + Tosa Higiênica</option><option>Banho + Tosa</option></select>`;
-            } else if(t === 'basico') {
-                b.innerHTML = `<p class="font-bold text-red-600 uppercase">Básico:</p><p class="text-xs">• 1 Banho e 1 Banho + Tosa Higiênica</p>`;
-            } else if(t === 'basico_tosa') {
-                b.innerHTML = `<p class="font-bold text-red-600 uppercase">Básico com Tosa:</p><p class="text-xs">• 1 Banho e 1 Banho + Tosa</p>`;
+                b.innerHTML = `<label class="label-req">Serviço Avulso:</label>
+                <select id="servicoSelecionado"><option>Banho</option><option>Banho e Tosa Higiênica</option><option>Banho e Tosa Geral</option></select>`;
             } else {
-                b.innerHTML = `<p class="font-bold text-red-600 uppercase">Premium:</p><p class="text-xs">• 3 Banhos e 1 Banho + Tosa Higiênica (Opcional: 5 semanas e 1 banho)</p>`;
+                let txt = t === 'premium' ? "PACOTE PREMIUM (4 BANHOS)" : "PACOTE BÁSICO (2 BANHOS)";
+                b.innerHTML = `<label class="label-req text-gray-400">Serviço do Pacote (Bloqueado):</label>
+                <input type="text" value="${txt}" readonly class="bg-gray-100 font-bold">`;
             }
         }
 
         function renderDatas() {
             const t = document.getElementById('tipo').value;
             const container = document.getElementById('datasContainer');
+            const nomesPets = Array.from(document.querySelectorAll('.pet-nome-input')).map(i => i.value || `Pet`);
+            
+            let numDatas = 1;
+            if(t === 'basico' || t === 'basico_tosa') numDatas = 2;
+            if(t === 'premium') numDatas = 4;
+
             container.innerHTML = '';
-            let loop = t === 'premium' ? 4 : (t.includes('basico') ? 2 : 1);
-            for(let i=1; i<=loop; i++) {
-                container.innerHTML += `<div class="mb-6 p-4 border-b"><label class="label-req">Data ${i}:</label><input type="date" onchange="carregaHorarios(this)"><label class="label-req">Horário Disponível:</label><select class="h-select"><option>Escolha o dia acima</option></select></div>`;
+            for(let i=1; i<=numDatas; i++) {
+                container.innerHTML += `
+                <div class="mb-4 p-4 border rounded-lg bg-slate-50">
+                    <p class="font-bold text-red-600 text-xs mb-2">DATA ${i} - PARA: ${nomesPets.join(", ")}</p>
+                    <label class="label-req">ESCOLHA A DATA</label>
+                    <input type="date" required>
+                    <label class="label-req">HORÁRIO</label>
+                    <select><option>08:00</option><option>10:00</option><option>13:00</option><option>15:00</option></select>
+                </div>`;
             }
         }
 
-        function carregaHorarios(el) {
-            const d = new Date(el.value + 'T00:00:00');
-            const hj = new Date();
-            const combo = el.nextElementSibling.nextElementSibling;
-            combo.innerHTML = '';
-            if(d.getMonth() > hj.getMonth() && hj.getDate() < 20) { alert("Agenda do mês seguinte só abre no dia 20!"); el.value = ""; return; }
-            const dia = d.getDay();
-            let h = [];
-            if(dia >= 3 && dia <= 6) { // Qua-Sab
-                h = ["09:00 - 3 Banhos/Higiênica e 1 Tosa", "10:00 - 3 Banhos/Higiênica e 1 Pet Grande Curto", "11:00 - 3 Banhos/Higiênica e 1 Tosa", "13:30 - 4 Banhos/Higiênica", "14:30 - 3 Banhos/Higiênica e 1 Tosa", "15:30 - 3 Banhos/Higiênica e 1 Pet Grande Peludo", "16:00 - 3 Banhos/Higiênica e 1 Gato"];
-            } else if(dia === 0) { // Dom
-                h = ["09:00 - 3 Banhos/Higiênica e 1 Tosa", "10:00 - 3 Banhos/Higiênica e 1 Pet Grande Curto", "11:00 - 3 Banhos/Higiênica e 1 Tosa", "12:00 - 3 Banhos/Higiênica e 1 Pet Grande Peludo"];
-            } else { alert("Fechado! Atendemos de Qua a Dom."); el.value = ""; return; }
-            h.forEach(t => { let o = document.createElement('option'); o.text = t; combo.add(o); });
-        }
-
         function finish() {
-            alert("AGENDAMENTO CONFIRMADO!\n\nLogo mais nossa equipe entrará em contato para passar valores.\n\nDE IMEDIATO ENVIE UMA FOTO DO PET PARA ACELERAR O PROCESSO.");
+            alert("Agendamento Enviado com Sucesso!");
+            // Lógica final do WhatsApp pode ser inserida aqui
         }
     </script>
 </body>
