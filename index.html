@@ -2,68 +2,67 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Nilo Pet - Agendamento</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nilo Pet</title>
     <script src="https://tailwindcss.com"></script>
     <style>
-        body { background-color: #e0f2fe; color: #ff0000; font-family: sans-serif; font-weight: bold; }
-        .bloco { border: 3px solid #000; padding: 20px; margin-bottom: 20px; background-color: #e0f2fe; }
-        input, select, textarea { border: 2px solid #000; width: 100%; padding: 8px; margin-top: 5px; margin-bottom: 15px; color: #000; font-weight: normal; }
-        .btn-proximo { background-color: #fff; border: 2px solid #000; color: #ff0000; padding: 10px 20px; cursor: pointer; text-transform: uppercase; font-weight: 900; }
-        .btn-proximo:hover { background-color: #ff0000; color: #fff; }
+        body { background-color: #e0f2fe; color: #ff0000; font-family: sans-serif; font-weight: bold; overflow-x: hidden; }
+        .bloco { border: 2px solid #000; padding: 12px; margin-bottom: 10px; background-color: #e0f2fe; }
+        input, select, textarea { border: 1.5px solid #000; width: 100%; padding: 6px; margin-top: 2px; margin-bottom: 8px; color: #000; font-weight: normal; font-size: 14px; }
+        .btn-proximo { background-color: #fff; border: 2px solid #000; color: #ff0000; padding: 8px; cursor: pointer; text-transform: uppercase; font-weight: 900; width: 100%; font-size: 14px; }
         .etapa { display: none; }
         .etapa.ativa { display: block; }
-        .aviso { font-size: 12px; color: #000; margin-bottom: 10px; }
+        label { font-size: 12px; text-transform: uppercase; }
+        .card-pet { background: #fff; border: 1px solid #000; padding: 8px; margin-top: 5px; }
     </style>
 </head>
-<body class="p-4">
+<body class="p-2">
 
-    <div class="max-w-2xl mx-auto">
-        <h1 class="text-3xl text-center border-b-4 border-black mb-6 pb-2">NILO PET BANHO E TOSA</h1>
+    <div class="max-w-md mx-auto">
+        <h1 class="text-xl text-center border-b-2 border-black mb-3 pb-1 italic">NILO PET BANHO E TOSA</h1>
 
         <!-- ETAPA 1 -->
         <div id="etapa1" class="etapa ativa bloco">
-            <h2 class="text-xl underline mb-4">ETAPA 1: IDENTIFICAÇÃO</h2>
-            <label>NOME COMPLETO DO CLIENTE (OBRIGATÓRIO)</label>
-            <input type="text" id="nome_cliente" required>
+            <label>NOME COMPLETO *</label>
+            <input type="text" id="nome_cliente">
             
-            <label>WHATSAPP COM 11 DÍGITOS (OBRIGATÓRIO)</label>
-            <input type="text" id="whatsapp" maxlength="11" placeholder="11999999999" required>
+            <label>WHATSAPP (11 DÍGITOS) *</label>
+            <input type="text" id="whatsapp" maxlength="11" placeholder="11999999999">
             
-            <label>ENDEREÇO COMPLETO (SÓ ATENDEMOS BAIRRO SOL NASCENTE)</label>
-            <textarea id="endereco" required></textarea>
+            <label>ENDEREÇO (SÓ SOL NASCENTE) *</label>
+            <textarea id="endereco" rows="2"></textarea>
             
-            <button class="btn-proximo" onclick="irPara(2)">PRÓXIMA ETAPA</button>
+            <button class="btn-proximo" onclick="irPara(2)">PRÓXIMOS: PETS</button>
         </div>
 
         <!-- ETAPA 2 -->
         <div id="etapa2" class="etapa bloco">
-            <h2 class="text-xl underline mb-4">ETAPA 2: DADOS DOS PETS</h2>
-            <label>QUANTIDADE DE PETS (ATÉ 4)</label>
+            <label>QUANTIDADE DE PETS (1-4)</label>
             <select id="qtd_pets" onchange="gerarCamposPets()">
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
+                <option value="1">1 PET</option>
+                <option value="2">2 PETS</option>
+                <option value="3">3 PETS</option>
+                <option value="4">4 PETS</option>
             </select>
             
-            <div id="container_pets"></div>
+            <div id="container_pets" class="max-h-[250px] overflow-y-auto pr-1"></div>
             
-            <button class="btn-proximo" onclick="irPara(3)">PRÓXIMA ETAPA</button>
+            <button class="btn-proximo mt-2" onclick="irPara(3)">PRÓXIMO: SERVIÇO</button>
         </div>
 
         <!-- ETAPA 3 -->
         <div id="etapa3" class="etapa bloco">
-            <h2 class="text-xl underline mb-4">ETAPA 3: TIPO DE PACOTE OU AVULSO</h2>
+            <label>TIPO DE PACOTE OU AVULSO</label>
             <select id="tipo_servico" onchange="mostrarServicos()">
-                <option value="">SELECIONE UMA OPÇÃO...</option>
-                <option value="avulso">AVULSO (CLIENTE ESCOLHE O SERVIÇO)</option>
-                <option value="basico">PACOTE BÁSICO (1 BANHO + 1 BANHO/TOSA HIG)</option>
-                <option value="basico_tosa">PACOTE BÁSICO COM TOSA (1 BANHO + 1 BANHO/TOSA)</option>
-                <option value="premium">PACOTE PREMIUM (3 BANHOS + 1 BANHO/TOSA HIG)</option>
+                <option value="">ESCOLHA...</option>
+                <option value="avulso">AVULSO</option>
+                <option value="basico">BÁSICO (1B + 1TH)</option>
+                <option value="basico_tosa">BÁSICO COM TOSA (1B + 1T)</option>
+                <option value="premium">PREMIUM (3B + 1TH)</option>
             </select>
 
             <div id="servicos_avulsos" class="hidden">
-                <label>ESCOLHA O SERVIÇO AVULSO:</label>
+                <label>QUAL SERVIÇO AVULSO?</label>
                 <select id="servico_final">
                     <option>BANHO</option>
                     <option>BANHO + TOSA HIGIÊNICA</option>
@@ -71,26 +70,25 @@
                 </select>
             </div>
 
-            <button class="btn-proximo mt-4" onclick="irPara(4)">PRÓXIMA ETAPA</button>
+            <button class="btn-proximo mt-2" onclick="irPara(4)">PRÓXIMO: DATA</button>
         </div>
 
         <!-- ETAPA 4 -->
         <div id="etapa4" class="etapa bloco">
-            <h2 class="text-xl underline mb-4">ETAPA 4: DATA E HORA</h2>
-            <p class="aviso">* Mês seguinte disponível apenas após o dia 20.</p>
+            <label>DATA (QUA A DOM)</label>
             <input type="date" id="data_agenda" onchange="carregarHorarios()">
             
-            <div id="lista_horarios" class="grid grid-cols-1 gap-2 mt-4"></div>
+            <div id="lista_horarios" class="grid grid-cols-2 gap-2 mt-2"></div>
             
-            <button class="btn-proximo mt-6 w-full" style="background-color: #ff0000; color: #fff;" onclick="finalizar()">CONFIRMAR AGENDAMENTO</button>
+            <button class="btn-proximo mt-4 bg-red-600 !text-white border-none" onclick="finalizar()">CONFIRMAR</button>
         </div>
 
         <!-- MENSAGEM FINAL -->
         <div id="final" class="etapa bloco text-center">
-            <p class="text-2xl mb-4">AGENDAMENTO CONFIRMADO!</p>
-            <p class="text-xl mb-4">LOGO MAIS NOSSA EQUIPE ENTRARÁ EM CONTATO PARA PASSAR VALORES.</p>
-            <p class="border-2 border-black p-2 bg-white text-black">DE IMEDIATO ENVIE UMA FOTO DO PET PARA ACELERAR O PROCESSO.</p>
-            <button class="mt-6 text-black underline" onclick="location.reload()">CANCELAR SERVIÇO / VOLTAR</button>
+            <p class="text-lg mb-2">AGENDAMENTO CONFIRMADO!</p>
+            <p class="text-sm mb-3">EQUIPE ENTRARÁ EM CONTATO PARA PASSAR VALORES.</p>
+            <p class="border-2 border-black p-2 bg-white text-black text-xs font-black">ENVIE UMA FOTO DO PET AGORA PARA ACELERAR.</p>
+            <button class="mt-4 text-[10px] text-black underline uppercase" onclick="location.reload()">Cancelar / Voltar</button>
         </div>
     </div>
 
@@ -108,24 +106,20 @@
             container.innerHTML = '';
             for(let i=1; i<=qtd; i++) {
                 container.innerHTML += `
-                <div class="bloco mt-2" style="background: #fff;">
-                    <p class="text-black">PET #${i}</p>
-                    <label>NOME DO PET (OBRIGATÓRIO)</label><input type="text" required>
-                    <label>ESPÉCIE</label><select><option>CACHORRO</option><option>GATO</option></select>
-                    <label>PORTE</label>
-                    <select>
-                        <option>PEQUENO</option><option>MÉDIO</option>
-                        <option>GRANDE PELO CURTO</option><option>GRANDE PELUDO</option>
-                    </select>
-                    <label>ALERGIA?</label><select><option>NÃO</option><option>SIM</option></select>
-                    <label>OBSERVAÇÃO</label><input type="text">
+                <div class="card-pet">
+                    <p class="text-[10px] text-black">PET #${i}</p>
+                    <input type="text" placeholder="NOME DO PET" required>
+                    <div class="flex gap-1">
+                        <select class="text-xs"><option>CÃO</option><option>GATO</option></select>
+                        <select class="text-xs"><option>PEQ</option><option>MÉD</option><option>G. CURTO</option><option>G. PELUDO</option></select>
+                    </div>
                 </div>`;
             }
         }
 
         function mostrarServicos() {
             const tipo = document.getElementById('tipo_servico').value;
-            document.getElementById('servicos_avulsos').className = (tipo === 'avulso') ? 'block' : 'hidden';
+            document.getElementById('servicos_avulsos').style.display = (tipo === 'avulso') ? 'block' : 'none';
         }
 
         function limitarCalendario() {
@@ -140,10 +134,10 @@
 
         function carregarHorarios() {
             const lista = document.getElementById('lista_horarios');
-            lista.innerHTML = '<p class="text-black">HORÁRIOS SEGUINDO AS REGRAS DA NILO PET:</p>';
+            lista.innerHTML = '';
             const horarios = ["09:00", "10:00", "11:00", "13:30", "14:30", "15:30", "16:00"];
             horarios.forEach(h => {
-                lista.innerHTML += `<button class="btn-proximo text-sm" onclick="alert('Selecionado: '+h)">${h}</button>`;
+                lista.innerHTML += `<button class="border border-black p-1 text-xs bg-white" onclick="this.style.background='red'; this.style.color='white'">${h}</button>`;
             });
         }
 
@@ -154,5 +148,3 @@
     </script>
 </body>
 </html>
-
-
