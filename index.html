@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nilo Pet - Agendamento</title>
+    <style>
+        :root {
+            --azul-claro: #f0f8ff; /* Azul Bebê/Gelo */
+            --vermelho: #ff0000;
+            --preto: #000000;
+        }
+        body { 
+            background-color: var(--azul-claro); 
+            color: var(--vermelho); 
+            font-family: 'Arial Black', sans-serif; 
+            padding: 10px;
+        }
+        .card {
+            background: white;
+            border: 5px solid var(--preto);
+            max-width: 450px;
+            margin: 20px auto;
+            padding: 25px;
+            box-shadow: 12px 12px 0px var(--preto);
+        }
+        .etapa { display: none; }
+        .etapa.ativa { display: block; }
+        
+        h1 { text-align: center; font-size: 22px; text-transform: uppercase; margin-bottom: 20px; border-bottom: 4px solid var(--preto); padding-bottom: 10px; }
+        label { display: block; margin-top: 15px; font-size: 14px; }
+        
+        input, select, textarea {
+            width: 100%; border: 3px solid var(--preto); padding: 12px;
+            color: var(--vermelho); font-weight: bold; margin-top: 5px; box-sizing: border-box;
+            background: var(--azul-claro);
+        }
+        
+        button {
+            background: var(--preto); color: var(--vermelho); border: none;
+            padding: 18px; width: 100%; cursor: pointer; font-weight: bold;
+            font-size: 16px; margin-top: 20px; text-transform: uppercase;
+        }
+        .btn-voltar { background: #ddd; color: #000; margin-top: 10px; font-size: 12px; padding: 10px; }
+        
+        .progresso { display: flex; gap: 5px; margin-bottom: 20px; }
+        .barra { height: 10px; flex: 1; border: 2px solid var(--preto); background: white; }
+        .barra.cheia { background: var(--vermelho); }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>Nilo Pet Banho e Tosa</h1>
+    
+    <div class="progresso">
+        <div class="barra cheia"></div>
+        <div class="barra" id="b2"></div>
+        <div class="barra" id="b3"></div>
+        <div class="barra" id="b4"></div>
+    </div>
+
+    <!-- ETAPA 1: CLIENTE -->
+    <div class="etapa ativa" id="e1">
+        <label>NOME COMPLETO (OBRIGATÓRIO):</label>
+        <input type="text" id="nome_cli" required>
+        <label>WHATSAPP (11 DÍGITOS):</label>
+        <input type="tel" id="tel" maxlength="11" placeholder="11912345678">
+        <label>ENDEREÇO (SÓ SOL NASCENTE):</label>
+        <input type="text" value="Bairro Sol Nascente" readonly>
+        <input type="text" id="rua" placeholder="Rua e Número">
+        <button onclick="proximo(2)">PRÓXIMO 🐾</button>
+    </div>
+
+    <!-- ETAPA 2: PETS -->
+    <div class="etapa" id="e2">
+        <label>QUANTIDADE DE PETS (MÁX 4):</label>
+        <input type="number" id="qtd_pets" value="1" min="1" max="4">
+        <label>ESPÉCIE:</label>
+        <select id="especie">
+            <option>Cachorro</option>
+            <option>Gato (Só Banho)</option>
+        </select>
+        <label>PORTE (PARA CÃES):</label>
+        <select id="porte">
+            <option>Pequeno</option>
+            <option>Médio</option>
+            <option>Grande Pelo Curto</option>
+            <option>Grande Peludo</option>
+        </select>
+        <label>NOME DO PET:</label>
+        <input type="text" id="nome_pet">
+        <label>POSSUI ALERGIA? (SIM/NÃO + OBS):</label>
+        <textarea id="alergia"></textarea>
+        <button onclick="proximo(3)">PRÓXIMO 🐾</button>
+        <button class="btn-voltar" onclick="proximo(1)">VOLTAR</button>
+    </div>
+
+    <!-- ETAPA 3: SERVIÇOS -->
+    <div class="etapa" id="e3">
+        <label>TIPO DE PACOTE:</label>
+        <select id="tipo_servico">
+            <option>Avulso (Escolher na hora)</option>
+            <option>Básico (1 Banho + 1 Higiênica)</option>
+            <option>Básico com Tosa (1 Banho + 1 Tosa)</option>
+            <option>Premium (3 Banhos + 1 Higiênica)</option>
+        </select>
+        <button onclick="proximo(4)">ESCOLHER DATA 📅</button>
+        <button class="btn-voltar" onclick="proximo(2)">VOLTAR</button>
+    </div>
+
+    <!-- ETAPA 4: DATA E HORA -->
+    <div class="etapa" id="e4">
+        <label>DATA DO AGENDAMENTO:</label>
+        <input type="date" id="data_agenda" onchange="validarData(this)">
+        <label>HORÁRIOS DISPONÍVEIS:</label>
+        <select id="horarios_lista">
+            <!-- Horários aparecem via script conforme o dia -->
+        </select>
+        <button onclick="finalizar()">CONFIRMAR AGENDAMENTO ✅</button>
+        <button class="btn-voltar" onclick="proximo(3)">VOLTAR</button>
+    </div>
+</div>
+
+<script>
+    function proximo(n) {
+        document.querySelectorAll('.etapa').forEach(e => e.classList.remove('ativa'));
+        document.getElementById('e' + n).classList.add('ativa');
+        for(let i=2; i<=4; i++) {
+            document.getElementById('b'+i).classList.toggle('cheia', i <= n);
+        }
+    }
+
+    // Regra do Calendário: Bloqueia passados e controla dia 20
+    const inputData = document.getElementById('data_agenda');
+    const hoje = new Date();
+    inputData.min = hoje.toISOString().split('T')[0];
+
+    function validarData(el) {
+        const dataSelecionada = new Date(el.value);
+        const diaMes = hoje.getDate();
+        
+        // Se ainda não é dia 20, bloqueia o mês seguinte
+        if (dataSelecionada.getMonth() > hoje.getMonth() && diaMes < 20) {
+            alert("A agenda para o próximo mês só libera no dia 20!");
+            el.value = "";
+        }
+    }
+
+    function finalizar() {
+        const msg = "Agendamento confirmado! Logo mais nossa equipe entrará em contato para passar valores. De imediato envie uma foto do pet para acelerar o processo.";
+        alert(msg);
+        window.open("https://wa.me Nilo Pet! Confirmei meu agendamento.");
+    }
+</script>
+
+</body>
+</html>
