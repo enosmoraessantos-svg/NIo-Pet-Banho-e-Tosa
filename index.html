@@ -10,7 +10,7 @@
         .card { background: white; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); margin: 15px; padding: 25px; border: 1px solid #e2e8f0; }
         input, select { width: 100%; padding: 14px; border-radius: 10px; border: 2px solid #e2e8f0; margin-bottom: 12px; font-size: 16px; color: black; }
         .btn-next { background-color: #dc2626; color: white; width: 100%; padding: 18px; border-radius: 12px; font-weight: 800; font-size: 18px; border: none; cursor: pointer; }
-        .btn-cancel { background-color: #64748b; color: white; width: 100%; padding: 12px; border-radius: 10px; font-weight: 700; margin-top: 10px; cursor: pointer; text-align: center; display: block; width: 100%; }
+        .btn-cancel { background-color: #64748b; color: white; width: 100%; padding: 12px; border-radius: 10px; font-weight: 700; margin-top: 10px; cursor: pointer; text-align: center; display: block; }
         .step-content { display: none; }
         .step-content.active { display: block; }
         .pet-box { border: 2px solid #e2e8f0; padding: 15px; border-radius: 15px; margin-bottom: 15px; background: #f8fafc; }
@@ -26,70 +26,54 @@
     </div>
 
     <form id="niloForm">
-        <!-- ETAPA 1: CLIENTE -->
+        <!-- ETAPA 1 -->
         <div id="step1" class="step-content active">
             <div class="card">
                 <h2 class="font-bold mb-4 text-slate-700 uppercase underline">Etapa 1: Dados do Cliente</h2>
                 <label class="label-req">Nome do Cliente *</label>
                 <input type="text" id="nome" required placeholder="Nome completo">
-                
-                <label class="label-req">WhatsApp (11 dígitos) *</label>
-                <input type="tel" id="whatsapp" required placeholder="11999998888" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-
+                <label class="label-req">WhatsApp *</label>
+                <input type="tel" id="whatsapp" required placeholder="11999998888" maxlength="11">
                 <label class="label-req">Rua e Número *</label>
-                <div class="flex gap-2">
-                    <input type="text" id="rua" required placeholder="Ex: Rua das Flores, 123" class="flex-grow">
-                    <input type="text" value="Sol Nascente" readonly class="w-32 bg-slate-100 font-bold text-slate-400 text-center border-none">
-                </div>
-                <button type="button" onclick="validaPasso1()" class="btn-next mt-4">PRÓXIMO</button>
-                <button type="button" onclick="cancelarAgendamento()" class="btn-cancel">CANCELAR AGENDAMENTO</button>
+                <input type="text" id="rua" required placeholder="Ex: Rua das Flores, 123">
+                <button type="button" onclick="next(2)" class="btn-next mt-4">PRÓXIMO</button>
+                <button type="button" onclick="botaoCancelar()" class="btn-cancel">CANCELAR AGENDAMENTO</button>
             </div>
         </div>
 
-        <!-- ETAPA 2: PETS -->
+        <!-- ETAPA 2 -->
         <div id="step2" class="step-content">
             <div class="card">
                 <h2 class="font-bold mb-4 text-slate-700 uppercase underline">Etapa 2: Dados do Pet</h2>
-                <label class="label-req">Quantos pets deseja agendar? (Max 4)</label>
-                <select id="qtd" onchange="renderPets()">
-                    <option value="1">1 Pet</option><option value="2">2 Pets</option>
-                    <option value="3">3 Pets</option><option value="4">4 Pets</option>
-                </select>
-
+                <select id="qtd" onchange="renderPets()"><option value="1">1 Pet</option><option value="2">2 Pets</option></select>
                 <div id="petsContainer"></div>
-
                 <button type="button" onclick="next(3)" class="btn-next">PRÓXIMO</button>
-                <button type="button" onclick="next(1)" class="btn-cancel bg-slate-400">VOLTAR</button>
+                <button type="button" onclick="next(1)" class="btn-cancel">VOLTAR</button>
             </div>
         </div>
 
-        <!-- ETAPA 3: SERVIÇOS -->
+        <!-- ETAPA 3 -->
         <div id="step3" class="step-content">
             <div class="card">
-                <h2 class="font-bold mb-4 text-slate-700 uppercase underline">Etapa 3: Serviços e Pacotes</h2>
-                <label class="label-req">Escolha o Tipo de Serviço:</label>
+                <h2 class="font-bold mb-4 text-slate-700 uppercase underline">Etapa 3: Serviços</h2>
                 <select id="tipo" onchange="renderServicos()">
-                    <option value="avulso">AVULSO (Individual)</option>
-                    <option value="basico">BÁSICO (2 Datas)</option>
-                    <option value="basico_tosa">BÁSICO + TOSA (2 Datas)</option>
-                    <option value="premium">PREMIUM (4 Datas)</option>
+                    <option value="avulso">AVULSO</option>
+                    <option value="basico">PACOTE BÁSICO (2 Datas)</option>
+                    <option value="premium">PACOTE PREMIUM (4 Datas)</option>
                 </select>
-
-                <div id="boxServico" class="p-4 border-2 border-red-100 rounded-xl bg-red-50 text-sm mb-6"></div>
-
+                <div id="boxServico"></div>
                 <button type="button" onclick="next(4)" class="btn-next">ESCOLHER HORÁRIOS</button>
-                <button type="button" onclick="next(2)" class="btn-cancel bg-slate-400">VOLTAR</button>
+                <button type="button" onclick="next(2)" class="btn-cancel">VOLTAR</button>
             </div>
         </div>
 
-        <!-- ETAPA 4: HORÁRIOS -->
+        <!-- ETAPA 4 -->
         <div id="step4" class="step-content">
             <div class="card">
-                <h2 class="font-bold mb-4 text-slate-700 uppercase underline">Etapa 4: Agendar Horário</h2>
+                <h2 class="font-bold mb-4 text-slate-700 uppercase underline">Etapa 4: Horários</h2>
                 <div id="datasContainer"></div>
-
-                <button type="button" onclick="finish()" class="btn-next mt-6">CONFIRMAR AGENDAMENTO ✅</button>
-                <button type="button" onclick="next(3)" class="btn-cancel bg-slate-400">VOLTAR</button>
+                <button type="button" onclick="finish()" class="btn-next mt-6">CONFIRMAR ✅</button>
+                <button type="button" onclick="botaoCancelar()" class="btn-cancel">CANCELAR TUDO</button>
             </div>
         </div>
     </form>
@@ -98,99 +82,58 @@
         function next(n) {
             document.querySelectorAll('.step-content').forEach(s => s.classList.remove('active'));
             document.getElementById('step'+n).classList.add('active');
-            if(n === 2 && document.getElementById('petsContainer').innerHTML === '') renderPets();
-            if(n === 3) renderServicos();
-            if(n === 4) renderDatas();
-            window.scrollTo(0,0);
+            if(n===2) renderPets();
+            if(n===3) renderServicos();
+            if(n===4) renderDatas();
         }
 
-        function cancelarAgendamento() {
-            if(confirm("Deseja cancelar e limpar os dados preenchidos?")) {
-                const tipoAtual = document.getElementById('tipo').value;
+        function botaoCancelar() {
+            const tipo = document.getElementById('tipo').value;
+            let msg = tipo === 'avulso' ? "Deseja cancelar seu serviço avulso?" : "Ao cancelar uma data, você cancelará todo o seu pacote. Para alterar apenas uma data, entre em contato com os atendentes. Deseja cancelar?";
+            
+            if(confirm(msg)) {
                 document.getElementById('niloForm').reset();
-                document.getElementById('tipo').value = tipoAtual; // Mantém a escolha do tipo
-                document.getElementById('petsContainer').innerHTML = '';
-                document.getElementById('datasContainer').innerHTML = '';
                 next(1);
             }
         }
 
-        function validaPasso1() {
-            const w = document.getElementById('whatsapp').value;
-            if(w.length !== 11) return alert("WhatsApp deve ter exatamente 11 dígitos!");
-            if(!document.getElementById('nome').value || !document.getElementById('rua').value) return alert("Preencha todos os campos!");
-            next(2);
-        }
-
         function renderPets() {
-            const qtd = document.getElementById('qtd').value;
             const container = document.getElementById('petsContainer');
-            container.innerHTML = '';
-            for(let i=1; i<=qtd; i++) {
-                container.innerHTML += `
-                <div class="pet-box">
-                    <h3 class="font-bold text-red-600 mb-2">PET #${i}: <span id="nomeDisplay${i}">...</span></h3>
-                    <label class="label-req">ESPÉCIE</label>
-                    <select onchange="togglePorte(this, ${i})">
-                        <option value="Cachorro">Cachorro</option><option value="Gato">Gato</option>
-                    </select>
-                    <label class="label-req">NOME DO PET ${i} *</label>
-                    <input type="text" class="pet-nome-input" required placeholder="Ex: Bob" oninput="document.getElementById('nomeDisplay${i}').innerText = this.value">
-                    <div class="porte-div">
-                        <label class="label-req">PORTE</label>
-                        <select><option>Pequeno</option><option>Médio</option><option>Grande Pelo Curto</option><option>Grande Peludo</option></select>
-                    </div>
-                    <div class="aviso-gato hidden bg-black text-white p-2 text-[10px] font-bold mb-3">GATO: SÓ BANHO</div>
-                </div>`;
-            }
-        }
-
-        function togglePorte(el, i) {
-            const p = el.parentElement.querySelector('.porte-div');
-            const a = el.parentElement.querySelector('.aviso-gato');
-            if(el.value === 'Gato') { p.style.display='none'; a.classList.remove('hidden'); }
-            else { p.style.display='block'; a.classList.add('hidden'); }
+            container.innerHTML = `<label class="label-req">Nome do Pet</label><input type="text" class="pet-nome-input" placeholder="Nome do Pet" oninput="renderDatas()">`;
         }
 
         function renderServicos() {
             const t = document.getElementById('tipo').value;
             const b = document.getElementById('boxServico');
             if(t === 'avulso') {
-                b.innerHTML = `<label class="label-req">Serviço Avulso:</label>
-                <select id="servicoSelecionado"><option>Banho</option><option>Banho e Tosa Higiênica</option><option>Banho e Tosa Geral</option></select>`;
+                b.innerHTML = `<label class="label-req">Serviço</label><select><option>Banho</option><option>Tosa</option></select>`;
             } else {
-                let txt = t === 'premium' ? "PACOTE PREMIUM (4 BANHOS)" : "PACOTE BÁSICO (2 BANHOS)";
-                b.innerHTML = `<label class="label-req text-gray-400">Serviço do Pacote (Bloqueado):</label>
-                <input type="text" value="${txt}" readonly class="bg-gray-100 font-bold">`;
+                b.innerHTML = `<label class="label-req text-red-600">Serviço de Pacote Selecionado (Fixo)</label><input type="text" value="BANHOS DO PACOTE" readonly class="bg-gray-100 font-bold">`;
             }
         }
 
         function renderDatas() {
             const t = document.getElementById('tipo').value;
             const container = document.getElementById('datasContainer');
-            const nomesPets = Array.from(document.querySelectorAll('.pet-nome-input')).map(i => i.value || `Pet`);
+            const cliente = document.getElementById('nome').value || "Cliente";
+            const pet = document.querySelector('.pet-nome-input')?.value || "Pet";
             
-            let numDatas = 1;
-            if(t === 'basico' || t === 'basico_tosa') numDatas = 2;
-            if(t === 'premium') numDatas = 4;
-
+            let num = t === 'avulso' ? 1 : (t === 'basico' ? 2 : 4);
             container.innerHTML = '';
-            for(let i=1; i<=numDatas; i++) {
+            
+            for(let i=1; i<=num; i++) {
                 container.innerHTML += `
-                <div class="mb-4 p-4 border rounded-lg bg-slate-50">
-                    <p class="font-bold text-red-600 text-xs mb-2">DATA ${i} - PARA: ${nomesPets.join(", ")}</p>
-                    <label class="label-req">ESCOLHA A DATA</label>
-                    <input type="date" required>
-                    <label class="label-req">HORÁRIO</label>
-                    <select><option>08:00</option><option>10:00</option><option>13:00</option><option>15:00</option></select>
+                <div class="mb-4 p-4 border rounded bg-slate-50">
+                    <p class="text-[10px] font-black uppercase text-red-600">Agendamento ${i}</p>
+                    <p class="text-xs mb-2"><b>Cliente:</b> ${cliente} | <b>Pet:</b> ${pet}</p>
+                    <label class="label-req">Data</label><input type="date" required>
+                    <label class="label-req">Horário</label>
+                    <select><option>08:00</option><option>10:00</option><option>14:00</option></select>
                 </div>`;
             }
         }
 
-        function finish() {
-            alert("Agendamento Enviado com Sucesso!");
-            // Lógica final do WhatsApp pode ser inserida aqui
-        }
+        function finish() { alert("Agendamento solicitado!"); }
     </script>
 </body>
 </html>
