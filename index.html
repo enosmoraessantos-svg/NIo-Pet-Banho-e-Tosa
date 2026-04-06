@@ -2,195 +2,157 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nilo Pet - Agendamento</title>
     <script src="https://tailwindcss.com"></script>
     <style>
-        @import url('https://googleapis.com');
-        body { background-color: #f0f9ff; font-family: 'Inter', sans-serif; color: #ff0000; }
-        .border-nilo { border: 4px solid #000000; }
-        .shadow-nilo { box-shadow: 8px 8px 0px 0px rgba(0,0,0,1); }
-        .step-card { display: none; background: #e0f2fe; }
-        .step-card.active { display: block; }
-        input, select, textarea { 
-            border: 2px solid #000; 
-            padding: 12px; 
-            width: 100%; 
-            color: #000; 
-            font-weight: 600;
-            margin-top: 5px;
-            margin-bottom: 15px;
-        }
-        label { font-weight: 900; text-transform: uppercase; font-size: 14px; }
-        .btn-acao { 
-            background: #fff; 
-            border: 3px solid #000; 
-            color: #ff0000; 
-            padding: 15px; 
-            font-weight: 900; 
-            width: 100%; 
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-        .btn-acao:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0px 0px #000; }
-        .badge-regra { background: #000; color: #fff; padding: 2px 8px; font-size: 11px; margin-bottom: 10px; display: inline-block; }
+        body { background-color: #e0f2fe; color: #ff0000; font-family: sans-serif; font-weight: bold; }
+        .bloco { border: 3px solid #000; padding: 20px; margin-bottom: 20px; background-color: #e0f2fe; }
+        input, select, textarea { border: 2px solid #000; width: 100%; padding: 8px; margin-top: 5px; margin-bottom: 15px; color: #000; font-weight: normal; }
+        .btn-proximo { background-color: #fff; border: 2px solid #000; color: #ff0000; padding: 10px 20px; cursor: pointer; text-transform: uppercase; font-weight: 900; }
+        .btn-proximo:hover { background-color: #ff0000; color: #fff; }
+        .etapa { display: none; }
+        .etapa.ativa { display: block; }
+        .aviso { font-size: 12px; color: #000; margin-bottom: 10px; }
     </style>
 </head>
-<body class="p-4 md:p-10 flex justify-center items-center min-h-screen">
+<body class="p-4">
 
-    <div class="w-full max-w-xl border-nilo shadow-nilo bg-white p-2">
-        <div class="bg-black text-white p-4 text-center mb-2">
-            <h1 class="text-2xl font-black italic">NILO PET BANHO E TOSA</h1>
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-3xl text-center border-b-4 border-black mb-6 pb-2">NILO PET BANHO E TOSA</h1>
+
+        <!-- ETAPA 1 -->
+        <div id="etapa1" class="etapa ativa bloco">
+            <h2 class="text-xl underline mb-4">ETAPA 1: IDENTIFICAÇÃO</h2>
+            <label>NOME COMPLETO DO CLIENTE (OBRIGATÓRIO)</label>
+            <input type="text" id="nome_cliente" required>
+            
+            <label>WHATSAPP COM 11 DÍGITOS (OBRIGATÓRIO)</label>
+            <input type="text" id="whatsapp" maxlength="11" placeholder="11999999999" required>
+            
+            <label>ENDEREÇO COMPLETO (SÓ ATENDEMOS BAIRRO SOL NASCENTE)</label>
+            <textarea id="endereco" required></textarea>
+            
+            <button class="btn-proximo" onclick="irPara(2)">PRÓXIMA ETAPA</button>
         </div>
 
-        <!-- ETAPA 1: CLIENTE -->
-        <div id="etapa1" class="step-card active p-6">
-            <span class="badge-regra">Etapa 01/04 • IDENTIFICAÇÃO</span>
-            <label>Nome Completo do Cliente *</label>
-            <input type="text" id="nome" placeholder="Seu nome aqui">
-            
-            <label>WhatsApp (11 dígitos) *</label>
-            <input type="text" id="whatsapp" maxlength="11" placeholder="11912345678">
-            
-            <label>Endereço Completo *</label>
-            <textarea id="endereco" rows="2" placeholder="Rua, número..."></textarea>
-            <p class="text-xs font-black mb-4">⚠️ ATENÇÃO: ATENDEMOS APENAS O BAIRRO SOL NASCENTE.</p>
-            
-            <button class="btn-acao" onclick="irEtapa(2)">PRÓXIMA ETAPA: OS PETS</button>
-        </div>
-
-        <!-- ETAPA 2: PETS -->
-        <div id="etapa2" class="step-card p-6">
-            <span class="badge-regra">Etapa 02/04 • DADOS DO PET</span>
-            <label>Quantos pets deseja agendar?</label>
-            <select id="qtdPets" onchange="renderPets()">
-                <option value="1">1 Pet</option>
-                <option value="2">2 Pets</option>
-                <option value="3">3 Pets</option>
-                <option value="4">4 Pets</option>
+        <!-- ETAPA 2 -->
+        <div id="etapa2" class="etapa bloco">
+            <h2 class="text-xl underline mb-4">ETAPA 2: DADOS DOS PETS</h2>
+            <label>QUANTIDADE DE PETS (ATÉ 4)</label>
+            <select id="qtd_pets" onchange="gerarCamposPets()">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
             </select>
             
-            <div id="listaPets" class="max-h-60 overflow-y-auto mb-4 border-t-2 border-black pt-4">
-                <!-- Injetado via JS -->
-            </div>
+            <div id="container_pets"></div>
             
-            <div class="flex gap-2">
-                <button class="btn-acao bg-gray-100 text-black border-gray-400" onclick="irEtapa(1)">VOLTAR</button>
-                <button class="btn-acao" onclick="irEtapa(3)">PRÓXIMO: SERVIÇOS</button>
-            </div>
+            <button class="btn-proximo" onclick="irPara(3)">PRÓXIMA ETAPA</button>
         </div>
 
-        <!-- ETAPA 3: SERVIÇO -->
-        <div id="etapa3" class="step-card p-6">
-            <span class="badge-regra">Etapa 03/04 • TIPO DE SERVIÇO</span>
-            <label>Escolha a modalidade:</label>
-            <div class="grid grid-cols-2 gap-2 mb-4">
-                <button id="btnAvulso" class="btn-acao bg-black text-white" onclick="selectTipo('Avulso')">AVULSO</button>
-                <button id="btnPacote" class="btn-acao" onclick="selectTipo('Pacote')">PACOTES</button>
-            </div>
-
-            <label>Selecione o Serviço:</label>
-            <select id="servicoFinal">
-                <!-- Injetado via JS -->
+        <!-- ETAPA 3 -->
+        <div id="etapa3" class="etapa bloco">
+            <h2 class="text-xl underline mb-4">ETAPA 3: TIPO DE PACOTE OU AVULSO</h2>
+            <select id="tipo_servico" onchange="mostrarServicos()">
+                <option value="">SELECIONE UMA OPÇÃO...</option>
+                <option value="avulso">AVULSO (CLIENTE ESCOLHE O SERVIÇO)</option>
+                <option value="basico">PACOTE BÁSICO (1 BANHO + 1 BANHO/TOSA HIG)</option>
+                <option value="basico_tosa">PACOTE BÁSICO COM TOSA (1 BANHO + 1 BANHO/TOSA)</option>
+                <option value="premium">PACOTE PREMIUM (3 BANHOS + 1 BANHO/TOSA HIG)</option>
             </select>
 
-            <div class="flex gap-2 mt-4">
-                <button class="btn-acao bg-gray-100 text-black" onclick="irEtapa(2)">VOLTAR</button>
-                <button class="btn-acao" onclick="irEtapa(4)">PRÓXIMO: HORÁRIO</button>
+            <div id="servicos_avulsos" class="hidden">
+                <label>ESCOLHA O SERVIÇO AVULSO:</label>
+                <select id="servico_final">
+                    <option>BANHO</option>
+                    <option>BANHO + TOSA HIGIÊNICA</option>
+                    <option>BANHO + TOSA</option>
+                </select>
             </div>
+
+            <button class="btn-proximo mt-4" onclick="irPara(4)">PRÓXIMA ETAPA</button>
         </div>
 
-        <!-- ETAPA 4: CALENDÁRIO -->
-        <div id="etapa4" class="step-card p-6">
-            <span class="badge-regra">Etapa 04/04 • DATA E HORA</span>
-            <label>Data (Qua a Dom)</label>
-            <input type="date" id="inputData" onchange="gerarHorarios()">
-            <p id="msgData" class="text-[10px] mb-4 font-black"></p>
-
-            <label>Horários disponíveis para este pet:</label>
-            <div id="gridHoras" class="grid grid-cols-2 gap-2 mt-2">
-                <!-- Horários dinâmicos -->
-            </div>
-
-            <button class="btn-acao mt-6 bg-red-600 text-white" onclick="irEtapa(5)">FINALIZAR AGENDAMENTO</button>
+        <!-- ETAPA 4 -->
+        <div id="etapa4" class="etapa bloco">
+            <h2 class="text-xl underline mb-4">ETAPA 4: DATA E HORA</h2>
+            <p class="aviso">* Mês seguinte disponível apenas após o dia 20.</p>
+            <input type="date" id="data_agenda" onchange="carregarHorarios()">
+            
+            <div id="lista_horarios" class="grid grid-cols-1 gap-2 mt-4"></div>
+            
+            <button class="btn-proximo mt-6 w-full" style="background-color: #ff0000; color: #fff;" onclick="finalizar()">CONFIRMAR AGENDAMENTO</button>
         </div>
 
-        <!-- FINAL -->
-        <div id="etapa5" class="step-card p-8 text-center">
-            <h2 class="text-3xl font-black mb-4">AGENDAMENTO CONFIRMADO!</h2>
-            <p class="text-xl mb-6">Logo mais nossa equipe entrará em contato para passar valores.</p>
-            <div class="border-4 border-black p-4 bg-yellow-200 text-black font-black mb-6">
-                ENVIE UMA FOTO DO PET IMEDIATAMENTE PARA ACELERAR O PROCESSO.
-            </div>
-            <button class="underline font-black text-black" onclick="location.reload()">NOVO AGENDAMENTO</button>
+        <!-- MENSAGEM FINAL -->
+        <div id="final" class="etapa bloco text-center">
+            <p class="text-2xl mb-4">AGENDAMENTO CONFIRMADO!</p>
+            <p class="text-xl mb-4">LOGO MAIS NOSSA EQUIPE ENTRARÁ EM CONTATO PARA PASSAR VALORES.</p>
+            <p class="border-2 border-black p-2 bg-white text-black">DE IMEDIATO ENVIE UMA FOTO DO PET PARA ACELERAR O PROCESSO.</p>
+            <button class="mt-6 text-black underline" onclick="location.reload()">CANCELAR SERVIÇO / VOLTAR</button>
         </div>
     </div>
 
     <script>
-        function irEtapa(n) {
-            document.querySelectorAll('.step-card').forEach(c => c.classList.remove('active'));
-            document.getElementById('etapa'+n).classList.add('active');
-            if(n === 2) renderPets();
-            if(n === 3) selectTipo('Avulso');
-            if(n === 4) configurarDatas();
+        function irPara(n) {
+            document.querySelectorAll('.etapa').forEach(e => e.classList.remove('ativa'));
+            document.getElementById('etapa' + n).classList.add('ativa');
+            if(n === 2) gerarCamposPets();
+            if(n === 4) limitarCalendario();
         }
 
-        function renderPets() {
-            const qtd = document.getElementById('qtdPets').value;
-            const container = document.getElementById('listaPets');
+        function gerarCamposPets() {
+            const qtd = document.getElementById('qtd_pets').value;
+            const container = document.getElementById('container_pets');
             container.innerHTML = '';
             for(let i=1; i<=qtd; i++) {
                 container.innerHTML += `
-                <div class="mb-6 border-b border-black pb-4">
-                    <p class="font-black text-black underline mb-2 italic">DADOS DO PET #${i}</p>
-                    <label>Nome do Pet *</label><input type="text" required>
-                    <label>Espécie</label><select><option>Cachorro</option><option>Gato</option></select>
-                    <label>Porte (Se cachorro)</label>
+                <div class="bloco mt-2" style="background: #fff;">
+                    <p class="text-black">PET #${i}</p>
+                    <label>NOME DO PET (OBRIGATÓRIO)</label><input type="text" required>
+                    <label>ESPÉCIE</label><select><option>CACHORRO</option><option>GATO</option></select>
+                    <label>PORTE</label>
                     <select>
-                        <option>Pequeno</option><option>Médio</option>
-                        <option>Grande (Pelo Curto)</option><option>Grande (Peludo)</option>
+                        <option>PEQUENO</option><option>MÉDIO</option>
+                        <option>GRANDE PELO CURTO</option><option>GRANDE PELUDO</option>
                     </select>
-                    <label>Possui Alergia?</label><select><option>Não</option><option>Sim</option></select>
+                    <label>ALERGIA?</label><select><option>NÃO</option><option>SIM</option></select>
+                    <label>OBSERVAÇÃO</label><input type="text">
                 </div>`;
             }
         }
 
-        function selectTipo(tipo) {
-            const sel = document.getElementById('servicoFinal');
-            sel.innerHTML = '';
-            document.getElementById('btnAvulso').className = tipo === 'Avulso' ? 'btn-acao bg-black text-white' : 'btn-acao';
-            document.getElementById('btnPacote').className = tipo === 'Pacote' ? 'btn-acao bg-black text-white' : 'btn-acao';
-            
-            const opts = tipo === 'Avulso' 
-                ? ['Banho', 'Banho + Tosa Higiênica', 'Banho + Tosa']
-                : ['Básico (1 Banho + 1 Tosa Hig)', 'Básico Tosa (1 Banho + 1 Tosa)', 'Premium (3 Banhos + 1 Tosa Hig)'];
-            opts.forEach(o => sel.innerHTML += `<option>${o}</option>`);
+        function mostrarServicos() {
+            const tipo = document.getElementById('tipo_servico').value;
+            document.getElementById('servicos_avulsos').className = (tipo === 'avulso') ? 'block' : 'hidden';
         }
 
-        function configurarDatas() {
-            const input = document.getElementById('inputData');
+        function limitarCalendario() {
+            const campo = document.getElementById('data_agenda');
             const hoje = new Date();
-            input.min = hoje.toISOString().split('T')[0];
-            
-            const msg = document.getElementById('msgData');
-            if(hoje.getDate() < 20) {
+            campo.min = hoje.toISOString().split("T")[0];
+            if (hoje.getDate() < 20) {
                 const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
-                input.max = ultimoDia.toISOString().split('T')[0];
-                msg.innerText = "PRÓXIMO MÊS LIBERA DIA 20.";
-            } else {
-                msg.innerText = "MÊS ATUAL E PRÓXIMO DISPONÍVEIS.";
+                campo.max = ultimoDia.toISOString().split("T")[0];
             }
         }
 
-        function gerarHorarios() {
-            const grid = document.getElementById('gridHoras');
-            grid.innerHTML = '';
-            const horas = ["09:00", "10:00", "11:00", "13:30", "14:30", "15:30", "16:00"];
-            horas.forEach(h => {
-                grid.innerHTML += `<button class="btn-acao text-sm py-2" onclick="this.style.background='#000'; this.style.color='#fff'">${h}</button>`;
+        function carregarHorarios() {
+            const lista = document.getElementById('lista_horarios');
+            lista.innerHTML = '<p class="text-black">HORÁRIOS SEGUINDO AS REGRAS DA NILO PET:</p>';
+            const horarios = ["09:00", "10:00", "11:00", "13:30", "14:30", "15:30", "16:00"];
+            horarios.forEach(h => {
+                lista.innerHTML += `<button class="btn-proximo text-sm" onclick="alert('Selecionado: '+h)">${h}</button>`;
             });
+        }
+
+        function finalizar() {
+            document.querySelectorAll('.etapa').forEach(e => e.classList.remove('ativa'));
+            document.getElementById('final').classList.add('ativa');
         }
     </script>
 </body>
 </html>
+
 
