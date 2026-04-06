@@ -22,7 +22,7 @@
         .status-bar { display: flex; gap: 5px; margin-bottom: 15px; }
         .ponto { height: 8px; flex: 1; border: 2px solid var(--preto); background: white; border-radius: 5px; }
         .ponto.ativo { background: var(--vermelho); }
-        .bloqueado { background: #e0e0e0 !important; color: #888 !important; cursor: not-allowed; }
+        .resumo-pacote { font-size: 11px; color: #000; margin-top: 10px; padding: 10px; background: #eee; border-radius: 5px; border: 1px solid black; }
     </style>
 </head>
 <body>
@@ -33,6 +33,7 @@
         <div id="p1" class="ponto ativo"></div><div id="p2" class="ponto"></div><div id="p3" class="ponto"></div><div id="p4" class="ponto"></div>
     </div>
 
+    <!-- ETAPA 1 -->
     <div class="etapa ativa" id="e1">
         <label>NOME DO CLIENTE*</label>
         <input type="text" id="nome_cli" required>
@@ -44,6 +45,7 @@
         <button onclick="irPara(2)">PRÓXIMO 🐾</button>
     </div>
 
+    <!-- ETAPA 2 -->
     <div class="etapa" id="e2">
         <label>QUANTIDADE DE PETS (MÁX 4)</label>
         <select id="qtd_pets" onchange="renderizarPets()">
@@ -54,19 +56,20 @@
         <button style="background:#666" onclick="irPara(1)">VOLTAR</button>
     </div>
 
+    <!-- ETAPA 3: SERVIÇOS E REGRAS DE PACOTE -->
     <div class="etapa" id="e3">
         <div id="container_servicos"></div>
         <button onclick="irPara(4)">ESCOLHER DATA 📅</button>
         <button style="background:#666" onclick="irPara(2)">VOLTAR</button>
     </div>
 
+    <!-- ETAPA 4 -->
     <div class="etapa" id="e4">
         <label>DATA (Próximo mês só após dia 20):</label>
         <input type="date" id="data_final" onchange="validarRegraData(this)">
         <label>HORÁRIOS DISPONÍVEIS:</label>
         <select id="horarios_final"></select>
-        <button style="background:var(--vermelho)" onclick="finalizarTudo()">FINALIZAR AGENDAMENTO ✅</button>
-        <button style="background:#666" onclick="irPara(3)">VOLTAR</button>
+        <button style="background:var(--vermelho)" onclick="finalizarTudo()">FINALIZAR ✅</button>
     </div>
 </div>
 
@@ -87,7 +90,7 @@
             div.innerHTML += `<div class="pet-box">
                 <label>NOME DO PET ${i}*</label><input type="text" class="p_nome" id="nome_pet_${i}" required>
                 <label>ESPÉCIE</label><select><option>Cachorro</option><option>Gato</option></select>
-                <label>PORTE</label><select id="porte_${i}"><option>Pequeno</option><option>Médio</option><option>Grande pelo curto</option><option>Grande peludo</option></select>
+                <label>PORTE</label><select><option>Pequeno</option><option>Médio</option><option>Grande pelo curto</option><option>Grande peludo</option></select>
                 <label>ALERGIA?</label><select><option>Não</option><option>Sim</option></select>
                 <textarea placeholder="Obs de alergia"></textarea>
             </div>`;
@@ -103,41 +106,44 @@
             div.innerHTML += `<div class="pet-box">
                 <strong>PET: ${nomePet.toUpperCase()}</strong>
                 <label>TIPO DE PLANO:</label>
-                <select id="plano_${i}" onchange="aplicarRegraPacote(${i})">
-                    <option value="avulso">Avulso (Escolher serviço abaixo)</option>
-                    <option value="basico">Básico (1 Banho + 1 Higiênica)</option>
-                    <option value="basico_tosa">Básico com Tosa (1 Banho + 1 Tosa)</option>
-                    <option value="premium">Premium (3 Banhos + 1 Higiênica)</option>
+                <select id="plano_${i}" onchange="atualizarInfoPacote(${i})">
+                    <option value="avulso">Avulso (Escolher abaixo)</option>
+                    <option value="basico">Básico</option>
+                    <option value="basico_tosa">Básico com Tosa</option>
+                    <option value="premium">Premium</option>
                 </select>
-                <label>SERVIÇO ESPECÍFICO:</label>
-                <select id="servico_${i}">
-                    <option value="banho">Banho</option>
-                    <option value="higiene">Banho + Tosa Higiênica</option>
-                    <option value="tosa">Banho + Tosa</option>
-                </select>
+                <div id="detalhe_${i}">
+                    <label>SERVIÇO:</label>
+                    <select id="servico_${i}">
+                        <option value="banho">Banho</option>
+                        <option value="higiene">Banho + Tosa Higiênica</option>
+                        <option value="tosa">Banho + Tosa</option>
+                    </select>
+                </div>
+                <div id="info_pacote_${i}" class="resumo-pacote" style="display:none;"></div>
             </div>`;
         }
     }
 
-    function aplicarRegraPacote(id) {
+    function atualizarInfoPacote(id) {
         const plano = document.getElementById(`plano_${id}`).value;
-        const servicoSelect = document.getElementById(`servico_${id}`);
+        const divInfo = document.getElementById(`info_pacote_${id}`);
+        const divServico = document.getElementById(`detalhe_${id}`);
         
-        if (plano === "basico") {
-            servicoSelect.value = "higiene";
-            servicoSelect.disabled = true;
-            servicoSelect.classList.add("bloqueado");
-        } else if (plano === "basico_tosa") {
-            servicoSelect.value = "tosa";
-            servicoSelect.disabled = true;
-            servicoSelect.classList.add("bloqueado");
-        } else if (plano === "premium") {
-            servicoSelect.value = "higiene";
-            servicoSelect.disabled = true;
-            servicoSelect.classList.add("bloqueado");
+        divInfo.style.display = "block";
+        divServico.style.display = "block";
+
+        if(plano === "basico") {
+            divInfo.innerHTML = "<strong>O que inclui:</strong><br>• 1 Banho<br>• 1 Banho + Tosa Higiênica";
+            divServico.style.display = "none";
+        } else if(plano === "basico_tosa") {
+            divInfo.innerHTML = "<strong>O que inclui:</strong><br>• 1 Banho<br>• 1 Banho + Tosa";
+            divServico.style.display = "none";
+        } else if(plano === "premium") {
+            divInfo.innerHTML = "<strong>O que inclui:</strong><br>• 3 Banhos<br>• 1 Banho + Tosa Higiênica<br><em>* 5º banho opcional em meses de 5 semanas.</em>";
+            divServico.style.display = "none";
         } else {
-            servicoSelect.disabled = false;
-            servicoSelect.classList.remove("bloqueado");
+            divInfo.style.display = "none";
         }
     }
 
@@ -159,7 +165,7 @@
 
     function finalizarTudo() {
         alert("Agendamento confirmado! Logo mais nossa equipe entrará em contato para passar valores. De imediato envie uma foto do pet para acelerar o processo.");
-        window.open("https://wa.me Nilo Pet! Agendamento realizado com sucesso.");
+        window.open("https://wa.me Nilo Pet! Agendamento realizado.");
     }
 </script>
 </body>
