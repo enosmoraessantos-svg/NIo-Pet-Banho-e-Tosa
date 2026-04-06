@@ -1,138 +1,47 @@
-// pages/index.js
-import React, { useState, useEffect } from 'react';
-import { format, addMonths, isAfter, isBefore, startOfMonth, endOfMonth } from 'date-fns';
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nilo Pet - Agendamento</title>
+    <script src="https://tailwindcss.com"></script>
+    <style>
+        body { background-color: #e0f2fe; color: #dc2626; font-family: sans-serif; }
+        .border-nilo { border: 3px solid black; }
+        .step { display: none; }
+        .step.active { display: block; }
+    </script>
+</head>
+<body class="p-4">
 
-export default function AgendamentoNiloPet() {
-  const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
-    nomeCliente: '',
-    whatsapp: '',
-    endereco: '',
-    tipoAgendamento: 'avulso', // avulso, basico, basico_tosa, premium
-    pets: [{ nome: '', especie: 'cachorro', porte: 'Pequeno', alergia: 'Não', obsAlergia: '' }],
-    data: '',
-    horario: ''
-  });
-
-  // Regras de bloqueio de calendário
-  const isDateDisabled = (date) => {
-    const hoje = new Date();
-    const proximoMes = addMonths(startOfMonth(hoje), 1);
-    const dia20Vigente = new Date(hoje.getFullYear(), hoje.getMonth(), 20);
-
-    // Bloqueia dias anteriores
-    if (isBefore(date, hoje)) return true;
-    
-    // Libera mês seguinte apenas após dia 20
-    if (isAfter(date, endOfMonth(hoje)) && isBefore(hoje, dia20Vigente)) return true;
-    
-    return false;
-  };
-
-  const nextStep = () => setStep(step + 1);
-  const prevStep = () => setStep(step - 1);
-
-  return (
-    <div className="min-h-screen bg-blue-50 p-4 font-sans border-4 border-black text-red-600">
-      <header className="text-center mb-8">
-        <h1 className="text-3xl font-bold uppercase tracking-tighter">Nilo Pet Banho e Tosa</h1>
-        <p className="font-bold">Etapa {step} de 4</p>
-      </header>
-
-      <main className="max-w-2xl mx-auto bg-white border-2 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+    <div class="max-w-md mx-auto bg-white border-nilo shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6">
+        <h1 class="text-2xl font-black text-center mb-6 uppercase">Nilo Pet Banho e Tosa</h1>
         
-        {/* ETAPA 1: DADOS DO CLIENTE */}
-        {step === 1 && (
-          <section className="space-y-4">
-            <h2 className="text-xl font-bold border-b-2 border-black pb-2">Dados do Tutor</h2>
-            <div>
-              <label className="block font-bold">NOME COMPLETO *</label>
-              <input type="text" required className="w-full border-2 border-black p-2 outline-none focus:bg-red-50" 
-                onChange={(e) => setFormData({...formData, nomeCliente: e.target.value})} />
-            </div>
-            <div>
-              <label className="block font-bold">WHATSAPP (11 DÍGITOS) *</label>
-              <input type="tel" maxLength="11" className="w-full border-2 border-black p-2" 
-                placeholder="11999999999" onChange={(e) => setFormData({...formData, whatsapp: e.target.value})} />
-            </div>
-            <div>
-              <label className="block font-bold">ENDEREÇO (Somente Sol Nascente) *</label>
-              <input type="text" className="w-full border-2 border-black p-2" 
-                placeholder="Rua, número..." onChange={(e) => setFormData({...formData, endereco: e.target.value})} />
-            </div>
-            <button onClick={nextStep} className="w-full bg-red-600 text-white font-bold p-3 border-2 border-black hover:bg-red-700">PRÓXIMO</button>
-          </section>
-        )}
-
-        {/* ETAPA 2: OS PETS */}
-        {step === 2 && (
-          <section className="space-y-4">
-            <h2 className="text-xl font-bold border-b-2 border-black pb-2">Informações dos Pets</h2>
-            {formData.pets.map((pet, index) => (
-              <div key={index} className="p-4 border-2 border-black mb-4 bg-blue-50">
-                <label className="block font-bold">NOME DO PET {index + 1} *</label>
-                <input type="text" className="w-full border-2 border-black p-2 mb-2" />
-                
-                <label className="block font-bold">ESPÉCIE</label>
-                <select className="w-full border-2 border-black p-2 mb-2">
-                  <option>Cachorro</option>
-                  <option>Gato</option>
-                </select>
-
-                <label className="block font-bold">PORTE / PELO</label>
-                <select className="w-full border-2 border-black p-2">
-                  <option>Pequeno</option>
-                  <option>Médio</option>
-                  <option>Grande Pelo Curto</option>
-                  <option>Grande Peludo</option>
-                </select>
-              </div>
-            ))}
-            <div className="flex gap-2">
-              <button onClick={prevStep} className="w-1/2 border-2 border-black p-3 font-bold">VOLTAR</button>
-              <button onClick={nextStep} className="w-1/2 bg-red-600 text-white font-bold p-3 border-2 border-black">PRÓXIMO</button>
-            </div>
-          </section>
-        )}
-
-        {/* ETAPA 3: SERVIÇOS E PACOTES */}
-        {step === 3 && (
-          <section className="space-y-4">
-            <h2 className="text-xl font-bold border-b-2 border-black pb-2">Tipo de Serviço</h2>
-            <div className="grid grid-cols-1 gap-2">
-              {['Avulso', 'Básico', 'Básico com Tosa', 'Premium'].map((tipo) => (
-                <button key={tipo} onClick={() => setFormData({...formData, tipoAgendamento: tipo})}
-                  className={`p-4 border-2 border-black font-bold ${formData.tipoAgendamento === tipo ? 'bg-red-600 text-white' : 'bg-white'}`}>
-                  {tipo}
-                </button>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <button onClick={prevStep} className="w-1/2 border-2 border-black p-3 font-bold">VOLTAR</button>
-              <button onClick={nextStep} className="w-1/2 bg-red-600 text-white font-bold p-3 border-2 border-black">PRÓXIMO</button>
-            </div>
-          </section>
-        )}
-
-        {/* ETAPA 4: DATA E HORA (Lógica de Regras) */}
-        {step === 4 && (
-          <section className="space-y-4">
-            <h2 className="text-xl font-bold border-b-2 border-black pb-2">Finalizar Agendamento</h2>
-            <p className="text-sm italic text-black">A seleção abaixo respeita as vagas de banho/tosa por horário.</p>
-            <input type="date" className="w-full border-2 border-black p-2" onChange={(e) => {/* Validar Regras aqui */}} />
+        <!-- ETAPA 1 -->
+        <div id="step1" class="step active">
+            <h2 class="font-bold border-b-2 border-black mb-4">Etapa 1: Seus Dados</h2>
+            <label class="block font-bold">NOME COMPLETO *</label>
+            <input type="text" class="w-full border-2 border-black p-2 mb-4 outline-none">
             
-            <div className="bg-yellow-100 p-4 border-2 border-black text-black text-sm">
-              <strong>SURPRESA (Cancelamento Inteligente):</strong><br/>
-              Ao confirmar, você terá um "Link Único" via WhatsApp. Se cancelar com 2h de antecedência, o sistema gera automaticamente um cupom de 5% de desconto para sua próxima tentativa!
-            </div>
+            <label class="block font-bold">WHATSAPP (11 DÍGITOS) *</label>
+            <input type="tel" class="w-full border-2 border-black p-2 mb-4">
 
-            <button onClick={() => alert('Agendamento confirmado! Logo mais nossa equipe entrará em contato para passar valores, de imediato envie uma foto do pet para acelerar o processo.')} 
-              className="w-full bg-red-600 text-white font-bold p-4 border-2 border-black text-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-              CONFIRMAR AGENDAMENTO
-            </button>
-          </section>
-        )}
-      </main>
+            <label class="block font-bold">ENDEREÇO (Sol Nascente) *</label>
+            <input type="text" class="w-full border-2 border-black p-2 mb-6">
+
+            <button onclick="nextStep(2)" class="w-full bg-red-600 text-white font-bold p-3 border-2 border-black">PRÓXIMO</button>
+        </div>
+
+        <!-- ETAPA 2 (Pets), ETAPA 3 (Serviços) e ETAPA 4 (Data) seguiriam aqui -->
+        <!-- O sistema de bloqueio de datas e cálculo de vagas ficaria no script abaixo -->
+
     </div>
-  );
-}
+
+    <script>
+        function nextStep(step) {
+            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+            document.getElementById('step' + step).classList.add('active');
+        }
+    </script>
+</body>
+</html>
