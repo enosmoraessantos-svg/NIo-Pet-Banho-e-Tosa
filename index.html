@@ -2,144 +2,202 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nilo Pet - Agendamento Profissional</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nilo Pet - Agendamento</title>
     <script src="https://tailwindcss.com"></script>
-    <link href="https://googleapis.com" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f0f9ff; }
-        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 24px; border: 2px solid #000; box-shadow: 8px 8px 0px 0px #000; }
-        .step-content { display: none; transition: all 0.3s ease; }
-        .step-content.active { display: block; animation: fadeIn 0.5s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        input, select { border-radius: 12px !important; border: 2px solid #e2e8f0; transition: all 0.2s; color: #1e293b; }
-        input:focus { border-color: #dc2626; ring: 2px; ring-color: #fca5a5; outline: none; }
-        .progress-bar { height: 8px; border-radius: 4px; background: #e2e8f0; overflow: hidden; }
-        .progress-fill { height: 100%; background: #dc2626; transition: width 0.4s ease; }
+        @import url('https://googleapis.com');
+        
+        body { 
+            background-color: #e0f2fe; /* Azul claro solicitado */
+            color: #dc2626; /* Vermelho solicitado */
+            font-family: 'Lexend', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container-nilo {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            border-left: 6px solid black;
+            border-right: 6px solid black;
+            padding: 20px;
+        }
+
+        .input-nilo {
+            width: 100%;
+            padding: 18px;
+            font-size: 18px;
+            border: 3px solid black;
+            color: black !important;
+            margin-bottom: 20px;
+            border-radius: 0px;
+            background: #f8fafc;
+        }
+
+        .btn-proximo {
+            width: 100%;
+            background: #dc2626;
+            color: white;
+            font-weight: 900;
+            font-size: 22px;
+            padding: 22px;
+            border: 4px solid black;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 6px 6px 0px 0px rgba(0,0,0,1);
+            margin-top: 10px;
+        }
+
+        .btn-proximo:active {
+            transform: translate(3px, 3px);
+            box-shadow: 2px 2px 0px 0px rgba(0,0,0,1);
+        }
+
+        .etapa { display: none; }
+        .active { display: block; animation: slideIn 0.3s ease-out; }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        label { font-weight: 900; text-transform: uppercase; font-size: 14px; display: block; margin-bottom: 5px; }
+        
+        .progresso {
+            background: #fee2e2;
+            height: 12px;
+            border: 2px solid black;
+            margin-bottom: 30px;
+        }
+        .barra { background: #dc2626; height: 100%; transition: width 0.3s; }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4 md:p-8">
+<body>
 
-    <div class="max-w-xl w-full glass-card p-6 md:p-10">
-        <!-- HEADER -->
-        <header class="text-center mb-8">
-            <div class="inline-block bg-red-600 text-white px-4 py-1 rounded-full text-xs font-bold mb-2 uppercase tracking-widest">Agendamento Online</div>
-            <h1 class="text-3xl font-extrabold text-slate-900 leading-tight">Nilo Pet <span class="text-red-600">Banho e Tosa</span></h1>
-            <div class="mt-6">
-                <div class="progress-bar"><div id="progressFill" class="progress-fill" style="width: 25%"></div></div>
-                <p id="stepIndicator" class="text-xs font-bold text-slate-500 mt-2 uppercase tracking-tighter">Etapa 1 de 4: Seus Dados</p>
-            </div>
-        </header>
+    <div class="container-nilo">
+        <!-- CABEÇALHO -->
+        <div class="text-center mb-6">
+            <h1 class="text-4xl font-black italic tracking-tighter uppercase leading-none">Nilo Pet</h1>
+            <p class="font-bold text-black border-b-4 border-black pb-2 inline-block w-full">BANHO E TOSA</p>
+        </div>
 
-        <form id="niloForm">
-            <!-- ETAPA 1: CLIENTE -->
-            <div id="step1" class="step-content active">
-                <div class="space-y-5">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Nome do Tutor</label>
-                        <input type="text" id="nome" placeholder="Digite seu nome completo" class="w-full p-4 bg-slate-50 focus:bg-white">
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-bold text-slate-700 mb-1">WhatsApp (DDD)</label>
-                            <input type="tel" id="whatsapp" placeholder="(11) 99999-9999" class="w-full p-4 bg-slate-50">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-slate-700 mb-1">Bairro</label>
-                            <input type="text" value="Sol Nascente" disabled class="w-full p-4 bg-slate-100 font-semibold text-slate-500 cursor-not-allowed">
-                        </div>
-                    </div>
-                    <button type="button" onclick="goToStep(2)" class="w-full bg-red-600 hover:bg-red-700 text-white font-extrabold p-5 rounded-2xl shadow-lg transition-all transform active:scale-95 uppercase tracking-wide">Continuar</button>
+        <div class="progresso"><div id="barraProgresso" class="barra" style="width: 25%;"></div></div>
+
+        <form id="formAgendamento">
+            
+            <!-- ETAPA 1: TUTOR -->
+            <div id="step1" class="etapa active">
+                <label>Nome do Tutor *</label>
+                <input type="text" id="nomeTutor" placeholder="Ex: João Silva" class="input-nilo" required>
+
+                <label>WhatsApp (11 dígitos) *</label>
+                <input type="tel" id="telTutor" placeholder="11988887777" class="input-nilo" required>
+
+                <label>Endereço Completo (Rua e Número) *</label>
+                <div class="relative">
+                    <input type="text" id="ruaTutor" placeholder="Rua das Flores, 123" class="input-nilo" required>
+                    <div class="bg-black text-white p-2 text-sm font-bold mt-[-20px] mb-6">Bairro: SOL NASCENTE (Obrigatório)</div>
                 </div>
+
+                <button type="button" onclick="nextStep(2)" class="btn-proximo">Continuar ➔</button>
             </div>
 
             <!-- ETAPA 2: PETS -->
-            <div id="step2" class="step-content">
-                <div class="space-y-4">
-                    <div class="p-5 border-2 border-slate-100 rounded-2xl bg-slate-50">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-bold text-slate-800">Informações do Pet</h3>
-                            <span class="text-[10px] bg-slate-200 px-2 py-1 rounded-md font-bold text-slate-600 uppercase">Pet 01</span>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3 mb-3">
-                            <select id="especie" class="p-3">
-                                <option>Cachorro</option>
-                                <option>Gato</option>
-                            </select>
-                            <input type="text" placeholder="Nome do Pet" class="p-3">
-                        </div>
-                        <select id="porte" class="w-full p-3 mb-3">
-                            <option>Porte Pequeno</option>
-                            <option>Porte Médio</option>
-                            <option>Grande (Pelo Curto)</option>
-                            <option>Grande (Peludo)</option>
-                        </select>
-                        <input type="text" placeholder="Alguma alergia ou observação?" class="w-full p-3">
-                    </div>
-                    <div class="flex gap-3">
-                        <button type="button" onclick="goToStep(1)" class="w-1/3 border-2 border-black font-bold rounded-2xl p-4 hover:bg-slate-100">Voltar</button>
-                        <button type="button" onclick="goToStep(3)" class="w-2/3 bg-red-600 text-white font-extrabold rounded-2xl p-4 shadow-lg uppercase">Próximo</button>
-                    </div>
+            <div id="step2" class="etapa">
+                <h3 class="font-black text-2xl mb-4 text-black uppercase underline">Dados do Pet</h3>
+                
+                <label>Espécie</label>
+                <select id="especie" class="input-nilo">
+                    <option>Cachorro</option>
+                    <option>Gato</option>
+                </select>
+
+                <label>Nome do Pet *</label>
+                <input type="text" id="nomePet" placeholder="Ex: Thor" class="input-nilo">
+
+                <label>Porte do Pet</label>
+                <select id="porte" class="input-nilo">
+                    <option>Pequeno</option>
+                    <option>Médio</option>
+                    <option>Grande (Pelo Curto)</option>
+                    <option>Grande (Peludo)</option>
+                </select>
+
+                <label>Possui Alergia?</label>
+                <input type="text" id="alergia" placeholder="Não / Sim (quais?)" class="input-nilo">
+
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="button" onclick="nextStep(1)" class="p-4 border-4 border-black font-black text-black">VOLTAR</button>
+                    <button type="button" onclick="nextStep(3)" class="btn-proximo !mt-0">PRÓXIMO</button>
                 </div>
             </div>
 
             <!-- ETAPA 3: SERVIÇOS -->
-            <div id="step3" class="step-content">
-                <div class="grid grid-cols-1 gap-3">
-                    <label class="relative flex items-center p-4 border-2 border-slate-200 rounded-2xl cursor-pointer hover:border-red-600 transition group">
-                        <input type="radio" name="plan" class="hidden" checked>
-                        <div class="flex flex-col">
-                            <span class="font-bold text-slate-800">Serviço Avulso</span>
-                            <span class="text-xs text-slate-500">Banho, Tosa ou Higiênica na hora</span>
-                        </div>
+            <div id="step3" class="etapa">
+                <h3 class="font-black text-2xl mb-4 text-black uppercase underline">Escolha o Serviço</h3>
+                
+                <div class="space-y-3">
+                    <label class="block p-4 border-4 border-black bg-slate-50 cursor-pointer">
+                        <input type="radio" name="servico" value="Avulso" checked> <span class="ml-2 text-black font-black uppercase">Avulso (Banho/Tosa)</span>
                     </label>
-                    <label class="relative flex items-center p-4 border-2 border-slate-200 rounded-2xl cursor-pointer hover:border-red-600 transition">
-                        <input type="radio" name="plan" class="hidden">
-                        <div class="flex flex-col">
-                            <span class="font-bold text-slate-800 italic uppercase text-red-600">Pacote Premium ⭐</span>
-                            <span class="text-xs text-slate-500 text-black">3 Banhos + 1 Tosa Higiênica</span>
-                        </div>
+                    <label class="block p-4 border-4 border-black bg-slate-50 cursor-pointer">
+                        <input type="radio" name="servico" value="Básico"> <span class="ml-2 text-black font-black uppercase text-red-600 italic font-black">Pacote Básico</span>
+                    </label>
+                    <label class="block p-4 border-4 border-black bg-slate-50 cursor-pointer">
+                        <input type="radio" name="servico" value="Premium"> <span class="ml-2 text-black font-black uppercase text-red-600 italic font-black">Pacote Premium ⭐</span>
                     </label>
                 </div>
-                <div class="flex gap-3 mt-6">
-                    <button type="button" onclick="goToStep(2)" class="w-1/3 border-2 border-black font-bold rounded-2xl p-4">Voltar</button>
-                    <button type="button" onclick="goToStep(4)" class="w-2/3 bg-red-600 text-white font-extrabold rounded-2xl p-4 shadow-lg uppercase">Próximo</button>
+
+                <div class="grid grid-cols-2 gap-2 mt-6">
+                    <button type="button" onclick="nextStep(2)" class="p-4 border-4 border-black font-black text-black">VOLTAR</button>
+                    <button type="button" onclick="nextStep(4)" class="btn-proximo !mt-0">PRÓXIMO</button>
                 </div>
             </div>
 
-            <!-- ETAPA 4: CALENDÁRIO -->
-            <div id="step4" class="step-content">
-                <div class="space-y-4">
-                    <input type="date" id="calendar" class="w-full p-4 font-bold bg-slate-50 rounded-2xl">
-                    <div id="timeGrid" class="grid grid-cols-3 gap-2">
-                        <!-- Horários dinâmicos via JS -->
-                    </div>
-                    <div class="bg-blue-50 p-4 rounded-2xl border-l-4 border-blue-500">
-                        <p class="text-[11px] text-blue-800 leading-snug font-medium">
-                            🚨 <strong>Dica Nilo:</strong> Envie a foto do seu pet após a confirmação para agilizarmos a avaliação do porte!
-                        </p>
-                    </div>
-                    <button type="button" onclick="finish()" class="w-full bg-slate-900 text-white font-black p-5 rounded-2xl shadow-xl hover:bg-black transition-all uppercase tracking-tighter text-lg">Confirmar Agendamento</button>
+            <!-- ETAPA 4: DATA -->
+            <div id="step4" class="etapa">
+                <h3 class="font-black text-2xl mb-4 text-black uppercase underline">Finalizar</h3>
+                
+                <label>Escolha o Dia:</label>
+                <input type="date" id="data" class="input-nilo font-bold">
+
+                <label>Horário Disponível:</label>
+                <select id="horarios" class="input-nilo font-bold">
+                    <option>09:00</option>
+                    <option>10:00 (Grande Curto)</option>
+                    <option>11:00</option>
+                    <option>13:30</option>
+                    <option>14:30</option>
+                    <option>15:30 (Grande Peludo)</option>
+                    <option>16:00 (Gato)</option>
+                </select>
+
+                <div class="bg-yellow-200 border-4 border-black p-4 text-black text-sm mb-6 font-bold">
+                    ⚠️ SURPRESA: Se precisar cancelar, avise 2h antes e ganhe desconto na próxima!
                 </div>
+
+                <button type="button" onclick="finalizar()" class="btn-proximo bg-black !border-red-600">CONFIRMAR AGENDAMENTO</button>
             </div>
         </form>
     </div>
 
     <script>
-        function goToStep(step) {
-            document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
-            document.getElementById('step' + step).classList.add('active');
-            
-            const progress = (step / 4) * 100;
-            document.getElementById('progressFill').style.width = progress + '%';
-            
-            const texts = ["", "Seus Dados", "Sobre o Pet", "Escolha o Plano", "Horário"];
-            document.getElementById('stepIndicator').innerText = "Etapa " + step + " de 4: " + texts[step];
+        function nextStep(n) {
+            document.querySelectorAll('.etapa').forEach(e => e.classList.remove('active'));
+            document.getElementById('step'+n).classList.add('active');
+            document.getElementById('barraProgresso').style.width = (n*25) + '%';
+            window.scrollTo(0,0);
         }
 
-        function finish() {
-            alert("✅ AGENDAMENTO CONFIRMADO!\n\nLogo mais nossa equipe entrará em contato para passar valores.\n\nENVIE UMA FOTO DO SEU PET AGORA PARA ACELERAR O PROCESSO.");
+        function finalizar() {
+            alert("✅ AGENDAMENTO CONFIRMADO!\n\nLogo mais nossa equipe entrará em contato para passar valores.\n\nENVIE UMA FOTO DO SEU PET IMEDIATAMENTE PARA ACELERAR.");
         }
+
+        // Bloqueio de datas passadas
+        document.getElementById('data').min = new Date().toISOString().split("T")[0];
     </script>
 </body>
 </html>
