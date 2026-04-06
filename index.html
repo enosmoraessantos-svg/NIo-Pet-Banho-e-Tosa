@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nilo Pet - Agendamento</title>
+    <script src="https://tailwindcss.com"></script>
+    <style>
+        body { background-color: #e0f2fe; color: #ff0000; font-weight: bold; }
+        .border-black-2 { border: 2px solid #000000; }
+        input, select, textarea { border: 2px solid #000000 !important; color: black !important; font-weight: normal; }
+        .btn-nilo { background-color: white; border: 2px solid #000000; color: #ff0000; padding: 10px; font-weight: 900; transition: 0.3s; }
+        .btn-nilo:hover { background-color: #ff0000; color: white; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="p-4 flex justify-center">
+
+    <div class="w-full max-w-lg border-black-2 p-6 bg-[#e0f2fe]">
+        <h1 class="text-2xl text-center mb-6 border-b-2 border-black pb-2">NILO PET BANHO E TOSA</h1>
+
+        <!-- ETAPA 1 -->
+        <div id="etapa1">
+            <h2 class="mb-4 underline text-xl text-black">Etapa 1: Seus Dados</h2>
+            <label>NOME COMPLETO *</label>
+            <input type="text" id="nome" class="w-full p-2 mb-4">
+            
+            <label>WHATSAPP (11 DÍGITOS) *</label>
+            <input type="text" id="whatsapp" maxlength="11" class="w-full p-2 mb-4" placeholder="11999999999">
+            
+            <label>ENDEREÇO (SÓ BAIRRO SOL NASCENTE) *</label>
+            <textarea id="endereco" class="w-full p-2 mb-4"></textarea>
+            
+            <button class="btn-nilo w-full" onclick="proximaEtapa(2)">PRÓXIMO: DADOS DO PET</button>
+        </div>
+
+        <!-- ETAPA 2 -->
+        <div id="etapa2" class="hidden">
+            <h2 class="mb-4 underline text-xl text-black">Etapa 2: Sobre os Pets</h2>
+            <label>QUANTOS PETS? (MÁX 4)</label>
+            <select id="qtdPets" class="w-full p-2 mb-4" onchange="gerarCamposPets()">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+            </select>
+            <div id="containerPets"></div>
+            <button class="btn-nilo w-full mt-4" onclick="proximaEtapa(3)">PRÓXIMO: SERVIÇOS</button>
+        </div>
+
+        <!-- ETAPA 3 -->
+        <div id="etapa3" class="hidden">
+            <h2 class="mb-4 underline text-xl text-black">Etapa 3: Escolha o Serviço</h2>
+            <div class="flex gap-2 mb-4">
+                <button class="btn-nilo flex-1" onclick="setServico('Avulso')">AVULSO</button>
+                <button class="btn-nilo flex-1" onclick="setServico('Pacote')">PACOTES</button>
+            </div>
+            <select id="listaServicos" class="w-full p-2 mb-4"></select>
+            <button class="btn-nilo w-full" onclick="proximaEtapa(4)">PRÓXIMO: DATA E HORA</button>
+        </div>
+
+        <!-- ETAPA 4 -->
+        <div id="etapa4" class="hidden">
+            <h2 class="mb-4 underline text-xl text-black">Etapa 4: Agendar</h2>
+            <label>ESCOLHA A DATA (QUA A DOM)</label>
+            <input type="date" id="dataAgendamento" class="w-full p-2 mb-4" onchange="validarData(this.value)">
+            <p id="avisoData" class="text-xs mb-2"></p>
+            
+            <label>HORÁRIOS DISPONÍVEIS</label>
+            <div class="grid grid-cols-2 gap-2" id="gradeHorarios">
+                <!-- Horários aparecem aqui conforme regras de slots -->
+            </div>
+            <button class="btn-nilo w-full mt-6 bg-red-600 text-white" onclick="finalizar()">CONFIRMAR AGENDAMENTO</button>
+        </div>
+
+        <!-- TELA FINAL -->
+        <div id="etapa5" class="hidden text-center">
+            <h2 class="text-2xl mb-4">✅ CONFIRMADO!</h2>
+            <p class="text-xl mb-4">LOGO MAIS NOSSA EQUIPE ENTRARÁ EM CONTATO PARA PASSAR VALORES.</p>
+            <p class="border-black-2 p-4 text-black bg-white">DE IMEDIATO ENVIE UMA FOTO DO PET PARA ACELERAR O PROCESSO.</p>
+            <button class="mt-6 underline text-black" onclick="alert('Funcionalidade de Reagendamento em breve no Painel ADM')">Gerenciar minhas sessões</button>
+        </div>
+    </div>
+
+    <script>
+        function proximaEtapa(n) {
+            document.querySelectorAll('[id^="etapa"]').forEach(el => el.classList.add('hidden'));
+            document.getElementById('etapa' + n).classList.remove('hidden');
+            if(n === 2) gerarCamposPets();
+            if(n === 4) configurarCalendario();
+        }
+
+        function gerarCamposPets() {
+            const qtd = document.getElementById('qtdPets').value;
+            const container = document.getElementById('containerPets');
+            container.innerHTML = '';
+            for(let i=1; i<=qtd; i++) {
+                container.innerHTML += `
+                    <div class="border-black-2 p-3 mb-2 bg-blue-100">
+                        <p class="text-black italic">PET ${i}</p>
+                        <input placeholder="Nome" class="w-full p-1 mb-2">
+                        <select class="w-full p-1 mb-2"><option>Cachorro</option><option>Gato</option></select>
+                        <select class="w-full p-1"><option>Pequeno</option><option>Médio</option><option>Grande Curto</option><option>Grande Peludo</option></select>
+                    </div>`;
+            }
+        }
+
+        function setServico(tipo) {
+            const lista = document.getElementById('listaServicos');
+            lista.innerHTML = '';
+            const opcoes = tipo === 'Avulso' 
+                ? ['Banho', 'Banho + Tosa Higiênica', 'Banho + Tosa']
+                : ['Básico (1B + 1TH)', 'Básico Tosa (1B + 1T)', 'Premium (3B + 1TH)'];
+            opcoes.forEach(opt => lista.innerHTML += `<option>${opt}</option>`);
+        }
+
+        function configurarCalendario() {
+            const input = document.getElementById('dataAgendamento');
+            const hoje = new Date();
+            const amanha = new Date(hoje); amanha.setDate(hoje.getDate() + 1);
+            input.min = amanha.toISOString().split("T")[0];
+            
+            if(hoje.getDate() < 20) {
+                const ultimoDiaMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+                input.max = ultimoDiaMes.toISOString().split("T")[0];
+                document.getElementById('avisoData').innerText = "* Próximo mês libera dia 20";
+            }
+            
+            // Simulação de horários baseados nas suas regras
+            const grade = document.getElementById('gradeHorarios');
+            const hrs = ["09:00", "10:00", "11:00", "13:30", "14:30", "15:30", "16:00"];
+            grade.innerHTML = '';
+            hrs.forEach(h => grade.innerHTML += `<button class="btn-nilo text-sm" onclick="this.style.bg='black'">${h}</button>`);
+        }
+
+        function finalizar() { proximaEtapa(5); }
+    </script>
+</body>
+</html>
