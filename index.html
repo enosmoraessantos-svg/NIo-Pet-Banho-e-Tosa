@@ -3,181 +3,205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>Nilo Pet - Agendamento</title>
+    <title>Nilo Pet - Agendamento Oficial</title>
     <script src="https://tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cloudflare.com">
     <style>
-        @import url('https://googleapis.com');
-        body { background-color: #e0f2fe; color: #dc2626; font-family: 'Inter', sans-serif; margin: 0; padding: 10px; }
-        .nilo-card { background: white; border: 4px solid black; box-shadow: 10px 10px 0px 0px black; width: 100%; max-width: 500px; margin: 20px auto; padding: 20px; }
-        .nilo-title { font-family: 'Archivo Black', sans-serif; text-transform: uppercase; font-size: 2.2rem; line-height: 1; margin-bottom: 5px; }
-        .step { display: none; }
-        .step.active { display: block; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        label { display: block; font-weight: 900; text-transform: uppercase; font-size: 0.85rem; margin-top: 15px; margin-bottom: 5px; color: black; }
-        input, select, textarea { width: 100%; padding: 15px; border: 3px solid black; font-weight: 700; font-size: 1rem; color: black !important; background: #f8fafc; border-radius: 0; }
-        .btn-nilo { width: 100%; background: #dc2626; color: white; border: 3px solid black; padding: 18px; font-weight: 900; text-transform: uppercase; font-size: 1.2rem; cursor: pointer; box-shadow: 4px 4px 0px 0px black; margin-top: 20px; }
-        .btn-nilo:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px 0px black; }
-        .btn-cancel { background: #000; color: #fff; font-size: 0.9rem; padding: 10px; margin-top: 10px; }
-        .pet-box { border: 2px dashed black; padding: 15px; margin-top: 15px; background: #fff1f2; }
+        body { background-color: #f0f9ff; font-family: sans-serif; color: #1e293b; }
+        .step-circle { width: 35px; height: 35px; border-radius: 50%; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-weight: bold; background: white; color: #64748b; }
+        .step-circle.active { background-color: #dc2626; color: white; border-color: #dc2626; }
+        .card { background: white; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); margin: 15px; padding: 25px; border: 1px solid #e2e8f0; }
+        input, select { width: 100%; padding: 14px; border-radius: 10px; border: 2px solid #e2e8f0; margin-bottom: 15px; font-size: 16px; }
+        input:focus { border-color: #dc2626; outline: none; }
+        .btn-next { background-color: #dc2626; color: white; width: 100%; padding: 18px; border-radius: 12px; font-weight: 800; font-size: 18px; border: none; }
+        .btn-cancel { background-color: #64748b; color: white; width: 100%; padding: 12px; border-radius: 10px; font-weight: 700; margin-top: 10px; }
+        .step-content { display: none; }
+        .step-content.active { display: block; }
     </style>
 </head>
 <body>
 
-<div class="nilo-card">
-    <header class="text-center border-b-4 border-black pb-4 mb-6">
-        <h1 class="nilo-title italic">Nilo Pet</h1>
-        <p class="font-black text-black tracking-widest uppercase">Banho e Tosa</p>
-    </header>
+    <div class="bg-white p-6 text-center border-b shadow-sm">
+        <i class="fas fa-paw text-red-600 text-3xl mb-2"></i>
+        <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tighter">Nilo Pet</h1>
+        <p class="text-red-600 font-bold text-sm">Banho e Tosa</p>
+    </div>
 
-    <div id="progress" class="text-center font-black text-sm mb-4 text-black italic">ETAPA 1 DE 4</div>
+    <!-- Barra de Progresso -->
+    <div class="flex justify-center items-center gap-4 my-6">
+        <div class="step-circle active" id="c1">1</div><div class="h-1 w-8 bg-slate-200"></div>
+        <div class="step-circle" id="c2">2</div><div class="h-1 w-8 bg-slate-200"></div>
+        <div class="step-circle" id="c3">3</div><div class="h-1 w-8 bg-slate-200"></div>
+        <div class="step-circle" id="c4">4</div>
+    </div>
 
-    <form id="agendamentoForm">
+    <form id="niloForm">
         <!-- ETAPA 1: CLIENTE -->
-        <div id="step1" class="step active">
-            <label>Nome do Cliente *</label>
-            <input type="text" id="nomeCliente" required placeholder="Seu nome completo">
-            
-            <label>WhatsApp (11 dígitos) *</label>
-            <input type="tel" id="whatsapp" required placeholder="11999999999" maxlength="11">
+        <div id="step1" class="step-content active">
+            <div class="card">
+                <h2 class="font-bold mb-4 text-slate-700 uppercase">Etapa 1: Dados do Cliente</h2>
+                <label class="block text-xs font-black mb-1">NOME DO CLIENTE (OBRIGATÓRIO)</label>
+                <input type="text" id="nome" required placeholder="Nome completo">
+                
+                <label class="block text-xs font-black mb-1">WHATSAPP (11 DÍGITOS EXATOS)</label>
+                <input type="tel" id="whatsapp" required placeholder="11900000000" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
 
-            <label>Endereço Completo (Sol Nascente) *</label>
-            <input type="text" id="endereco" required placeholder="Rua, Número, Bairro Sol Nascente">
-            
-            <button type="button" onclick="nextStep(2)" class="btn-nilo">Próximo ➔</button>
+                <label class="block text-xs font-black mb-1 text-red-600">ENDEREÇO COMPLETO (SOL NASCENTE)</label>
+                <div class="flex gap-2">
+                    <input type="text" id="rua" required placeholder="Rua e Número" class="flex-grow">
+                    <input type="text" value="Sol Nascente" readonly class="w-32 bg-slate-100 text-slate-500 font-bold">
+                </div>
+
+                <button type="button" onclick="validaPasso1()" class="btn-next">PRÓXIMO</button>
+                <button type="button" class="btn-cancel">CANCELAR SERVIÇO</button>
+            </div>
         </div>
 
         <!-- ETAPA 2: PETS -->
-        <div id="step2" class="step">
-            <label>Quantos Pets deseja agendar? (Máx 4)</label>
-            <select id="qtdPets" onchange="gerarCamposPets()">
-                <option value="1">1 Pet</option>
-                <option value="2">2 Pets</option>
-                <option value="3">3 Pets</option>
-                <option value="4">4 Pets</option>
-            </select>
+        <div id="step2" class="step-content">
+            <div class="card">
+                <h2 class="font-bold mb-4 text-slate-700 uppercase">Etapa 2: Dados do Pet</h2>
+                <label class="block text-xs font-black mb-1">QUANTIDADE DE PETS (MÁX 4)</label>
+                <select id="qtd" onchange="renderPets()">
+                    <option value="1">1 Pet</option><option value="2">2 Pets</option>
+                    <option value="3">3 Pets</option><option value="4">4 Pets</option>
+                </select>
 
-            <div id="containerPets">
-                <div class="pet-box">
-                    <label>Nome do Pet 1 *</label>
-                    <input type="text" required>
-                    <label>Espécie</label>
-                    <select><option>Cachorro</option><option>Gato</option></select>
-                    <label>Porte</label>
-                    <select>
-                        <option>Pequeno</option>
-                        <option>Médio</option>
-                        <option>Grande Pelo Curto</option>
-                        <option>Grande Peludo</option>
-                    </select>
-                    <label>Alergia?</label>
-                    <select onchange="this.nextElementSibling.style.display = this.value == 'Sim' ? 'block' : 'none'">
-                        <option>Não</option><option>Sim</option>
-                    </select>
-                    <textarea placeholder="Quais alergias?" style="display:none; margin-top:5px;"></textarea>
+                <div id="petsContainer">
+                    <div class="p-4 border rounded-xl mb-4 bg-slate-50">
+                        <label class="block text-xs font-black mb-1">ESPÉCIE</label>
+                        <select onchange="togglePorte(this)">
+                            <option value="Cachorro">Cachorro</option>
+                            <option value="Gato">Gato</option>
+                        </select>
+                        <label class="block text-xs font-black mb-1">NOME DO PET (OBRIGATÓRIO)</label>
+                        <input type="text" required>
+                        <div class="porte-div">
+                            <label class="block text-xs font-black mb-1">PORTE</label>
+                            <select>
+                                <option>Pequeno</option><option>Médio</option>
+                                <option>Grande Pelo Curto</option><option>Grande Peludo</option>
+                            </select>
+                        </div>
+                        <label class="block text-xs font-black mb-1">ALERGIA?</label>
+                        <select onchange="this.nextElementSibling.classList.toggle('hidden', this.value === 'Não')">
+                            <option>Não</option><option>Sim</option>
+                        </select>
+                        <input type="text" class="hidden mt-2" placeholder="Qual alergia?">
+                    </div>
                 </div>
+
+                <button type="button" onclick="next(3)" class="btn-next">PRÓXIMO</button>
+                <button type="button" onclick="next(1)" class="btn-cancel bg-slate-400">VOLTAR</button>
             </div>
-            
-            <button type="button" onclick="nextStep(3)" class="btn-nilo">Próximo ➔</button>
-            <button type="button" onclick="prevStep(1)" class="btn-nilo btn-cancel">Voltar</button>
         </div>
 
         <!-- ETAPA 3: SERVIÇOS -->
-        <div id="step3" class="step">
-            <label>Escolha o Tipo de Agendamento</label>
-            <select id="tipoContrato" onchange="atualizarServicos()">
-                <option value="avulso">Avulso (Escolher na hora)</option>
-                <option value="basico">Básico (1 Banho + 1 Higiênica)</option>
-                <option value="basico_tosa">Básico com Tosa (1 Banho + 1 Tosa)</option>
-                <option value="premium">Premium (3 Banhos + 1 Higiênica)</option>
-            </select>
+        <div id="step3" class="step-content">
+            <div class="card">
+                <h2 class="font-bold mb-4 text-slate-700 uppercase">Etapa 3: Serviços e Pacotes</h2>
+                <label class="block text-xs font-black mb-1">TIPO DE AGENDAMENTO</label>
+                <select id="tipo" onchange="renderServicos()">
+                    <option value="avulso">AVULSO</option>
+                    <option value="basico">BÁSICO</option>
+                    <option value="basico_tosa">BÁSICO COM TOSA</option>
+                    <option value="premium">PREMIUM</option>
+                </select>
 
-            <div id="servicosDetalhados" class="mt-4 p-4 border-2 border-black bg-blue-50 text-black text-sm font-bold">
-                * Serviço avulso: Escolha entre Banho, Tosa Higiênica ou Tosa Completa.
+                <div id="boxServico" class="p-4 border-2 border-red-100 rounded-xl bg-red-50 text-sm mb-6">
+                    <label class="block text-xs font-black mb-2">ESCOLHA O SERVIÇO AVULSO:</label>
+                    <select>
+                        <option>Banho</option>
+                        <option>Banho + Tosa Higiênica</option>
+                        <option>Banho + Tosa</option>
+                    </select>
+                </div>
+
+                <button type="button" onclick="next(4)" class="btn-next">ESCOLHER HORÁRIO</button>
+                <button type="button" onclick="next(2)" class="btn-cancel bg-slate-400">VOLTAR</button>
+                <button type="button" class="btn-cancel mt-4">CANCELAR PACOTE</button>
             </div>
-
-            <button type="button" onclick="nextStep(4)" class="btn-nilo">Escolher Horário ➔</button>
-            <button type="button" onclick="prevStep(2)" class="btn-nilo btn-cancel">Voltar</button>
         </div>
 
-        <!-- ETAPA 4: CALENDÁRIO E REGRAS -->
-        <div id="step4" class="step">
-            <label>Selecione o Dia:</label>
-            <input type="date" id="dataAgendamento" onchange="validarData(this.value)">
+        <!-- ETAPA 4: HORÁRIOS -->
+        <div id="step4" class="step-content">
+            <div class="card">
+                <h2 class="font-bold mb-4 text-slate-700 uppercase">Etapa 4: Agendar Horário</h2>
+                <label class="block text-xs font-black mb-1">ESCOLHA A DATA</label>
+                <input type="date" id="data" onchange="carregaHorarios(this.value)">
 
-            <label>Horários Disponíveis (Regras Nilo Pet):</label>
-            <select id="selectHorario">
-                <option>Selecione um dia primeiro</option>
-            </select>
+                <label class="block text-xs font-black mb-1">HORÁRIOS DISPONÍVEIS (REGRAS NILO PET)</label>
+                <select id="h-select">
+                    <option>Selecione o dia primeiro</option>
+                </select>
 
-            <div class="mt-4 p-4 bg-yellow-100 border-2 border-black text-xs text-black font-bold">
-                ⚠️ SURPRESA DE CANCELAMENTO: Se você cancelar com 2h de antecedência, o sistema gera um cupom automático para sua próxima visita!
+                <button type="button" onclick="finish()" class="btn-next mt-6 shadow-xl">CONFIRMAR AGENDAMENTO ✅</button>
+                <button type="button" onclick="next(3)" class="btn-cancel bg-slate-400">VOLTAR</button>
             </div>
-
-            <button type="button" onclick="finalizar()" class="btn-nilo">Confirmar Agendamento</button>
-            <button type="button" onclick="prevStep(3)" class="btn-nilo btn-cancel">Voltar</button>
         </div>
     </form>
-</div>
 
-<script>
-    function nextStep(n) {
-        document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
-        document.getElementById('step'+n).classList.add('active');
-        document.getElementById('progress').innerText = "ETAPA " + n + " DE 4";
-        window.scrollTo(0,0);
-    }
-    function prevStep(n) { nextStep(n); }
-
-    function gerarCamposPets() {
-        const qtd = document.getElementById('qtdPets').value;
-        const container = document.getElementById('containerPets');
-        container.innerHTML = '';
-        for(let i=1; i<=qtd; i++) {
-            container.innerHTML += `<div class="pet-box"><label>Nome do Pet ${i} *</label><input type="text" required><label>Espécie</label><select><option>Cachorro</option><option>Gato</option></select><label>Porte</label><select><option>Pequeno</option><option>Médio</option><option>Grande Pelo Curto</option><option>Grande Peludo</option></select></div>`;
-        }
-    }
-
-    function validarData(dataString) {
-        const data = new Date(dataString + 'T00:00:00');
-        const hoje = new Date();
-        const dia = data.getDay(); // 0-Dom, 3-Qua, 6-Sab
-        const inputData = document.getElementById('dataAgendamento');
-        const combo = document.getElementById('selectHorario');
-        combo.innerHTML = '';
-
-        // Regra do dia 20: Bloqueia mês seguinte se hoje for antes do dia 20
-        if (data.getMonth() > hoje.getMonth() && hoje.getDate() < 20) {
-            alert("Agenda do próximo mês disponível apenas a partir do dia 20!");
-            inputData.value = "";
-            return;
+    <script>
+        function next(n) {
+            document.querySelectorAll('.step-content').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.step-circle').forEach((c, i) => c.classList.toggle('active', i < n));
+            document.getElementById('step'+n).classList.add('active');
+            window.scrollTo(0,0);
         }
 
-        // Lógica de horários específicos
-        let horarios = [];
-        if (dia >= 3 && dia <= 6) { // Qua a Sab
-            horarios = ["09:00 (3 Banho + 1 Tosa)", "10:00 (Pet Grande Pelo Curto)", "11:00 (3 Banho + 1 Tosa)", "13:30 (4 Banhos)", "14:30 (3 Banho + 1 Tosa)", "15:30 (Pet Grande Peludo)", "16:00 (Gato)"];
-        } else if (dia === 0) { // Dom
-            horarios = ["09:00 (3 Banho + 1 Tosa)", "10:00 (Pet Grande Pelo Curto)", "11:00 (3 Banho + 1 Tosa)", "12:00 (Pet Grande Peludo)"];
-        } else {
-            alert("Fechado! Atendemos apenas de Quarta a Domingo.");
-            inputData.value = ""; return;
+        function validaPasso1() {
+            const w = document.getElementById('whatsapp').value;
+            if(w.length !== 11) return alert("WhatsApp deve ter exatamente 11 dígitos!");
+            if(!document.getElementById('nome').value || !document.getElementById('rua').value) return alert("Preencha todos os campos obrigatórios!");
+            next(2);
         }
 
-        horarios.forEach(h => {
-            let opt = document.createElement('option');
-            opt.value = h; opt.text = h; combo.add(opt);
-        });
-    }
+        function togglePorte(el) {
+            el.parentElement.querySelector('.porte-div').classList.toggle('hidden', el.value === 'Gato');
+        }
 
-    function finalizar() {
-        const msg = "AGENDAMENTO CONFIRMADO!\n\nLogo mais nossa equipe entrará em contato para passar valores.\n\nDE IMEDIATO ENVIE UMA FOTO DO PET PARA ACELERAR O PROCESSO.";
-        alert(msg);
-    }
+        function renderServicos() {
+            const t = document.getElementById('tipo').value;
+            const b = document.getElementById('boxServico');
+            if(t === 'avulso') {
+                b.innerHTML = `<label class='text-xs font-black mb-2'>ESCOLHA O SERVIÇO:</label><select><option>Banho</option><option>Banho + Tosa Higiênica</option><option>Banho + Tosa</option></select>`;
+            } else if(t === 'basico') {
+                b.innerHTML = `<p class='font-bold text-red-600'>PACOTE BÁSICO:</p><p class='text-xs'>• 1 Banho e 1 Banho + Tosa Higiênica</p>`;
+            } else if(t === 'basico_tosa') {
+                b.innerHTML = `<p class='font-bold text-red-600'>PACOTE BÁSICO COM TOSA:</p><p class='text-xs'>• 1 Banho e 1 Banho + Tosa</p>`;
+            } else {
+                b.innerHTML = `<p class='font-bold text-red-600'>PACOTE PREMIUM:</p><p class='text-xs'>• 3 Banhos e 1 Banho + Tosa Higiênica (5ª semana opcional)</p>`;
+            }
+        }
 
-    // Bloqueia datas passadas
-    const hoje = new Date().toISOString().split('T')[0];
-    document.getElementById('dataAgendamento').min = hoje;
-</script>
+        function carregaHorarios(val) {
+            const d = new Date(val + 'T00:00:00');
+            const hj = new Date();
+            const combo = document.getElementById('h-select');
+            combo.innerHTML = '';
 
+            // Bloqueio Dia 20
+            if(d.getMonth() > hj.getMonth() && hj.getDate() < 20) {
+                alert("Agenda do mês seguinte disponível só após dia 20!");
+                document.getElementById('data').value = ""; return;
+            }
+
+            const dia = d.getDay();
+            let h = [];
+            if(dia >= 3 && dia <= 6) { // Qua-Sab
+                h = ["09:00 - 3 Banhos ou 3 B. + Tosa Higiênica e 1 Tosa", "10:00 - 3 Banhos ou 3 B. + Tosa Higiênica e 1 Pet Grande Curto (Só Banho)", "11:00 - 3 Banhos ou 3 B. + Tosa Higiênica e 1 Tosa", "13:30 - 4 Banhos ou 4 B. + Tosa Higiênica", "14:30 - 3 Banhos ou 3 B. + Tosa Higiênica e 1 Tosa", "15:30 - 3 Banhos ou 3 B. + Tosa Higiênica e 1 Pet Grande Peludo (Só Banho)", "16:00 - 3 Banhos ou 3 B. + Tosa Higiênica e 1 Gato (Só Banho)"];
+            } else if(dia === 0) { // Dom
+                h = ["09:00 - 3 Banhos ou 3 B. + Tosa Higiênica e 1 Tosa", "10:00 - 3 Banhos ou 3 B. + Tosa Higiênica e 1 Pet Grande Curto (Só Banho)", "11:00 - 3 Banhos ou 3 B. + Tosa Higiênica e 1 Tosa", "12:00 - 3 Banhos ou 3 B. + Tosa Higiênica e 1 Pet Grande Peludo (Só Banho)"];
+            } else {
+                alert("Atendemos apenas de Quarta a Domingo!");
+                document.getElementById('data').value = ""; return;
+            }
+            h.forEach(txt => { let o = document.createElement('option'); o.text = txt; combo.add(o); });
+        }
+
+        function finish() {
+            alert("AGENDAMENTO CONFIRMADO!\n\nLogo mais nossa equipe entrará em contato para passar valores.\n\nENVIE UMA FOTO DO SEU PET AGORA PARA ACELERAR O PROCESSO.");
+        }
+    </script>
 </body>
 </html>
