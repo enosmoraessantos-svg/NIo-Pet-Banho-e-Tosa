@@ -3,216 +3,209 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nilo Pet - Agendamento</title>
+    <title>Nilo Pet | Agendamento</title>
     <script src="https://tailwindcss.com"></script>
+    <link href="https://googleapis.com" rel="stylesheet">
     <style>
-        body { background-color: #e0f2fe; color: #ff0000; font-family: 'Arial Black', sans-serif; }
-        .border-black-bold { border: 3px solid #000000; }
+        body { font-family: 'Inter', sans-serif; background-color: #f0f7ff; color: #1e293b; }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 2rem; border: 1px solid rgba(0,0,0,0.05); }
         .step { display: none; }
-        .step.active { display: block; }
-        input, select, textarea { border: 2px solid #000000 !important; color: #ff0000 !important; font-weight: bold; background: white; }
-        label { color: #ff0000; text-transform: uppercase; font-size: 0.8rem; }
-        .btn-next { background-color: #ff0000; color: #ffffff; border: 2px solid #000000; transition: transform 0.1s; }
-        .btn-next:active { transform: scale(0.95); }
-        .slot-card { border: 2px solid #000000; background: white; cursor: pointer; margin-bottom: 8px; padding: 10px; }
-        input:checked + .slot-card { background-color: #ff0000; color: white; }
-        input:checked + .slot-card p { color: white; }
+        .step.active { display: block; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .input-nilo { width: 100%; padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; outline: none; transition: 0.2s; }
+        .input-nilo:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+        .slot-card { border: 2px solid #f1f5f9; border-radius: 16px; padding: 12px; cursor: pointer; transition: 0.2s; background: white; }
+        input:checked + .slot-card { border-color: #3b82f6; background: #eff6ff; }
+        .btn-primary { background: #3b82f6; color: white; border-radius: 14px; padding: 16px; font-weight: 700; transition: 0.2s; }
+        .btn-primary:active { transform: scale(0.98); }
     </style>
 </head>
-<body class="p-4">
+<body class="p-4 md:p-8">
 
-    <div class="max-w-md mx-auto border-black-bold bg-[#e0f2fe] min-h-screen p-6 shadow-[10px_10px_0px_0px_rgba(0,0,0,1)]">
-        
-        <header class="text-center border-b-4 border-black pb-4 mb-6">
-            <h1 class="text-3xl font-black italic uppercase tracking-tighter">NILO PET</h1>
-            <p class="text-sm font-bold">BANHO E TOSA - SOL NASCENTE</p>
-        </header>
+    <div class="max-w-md mx-auto glass-card shadow-2xl overflow-hidden">
+        <!-- Header Minimalista -->
+        <div class="bg-gradient-to-r from-blue-600 to-blue-500 p-8 text-white text-center">
+            <h1 class="text-3xl font-extrabold tracking-tight">Nilo Pet</h1>
+            <p class="text-blue-100 text-sm font-medium mt-1">Banho e Tosa Profissional</p>
+        </div>
 
-        <form id="niloForm">
+        <form id="agendamento" class="p-6">
             
             <!-- ETAPA 1: CLIENTE -->
             <div id="step1" class="step active">
-                <h2 class="text-xl font-black mb-4 underline">ETAPA 1: SEUS DADOS</h2>
+                <div class="mb-6"><span class="text-blue-600 font-bold text-xs uppercase tracking-widest">Passo 01</span><h2 class="text-2xl font-bold">Seus Dados</h2></div>
                 <div class="space-y-4">
-                    <div>
-                        <label>NOME COMPLETO *</label>
-                        <input type="text" id="nome" required class="w-full p-2">
-                    </div>
-                    <div>
-                        <label>WHATSAPP (11 DÍGITOS) *</label>
-                        <input type="tel" id="tel" required maxlength="11" placeholder="11912345678" class="w-full p-2">
-                    </div>
-                    <div>
-                        <label>ENDEREÇO (SÓ SOL NASCENTE) *</label>
-                        <input type="text" id="end" required placeholder="Rua, Número" class="w-full p-2">
+                    <input type="text" id="nome" placeholder="Nome Completo *" required class="input-nilo">
+                    <input type="tel" id="whatsapp" placeholder="WhatsApp (11 dígitos) *" required maxlength="11" class="input-nilo">
+                    <div class="p-4 bg-blue-50 rounded-xl border border-blue-100">
+                        <p class="text-xs text-blue-700 font-bold mb-2">📍 ATENÇÃO</p>
+                        <input type="text" id="endereco" placeholder="Endereço Completo *" required class="input-nilo border-none bg-transparent p-0 focus:ring-0">
+                        <p class="text-[10px] text-blue-500 mt-1 uppercase font-bold">Somente Bairro Sol Nascente</p>
                     </div>
                 </div>
-                <button type="button" onclick="mudarEtapa(2)" class="btn-next w-full mt-8 p-4 font-black">PROXIMO >>></button>
+                <button type="button" onclick="proximo(2)" class="btn-primary w-full mt-8 shadow-lg shadow-blue-200">Continuar</button>
             </div>
 
             <!-- ETAPA 2: PETS -->
             <div id="step2" class="step">
-                <h2 class="text-xl font-black mb-4 underline">ETAPA 2: OS PETS</h2>
-                <label>QUANTOS PETS? (MÁX 4)</label>
-                <select id="qtdPets" onchange="gerarPets()" class="w-full p-2 mb-6">
-                    <option value="1">1 PET</option>
-                    <option value="2">2 PETS</option>
-                    <option value="3">3 PETS</option>
-                    <option value="4">4 PETS</option>
+                <div class="mb-6"><span class="text-blue-600 font-bold text-xs uppercase tracking-widest">Passo 02</span><h2 class="text-2xl font-bold">Sobre o Pet</h2></div>
+                <label class="text-xs font-bold text-gray-400 mb-2 block">QUANTOS PETS DESEJA AGENDAR?</label>
+                <select id="qtdPets" onchange="renderPets()" class="input-nilo mb-6 bg-gray-50">
+                    <option value="1">1 Pet</option><option value="2">2 Pets</option><option value="3">3 Pets</option><option value="4">4 Pets</option>
                 </select>
                 
-                <div id="petsContainer" class="space-y-4"></div>
+                <div id="petsList" class="space-y-4 max-h-[350px] overflow-y-auto pr-2"></div>
 
-                <div class="flex gap-2 mt-8">
-                    <button type="button" onclick="mudarEtapa(1)" class="w-1/3 border-2 border-black p-4 font-black">VOLTAR</button>
-                    <button type="button" onclick="mudarEtapa(3)" class="btn-next w-2/3 p-4 font-black">PROXIMO >>></button>
+                <div class="flex gap-3 mt-8">
+                    <button type="button" onclick="voltar(1)" class="w-1/3 p-4 font-bold text-gray-400">Voltar</button>
+                    <button type="button" onclick="proximo(3)" class="btn-primary flex-1 shadow-lg shadow-blue-200">Próximo</button>
                 </div>
             </div>
 
             <!-- ETAPA 3: REGRAS DE HORÁRIOS -->
             <div id="step3" class="step">
-                <h2 class="text-xl font-black mb-4 underline">ETAPA 3: TIPO E DATA</h2>
+                <div class="mb-6"><span class="text-blue-600 font-bold text-xs uppercase tracking-widest">Passo 03</span><h2 class="text-2xl font-bold">Data e Hora</h2></div>
                 
-                <label>TIPO DE PACOTE</label>
-                <select id="pacote" class="w-full p-2 mb-4">
-                    <option value="avulso">AVULSO (BANHO, HIGIÊNICA OU TOSA)</option>
-                    <option value="basico">BÁSICO (1 BANHO + 1 HIGIÊNICA)</option>
-                    <option value="basico_tosa">BÁSICO COM TOSA (1 BANHO + 1 TOSA)</option>
-                    <option value="premium">PREMIUM (3 BANHOS + 1 HIGIÊNICA)</option>
+                <label class="text-xs font-bold text-gray-400 mb-2 block">TIPO DE SERVIÇO</label>
+                <select id="tipoServico" class="input-nilo mb-4">
+                    <optgroup label="Avulso">
+                        <option value="avulso">Banho / Higiênica / Tosa</option>
+                    </optgroup>
+                    <optgroup label="Pacotes">
+                        <option value="pacote">Básico (1 Banho + 1 Higiênica)</option>
+                        <option value="pacote">Básico c/ Tosa (1 Banho + 1 Tosa)</option>
+                        <option value="pacote">Premium (3 Banhos + 1 Higiênica)</option>
+                    </optgroup>
                 </select>
 
-                <label>ESCOLHA A DATA</label>
-                <input type="date" id="data" onchange="carregarHorarios()" class="w-full p-2 mb-4">
+                <input type="date" id="dataAgenda" onchange="setSlots()" class="input-nilo mb-6">
 
-                <div id="horariosGrid" class="mt-4">
-                    <p class="text-center font-bold">SELECIONE UMA DATA VÁLIDA</p>
+                <div id="gridSlots" class="space-y-3">
+                    <p class="text-center text-sm text-gray-400 italic">Selecione uma data acima...</p>
                 </div>
 
-                <div class="flex gap-2 mt-8">
-                    <button type="button" onclick="mudarEtapa(2)" class="w-1/3 border-2 border-black p-4 font-black">VOLTAR</button>
-                    <button type="button" onclick="finalizar()" class="btn-next w-2/3 p-4 font-black">FINALIZAR AGENDAMENTO</button>
+                <div class="flex gap-3 mt-8">
+                    <button type="button" onclick="voltar(2)" class="w-1/3 p-4 font-bold text-gray-400">Voltar</button>
+                    <button type="button" onclick="confirmar()" class="btn-primary flex-1 shadow-lg shadow-blue-200">Agendar Agora</button>
                 </div>
             </div>
 
             <!-- ETAPA 4: CONFIRMAÇÃO -->
-            <div id="step4" class="step text-center">
-                <div class="border-4 border-black p-6 bg-white">
-                    <h2 class="text-2xl font-black mb-4 italic">AGENDAMENTO CONFIRMADO!</h2>
-                    <p class="mb-6 font-bold uppercase">Logo mais nossa equipe entrará em contato para passar valores de imediato envie um foto do pet para acelerar o processo.</p>
+            <div id="step4" class="step">
+                <div class="text-center py-6">
+                    <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">✓</div>
+                    <h2 class="text-2xl font-extrabold mb-4">Agendamento Confirmado!</h2>
+                    <p class="text-gray-500 text-sm leading-relaxed px-4">
+                        Logo mais nossa equipe entrará em contato para passar valores. 
+                        <strong>De imediato envie uma foto do pet para acelerar o processo.</strong>
+                    </p>
                     
-                    <div id="areaCancelamento" class="mt-8 border-t-2 border-black pt-4">
-                        <!-- O Botão inteligente aparece aqui -->
+                    <div id="cancelArea" class="mt-12 pt-8 border-t border-gray-100">
+                        <!-- Botão Inteligente de Cancelamento -->
                     </div>
                 </div>
             </div>
-
         </form>
     </div>
 
     <script>
-        // --- LOGICA DE CALENDÁRIO ---
-        const inputData = document.getElementById('data');
+        const inputData = document.getElementById('dataAgenda');
         const hoje = new Date();
         inputData.min = hoje.toISOString().split('T')[0];
-        
-        // Bloqueio do mês seguinte se for antes do dia 20
+
+        // Regra do dia 20 para mês seguinte
         if (hoje.getDate() < 20) {
-            const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
-            inputData.max = ultimoDia.toISOString().split('T')[0];
+            inputData.max = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).toISOString().split('T')[0];
         }
 
-        function mudarEtapa(n) {
+        function proximo(n) {
             document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
             document.getElementById('step'+n).classList.add('active');
-            if(n === 2) gerarPets();
+            if(n === 2) renderPets();
         }
 
-        function gerarPets() {
+        function voltar(n) { proximo(n); }
+
+        function renderPets() {
             const qtd = document.getElementById('qtdPets').value;
-            const container = document.getElementById('petsContainer');
+            const container = document.getElementById('petsList');
             container.innerHTML = '';
             for(let i=1; i<=qtd; i++) {
                 container.innerHTML += `
-                <div class="border-2 border-black p-3 bg-white/50">
-                    <p class="font-black underline mb-2">PET #${i}</p>
-                    <input type="text" placeholder="NOME DO PET *" required class="w-full p-2 mb-2">
-                    <select class="w-full p-2 mb-2">
-                        <option>CACHORRO</option>
-                        <option>GATO</option>
-                    </select>
-                    <select class="w-full p-2 mb-2">
-                        <option>PEQUENO</option>
-                        <option>MÉDIO</option>
-                        <option>GRANDE PELO CURTO</option>
-                        <option>GRANDE PELUDO</option>
-                    </select>
-                    <div class="flex items-center gap-2">
-                        <label>ALERGIA?</label>
-                        <select onchange="this.nextElementSibling.classList.toggle('hidden')" class="p-1">
-                            <option>NÃO</option>
-                            <option>SIM</option>
-                        </select>
-                        <input type="text" placeholder="OBSERVAÇÃO" class="hidden flex-1 p-1">
+                <div class="p-5 border border-gray-100 rounded-2xl bg-white shadow-sm">
+                    <p class="font-bold text-blue-600 text-xs uppercase mb-3">Pet #${i}</p>
+                    <div class="space-y-3">
+                        <input type="text" placeholder="Nome do Pet *" required class="input-nilo bg-gray-50 border-none">
+                        <div class="grid grid-cols-2 gap-2">
+                            <select class="input-nilo text-sm bg-gray-50 border-none"><option>Cachorro</option><option>Gato</option></select>
+                            <select class="input-nilo text-sm bg-gray-50 border-none">
+                                <option>Pequeno</option><option>Médio</option><option>Grande (Pelo Curto)</option><option>Grande (Peludo)</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center gap-3 p-2">
+                            <span class="text-xs font-bold text-gray-400">Alergia?</span>
+                            <select class="text-xs font-bold bg-white border rounded p-1" onchange="this.nextElementSibling.classList.toggle('hidden')">
+                                <option value="não">Não</option><option value="sim">Sim</option>
+                            </select>
+                            <input type="text" placeholder="Qual?" class="hidden flex-1 text-xs border-b outline-none">
+                        </div>
                     </div>
                 </div>`;
             }
         }
 
-        function carregarHorarios() {
+        function setSlots() {
             const dataSel = new Date(inputData.value + 'T00:00:00');
-            const dia = dataSel.getDay(); // 0 Dom, 3 Qua, 6 Sab
-            const grid = document.getElementById('horariosGrid');
+            const dia = dataSel.getDay();
+            const grid = document.getElementById('gridSlots');
             grid.innerHTML = '';
 
             let slots = [];
-            if (dia >= 3 && dia <= 6) { // Quarta a Sábado
+            if (dia >= 3 && dia <= 6) { // Qua-Sab
                 slots = [
-                    {h:'09:00', d:'3 Banhos/Higiênica + 1 Tosa'},
-                    {h:'10:00', d:'3 Banhos/Higiênica + 1 Grande Curto (Só Banho)'},
-                    {h:'11:00', d:'3 Banhos/Higiênica + 1 Tosa'},
-                    {h:'13:30', d:'4 Banhos/Higiênica'},
-                    {h:'14:30', d:'3 Banhos/Higiênica + 1 Tosa'},
-                    {h:'15:30', d:'3 Banhos/Higiênica + 1 Grande Peludo (Só Banho)'},
-                    {h:'16:00', d:'3 Banhos/Higiênica + 1 Gato (Só Banho)'}
+                    {h:'09:00', d:'3 Banhos ou Tosa Higiênica + 1 Tosa'},
+                    {h:'10:00', d:'3 Banhos ou Tosa Higiênica + 1 Grande Pelo Curto'},
+                    {h:'11:00', d:'3 Banhos ou Tosa Higiênica + 1 Tosa'},
+                    {h:'13:30', d:'4 Banhos ou 4 Tosa Higiênica'},
+                    {h:'14:30', d:'3 Banhos ou Tosa Higiênica + 1 Tosa'},
+                    {h:'15:30', d:'3 Banhos ou Tosa Higiênica + 1 Grande Peludo'},
+                    {h:'16:00', d:'3 Banhos ou Tosa Higiênica + 1 Gato'}
                 ];
-            } else if (dia === 0) { // Domingo
+            } else if (dia === 0) { // Dom
                 slots = [
-                    {h:'09:00', d:'3 Banhos/Higiênica + 1 Tosa'},
-                    {h:'10:00', d:'3 Banhos/Higiênica + 1 Grande Curto (Só Banho)'},
-                    {h:'11:00', d:'3 Banhos/Higiênica + 1 Tosa'},
-                    {h:'12:00', d:'3 Banhos/Higiênica + 1 Grande Peludo (Só Banho)'}
+                    {h:'09:00', d:'3 Banhos ou Tosa Higiênica + 1 Tosa'},
+                    {h:'10:00', d:'3 Banhos ou Tosa Higiênica + 1 Grande Pelo Curto'},
+                    {h:'11:00', d:'3 Banhos ou Tosa Higiênica + 1 Tosa'},
+                    {h:'12:00', d:'3 Banhos ou Tosa Higiênica + 1 Grande Peludo'}
                 ];
             } else {
-                grid.innerHTML = '<p class="font-black text-center border-2 border-black p-2 bg-yellow-300">NILO PET FECHADO (SEG E TER)</p>';
+                grid.innerHTML = '<div class="p-4 bg-red-50 text-red-500 rounded-xl text-center font-bold">Nilo Pet fechado (Segunda e Terça)</div>';
                 return;
             }
 
             slots.forEach(s => {
                 grid.innerHTML += `
-                <label>
-                    <input type="radio" name="hora" value="${s.h}" class="hidden">
-                    <div class="slot-card">
-                        <div class="flex justify-between font-black italic"><span>${s.h}</span><span>DISPONÍVEL</span></div>
-                        <p class="text-[10px] uppercase font-bold text-black">${s.d}</p>
+                <label class="block">
+                    <input type="radio" name="h" value="${s.h}" class="hidden peer" required>
+                    <div class="slot-card peer-checked:border-blue-500">
+                        <div class="flex justify-between items-center"><span class="font-extrabold text-lg">${s.h}</span><span class="text-[10px] font-bold text-blue-500 bg-blue-50 px-2 py-1 rounded-full uppercase tracking-tighter">Vaga Disponível</span></div>
+                        <p class="text-[10px] text-gray-400 mt-1 font-medium">${s.d}</p>
                     </div>
                 </label>`;
             });
         }
 
-        function finalizar() {
-            if(!document.querySelector('input[name="hora"]:checked')) return alert('ESCOLHA UM HORÁRIO!');
+        function confirmar() {
+            if(!document.querySelector('input[name="h"]:checked')) return alert('Selecione um horário!');
+            const tipo = document.getElementById('tipoServico').value;
+            const cancelArea = document.getElementById('cancelArea');
             
-            const tipo = document.getElementById('pacote').value;
-            const btnArea = document.getElementById('areaCancelamento');
-            
-            // Lógica Surpresa do Botão de Cancelamento
             if(tipo === 'avulso') {
-                btnArea.innerHTML = `<button type="button" onclick="alert('AVULSO: Cancelamento solicitado! A vaga foi aberta.')" class="w-full border-2 border-black p-2 font-black bg-white hover:bg-black hover:text-white">CANCELAR AGENDAMENTO AVULSO</button>`;
+                cancelArea.innerHTML = `<button type="button" onclick="alert('Solicitação de cancelamento enviada!')" class="text-red-500 font-bold text-xs uppercase tracking-widest hover:underline">Cancelar Agendamento Avulso</button>`;
             } else {
-                btnArea.innerHTML = `<button type="button" onclick="alert('PACOTE: Para cancelar pacotes, fale com o suporte para manter seus créditos!')" class="w-full border-2 border-black p-2 font-black bg-black text-yellow-400">CANCELAR / REAGENDAR PACOTE</button>`;
+                cancelArea.innerHTML = `<div class="bg-gray-50 p-4 rounded-2xl text-center"><p class="text-[10px] font-bold text-gray-400 mb-2 uppercase">Agendamento de Pacote</p><button type="button" onclick="alert('Redirecionando para suporte de pacotes...')" class="text-blue-600 font-bold text-xs uppercase">Reagendar Sessão</button></div>`;
             }
-            
-            mudarEtapa(4);
+            proximo(4);
         }
     </script>
 </body>
