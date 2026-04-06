@@ -3,31 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nilo Pet - Agendamento</title>
+    <title>Nilo Pet - Agendamento Oficial</title>
     <style>
         :root { --vermelho: #ff0000; --preto: #000000; --azul-bebe: #f0f8ff; }
         body { 
             background: var(--azul-bebe) url('SUA_LOGO_AQUI.png') no-repeat center fixed;
-            background-size: 50%; color: var(--vermelho); font-family: 'Arial Black', sans-serif;
+            background-size: 40%; color: var(--vermelho); font-family: 'Arial Black', sans-serif;
             padding: 15px; margin: 0;
         }
         body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(240, 248, 255, 0.85); z-index: -1; }
-        
         .card { background: white; border: 5px solid var(--preto); max-width: 500px; margin: 10px auto; padding: 20px; box-shadow: 10px 10px 0px var(--preto); border-radius: 15px; }
         .etapa { display: none; } .etapa.ativa { display: block; }
-        
         h1 { text-align: center; font-size: 18px; border-bottom: 4px solid var(--preto); padding-bottom: 10px; margin-top: 0; }
         label { display: block; margin-top: 15px; font-size: 13px; text-transform: uppercase; }
-        
         input, select, textarea { width: 100%; border: 3px solid var(--preto); padding: 10px; color: var(--vermelho); font-weight: bold; margin-top: 5px; box-sizing: border-box; border-radius: 8px; background: white; }
-        
         button { background: var(--preto); color: white; border: none; padding: 15px; width: 100%; cursor: pointer; font-weight: bold; margin-top: 15px; border-radius: 8px; text-transform: uppercase; }
-        .btn-voltar { background: #666; font-size: 11px; margin-top: 8px; }
-        
         .pet-box { border: 3px solid var(--preto); padding: 15px; margin-top: 15px; background: #fff; border-radius: 10px; }
         .status-bar { display: flex; gap: 5px; margin-bottom: 15px; }
         .ponto { height: 8px; flex: 1; border: 2px solid var(--preto); background: white; border-radius: 5px; }
         .ponto.ativo { background: var(--vermelho); }
+        .bloqueado { background: #eee !important; color: #666 !important; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -35,10 +30,7 @@
 <div class="card">
     <h1>NILO PET BANHO E TOSA</h1>
     <div class="status-bar">
-        <div class="ponto ativo" id="p1"></div>
-        <div class="ponto" id="p2"></div>
-        <div class="ponto" id="p3"></div>
-        <div class="ponto" id="p4"></div>
+        <div id="p1" class="ponto ativo"></div><div id="p2" class="ponto"></div><div id="p3" class="ponto"></div><div id="p4" class="ponto"></div>
     </div>
 
     <!-- ETAPA 1: CLIENTE -->
@@ -48,31 +40,27 @@
         <label>WHATSAPP (11 DÍGITOS)*</label>
         <input type="tel" id="tel" maxlength="11" placeholder="11999999999" required>
         <label>ENDEREÇO (APENAS SOL NASCENTE)*</label>
-        <input type="text" value="Bairro Sol Nascente" readonly style="background:#eee">
+        <input type="text" value="Sol Nascente" readonly style="background:#eee">
         <input type="text" id="rua" placeholder="Rua e número" required>
         <button onclick="irPara(2)">PRÓXIMO 🐾</button>
     </div>
 
-    <!-- ETAPA 2: PETS (DINÂMICO) -->
+    <!-- ETAPA 2: PETS -->
     <div class="etapa" id="e2">
         <label>QUANTIDADE DE PETS (MÁX 4)</label>
         <select id="qtd_pets" onchange="renderizarPets()">
-            <option value="1">1 Pet</option>
-            <option value="2">2 Pets</option>
-            <option value="3">3 Pets</option>
-            <option value="4">4 Pets</option>
+            <option value="1">1 Pet</option><option value="2">2 Pets</option><option value="3">3 Pets</option><option value="4">4 Pets</option>
         </select>
         <div id="lista_pets"></div>
         <button onclick="irPara(3)">PRÓXIMO 🐾</button>
-        <button class="btn-voltar" onclick="irPara(1)">VOLTAR</button>
+        <button style="background:#666" onclick="irPara(1)">VOLTAR</button>
     </div>
 
-    <!-- ETAPA 3: SERVIÇO -->
+    <!-- ETAPA 3: SERVIÇOS E PACOTES -->
     <div class="etapa" id="e3">
-        <label>TIPO DE PACOTE/SERVIÇO:</label>
-        <div id="servicos_por_pet"></div>
+        <div id="container_servicos"></div>
         <button onclick="irPara(4)">ESCOLHER DATA 📅</button>
-        <button class="btn-voltar" onclick="irPara(2)">VOLTAR</button>
+        <button style="background:#666" onclick="irPara(2)">VOLTAR</button>
     </div>
 
     <!-- ETAPA 4: CALENDÁRIO -->
@@ -81,9 +69,8 @@
         <input type="date" id="data_final" onchange="validarRegraData(this)">
         <label>HORÁRIOS DISPONÍVEIS:</label>
         <select id="horarios_final"></select>
-        <button style="background:var(--vermelho)" onclick="finalizarTudo()">FINALIZAR ✅</button>
-        <button class="cancel-btn" onclick="cancelarSurpresa()" style="background:#ddd; color:black; font-size:10px; width:100%; margin-top:10px; border:1px solid black; padding:5px; border-radius:5px; cursor:pointer;">CANCELAR SERVIÇO</button>
-        <button class="btn-voltar" onclick="irPara(3)">VOLTAR</button>
+        <button style="background:var(--vermelho)" onclick="finalizarTudo()">FINALIZAR AGENDAMENTO ✅</button>
+        <button style="background:#666" onclick="irPara(3)">VOLTAR</button>
     </div>
 </div>
 
@@ -93,7 +80,7 @@
         document.getElementById('e' + n).classList.add('ativa');
         for(let i=1; i<=4; i++) document.getElementById('p'+i).classList.toggle('ativo', i <= n);
         if(n === 2) renderizarPets();
-        if(n === 3) renderizarServicos();
+        if(n === 3) renderizarEscolhaServicos();
     }
 
     function renderizarPets() {
@@ -103,23 +90,57 @@
         for(let i=1; i<=qtd; i++) {
             div.innerHTML += `<div class="pet-box">
                 <label>NOME DO PET ${i}*</label><input type="text" class="p_nome" required>
-                <label>ESPÉCIE</label><select class="p_esp"><option>Cachorro</option><option>Gato</option></select>
-                <label>PORTE</label><select class="p_porte"><option>Pequeno</option><option>Médio</option><option>Grande pelo curto</option><option>Grande peludo</option></select>
+                <label>ESPÉCIE</label><select><option>Cachorro</option><option>Gato</option></select>
+                <label>PORTE</label><select><option>Pequeno</option><option>Médio</option><option>Grande pelo curto</option><option>Grande peludo</option></select>
                 <label>ALERGIA?</label><select><option>Não</option><option>Sim</option></select>
-                <textarea placeholder="Observações"></textarea>
+                <textarea placeholder="Obs de alergia"></textarea>
             </div>`;
         }
     }
 
-    function renderizarServicos() {
+    function renderizarEscolhaServicos() {
         const qtd = document.getElementById('qtd_pets').value;
-        const div = document.getElementById('servicos_por_pet');
-        div.innerHTML = "";
+        const div = document.getElementById('container_servicos');
+        div.innerHTML = "<h2>Escolha o Plano para cada Pet</h2>";
         for(let i=1; i<=qtd; i++) {
             div.innerHTML += `<div class="pet-box">
-                <strong>SERVIÇO PARA PET ${i}:</strong>
-                <select><option>Avulso</option><option>Básico</option><option>Básico com Tosa</option><option>Premium</option></select>
+                <strong>PET ${i}:</strong>
+                <label>TIPO DE PLANO:</label>
+                <select id="plano_${i}" onchange="ajustarServico(${i})">
+                    <option value="avulso">Avulso (Escolher serviço abaixo)</option>
+                    <option value="basico">Básico (1 Banho + 1 Higiênica)</option>
+                    <option value="basico_tosa">Básico com Tosa (1 Banho + 1 Tosa)</option>
+                    <option value="premium">Premium (3 Banhos + 1 Higiênica)</option>
+                </select>
+                <label>SERVIÇO ESPECÍFICO:</label>
+                <select id="servico_${i}">
+                    <option value="banho">Banho</option>
+                    <option value="higiene">Banho + Tosa Higiênica</option>
+                    <option value="tosa">Banho + Tosa</option>
+                </select>
             </div>`;
+        }
+    }
+
+    function ajustarServico(id) {
+        const plano = document.getElementById(`plano_${id}`).value;
+        const servicoSelect = document.getElementById(`servico_${id}`);
+        
+        if(plano === "basico") {
+            servicoSelect.value = "higiene";
+            servicoSelect.classList.add("bloqueado");
+            servicoSelect.disabled = true;
+        } else if(plano === "basico_tosa") {
+            servicoSelect.value = "tosa";
+            servicoSelect.classList.add("bloqueado");
+            servicoSelect.disabled = true;
+        } else if(plano === "premium") {
+            servicoSelect.value = "higiene";
+            servicoSelect.classList.add("bloqueado");
+            servicoSelect.disabled = true;
+        } else {
+            servicoSelect.classList.remove("bloqueado");
+            servicoSelect.disabled = false;
         }
     }
 
@@ -129,25 +150,19 @@
         const selH = document.getElementById('horarios_final');
         selH.innerHTML = "";
 
-        if(dt < hoje) { alert("Dias anteriores bloqueados!"); el.value = ""; return; }
-        if(dt.getMonth() > hoje.getMonth() && hoje.getDate() < 20) { alert("Agenda do próximo mês só libera dia 20!"); el.value = ""; return; }
+        if(dt < hoje) { alert("Dias passados bloqueados!"); el.value = ""; return; }
+        if(dt.getMonth() > hoje.getMonth() && hoje.getDate() < 20) { alert("Agenda do mês seguinte libera dia 20!"); el.value = ""; return; }
 
         const dia = dt.getDay();
         const hrs = (dia === 0) ? ["09:00","10:00","11:00","12:00"] : (dia >= 3 && dia <= 6) ? ["09:00","10:00","11:00","13:30","14:30","15:30","16:00"] : [];
         
-        if(hrs.length === 0) { alert("Não funcionamos neste dia!"); el.value = ""; }
+        if(hrs.length === 0) { alert("Não funcionamos Segunda/Terça!"); el.value = ""; }
         else { hrs.forEach(h => selH.innerHTML += `<option>${h}</option>`); }
     }
 
     function finalizarTudo() {
-        alert("Agendamento confirmado! Logo mais nossa equipe entrará em contato para passar valores de imediato envie uma foto do pet para acelerar o processo.");
-        window.open("https://wa.me Nilo Pet! Agendamento realizado.");
-    }
-
-    function cancelarSurpresa() {
-        if(confirm("Deseja reagendar agora para ganhar um brinde exclusivo para seu pet?")) {
-            window.open("https://wa.me reagendar meu serviço para ganhar o brinde!");
-        }
+        alert("Agendamento confirmado! Logo mais nossa equipe entrará em contato para passar valores. De imediato envie uma foto do pet para acelerar o processo.");
+        window.open("https://wa.me Nilo Pet! Agendamento realizado com sucesso.");
     }
 </script>
 </body>
