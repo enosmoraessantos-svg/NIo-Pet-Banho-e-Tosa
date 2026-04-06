@@ -89,7 +89,7 @@
         div.innerHTML = "";
         for(let i=1; i<=qtd; i++) {
             div.innerHTML += `<div class="pet-box">
-                <label>NOME DO PET ${i}*</label><input type="text" class="p_nome" required>
+                <label>NOME DO PET ${i}*</label><input type="text" class="p_nome" id="nome_pet_${i}" required>
                 <label>ESPÉCIE</label><select><option>Cachorro</option><option>Gato</option></select>
                 <label>PORTE</label><select><option>Pequeno</option><option>Médio</option><option>Grande pelo curto</option><option>Grande peludo</option></select>
                 <label>ALERGIA?</label><select><option>Não</option><option>Sim</option></select>
@@ -101,10 +101,13 @@
     function renderizarEscolhaServicos() {
         const qtd = document.getElementById('qtd_pets').value;
         const div = document.getElementById('container_servicos');
-        div.innerHTML = "<h2>Escolha o Plano para cada Pet</h2>";
+        div.innerHTML = "<h2>Escolha o Plano</h2>";
         for(let i=1; i<=qtd; i++) {
+            // Pega o nome digitado no input anterior
+            const nomePet = document.getElementById(`nome_pet_${i}`).value || `Pet ${i}`;
+            
             div.innerHTML += `<div class="pet-box">
-                <strong>PET ${i}:</strong>
+                <strong>PET: ${nomePet.toUpperCase()}</strong>
                 <label>TIPO DE PLANO:</label>
                 <select id="plano_${i}" onchange="ajustarServico(${i})">
                     <option value="avulso">Avulso (Escolher serviço abaixo)</option>
@@ -126,21 +129,17 @@
         const plano = document.getElementById(`plano_${id}`).value;
         const servicoSelect = document.getElementById(`servico_${id}`);
         
-        if(plano === "basico") {
+        if(plano === "basico" || plano === "premium") {
             servicoSelect.value = "higiene";
-            servicoSelect.classList.add("bloqueado");
             servicoSelect.disabled = true;
+            servicoSelect.classList.add("bloqueado");
         } else if(plano === "basico_tosa") {
             servicoSelect.value = "tosa";
-            servicoSelect.classList.add("bloqueado");
             servicoSelect.disabled = true;
-        } else if(plano === "premium") {
-            servicoSelect.value = "higiene";
             servicoSelect.classList.add("bloqueado");
-            servicoSelect.disabled = true;
         } else {
-            servicoSelect.classList.remove("bloqueado");
             servicoSelect.disabled = false;
+            servicoSelect.classList.remove("bloqueado");
         }
     }
 
