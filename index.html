@@ -94,7 +94,7 @@
                 <h2 class="font-bold mb-4 text-slate-700 uppercase underline text-sm">Etapa 3: Serviços e Pacotes</h2>
                 <label class="label-req">Escolha o Plano</label>
                 <select id="tipoPlano" onchange="atualizaInfoServico()">
-                    <option value="avulso">AVULSO (Cliente escolhe o serviço)</option>
+                    <option value="avulso">AVULSO (Escolha o serviço)</option>
                     <option value="basico">PACOTE BÁSICO</option>
                     <option value="basico_tosa">PACOTE BÁSICO COM TOSA</option>
                     <option value="premium">PACOTE PREMIUM</option>
@@ -122,11 +122,18 @@
         <!-- ETAPA 4 -->
         <div id="step4" class="step-content">
             <div class="card">
-                <h2 class="font-bold mb-4 text-slate-700 uppercase underline text-sm">Etapa 4: Horários</h2>
-                <label class="label-req">Data *</label>
-                <input type="date" id="dataAgendamento" onchange="filtraHorarios()">
+                <h2 class="font-bold mb-4 text-slate-700 uppercase underline text-sm">Etapa 4: Datas e Horários</h2>
+                
+                <div id="informativoRegra" class="info-bloqueada text-[11px] mb-4"></div>
+
+                <label class="label-req">Selecione a Data *</label>
+                <input type="date" id="dataAgendamento" onchange="validarRegrasHorario()">
+
                 <label class="label-req">Horários Disponíveis *</label>
-                <select id="horarioAgendamento"></select>
+                <select id="horarioAgendamento">
+                    <option value="">Selecione a data primeiro...</option>
+                </select>
+
                 <button type="button" onclick="finalizar()" class="btn-next mt-4">CONFIRMAR ✅</button>
                 <button type="button" onclick="next(3)" class="btn-back-large">VOLTAR</button>
             </div>
@@ -145,7 +152,7 @@
             document.querySelectorAll('.step-content').forEach(s => s.classList.remove('active'));
             document.getElementById('step'+n).classList.add('active');
             if(n===2 && !document.getElementById('petsContainer').innerHTML) renderPets();
-            if(n===4) configCalendario();
+            if(n===4) prepararEtapa4();
             window.scrollTo(0,0);
         }
 
@@ -156,17 +163,23 @@
             for(let i=1; i<=qtd; i++) {
                 container.innerHTML += `
                     <div class="pet-box">
-                        <p class="font-bold text-red-600 text-xs mb-2">PET #${i}</p>
-                        <select id="especie${i}" onchange="togglePorte(${i})"><option value="cachorro">Cachorro</option><option value="gato">Gato</option></select>
-                        <input type="text" id="nomePet${i}" placeholder="Nome do Pet *">
+                        <p class="font-bold text-red-600 text-xs mb-2 italic">PET #${i}</p>
+                        <label class="label-req">Espécie</label>
+                        <select id="especie${i}" onchange="togglePorte(${i})">
+                            <option value="cachorro">Cachorro</option><option value="gato">Gato</option>
+                        </select>
+                        <label class="label-req">Nome do Pet *</label>
+                        <input type="text" id="nomePet${i}" placeholder="Nome do animal">
                         <div id="divPorte${i}">
+                            <label class="label-req">Porte</label>
                             <select id="porte${i}">
                                 <option value="pequeno">Pequeno</option><option value="medio">Médio</option>
                                 <option value="grande_curto">Grande pelo curto</option><option value="grande_peludo">Grande peludo</option>
                             </select>
                         </div>
-                        <select id="alergia${i}"><option value="nao">Não possui alergia</option><option value="sim">Possui Alergia</option></select>
-                        <textarea id="obs${i}" placeholder="Observação de alergia..."></textarea>
+                        <label class="label-req">Possui Alergia?</label>
+                        <select id="alergia${i}"><option value="nao">Não</option><option value="sim">Sim</option></select>
+                        <textarea id="obs${i}" placeholder="Observações de alergia"></textarea>
                     </div>`;
             }
         }
@@ -175,61 +188,79 @@
 
         function atualizaInfoServico() {
             const plano = document.getElementById('tipoPlano').value;
-            const areaAvulso = document.getElementById('areaAvulso');
-            const areaPacote = document.getElementById('areaPacote');
             const info = document.getElementById('infoTextoPacote');
+            document.getElementById('areaAvulso').classList.toggle('hidden', plano !== 'avulso');
+            document.getElementById('areaPacote').classList.toggle('hidden', plano === 'avulso');
 
+            if(plano === 'basico') info.innerHTML = "<b>Semana 1:</b> Banho<br><b>Semana 2:</b> Banho + Tosa Higiênica";
+            else if(plano === 'basico_tosa') info.innerHTML = "<b>Semana 1:</b> Banho<br><b>Semana 2:</b> Banho + Tosa";
+            else if(plano === 'premium') info.innerHTML = "<b>Semanas 1-3:</b> Banho<br><b>Semana 4:</b> Banho + Tosa Higiênica<br><b>Semana 5:</b> Banho (Opcional se houver 5 semanas)";
+        }
+
+        function prepararEtapa4() {
+            const plano = document.getElementById('tipoPlano').value;
+            const info = document.getElementById('informativoRegra');
             if(plano === 'avulso') {
-                areaAvulso.classList.remove('hidden'); areaPacote.classList.add('hidden');
+                const serv = document.getElementById('servicoAvulso').options[document.getElementById('servicoAvulso').selectedIndex].text;
+                info.innerHTML = `<b>SERVIÇO:</b> ${serv} <br>Selecione uma data e horário abaixo.`;
             } else {
-                areaAvulso.classList.add('hidden'); areaPacote.classList.remove('hidden');
-                if(plano === 'basico') info.innerHTML = "<b>Semana 1:</b> Banho<br><b>Semana 2:</b> Banho + Tosa Higiênica";
-                if(plano === 'basico_tosa') info.innerHTML = "<b>Semana 1:</b> Banho<br><b>Semana 2:</b> Banho + Tosa";
-                if(plano === 'premium') info.innerHTML = "<b>Semana 1 a 3:</b> Banhos<br><b>Semana 4:</b> Banho + Tosa Higiênica<br><b>Semana 5:</b> Banho (Opcional)";
+                info.innerHTML = document.getElementById('infoTextoPacote').innerHTML + "<br><b class='text-red-600 uppercase'>Serviços bloqueados para este pacote.</b>";
             }
+            configCalendario();
         }
 
         function configCalendario() {
             const input = document.getElementById('dataAgendamento');
             const hoje = new Date();
             input.min = hoje.toISOString().split('T')[0];
-            let dataMax = new Date(hoje.getFullYear(), hoje.getMonth() + (hoje.getDate() >= 20 ? 2 : 1), 0);
+            let mesMax = hoje.getMonth() + (hoje.getDate() >= 20 ? 2 : 1);
+            let anoMax = hoje.getFullYear();
+            if(mesMax > 11) { mesMax -= 12; anoMax++; }
+            let dataMax = new Date(anoMax, mesMax, 0);
             input.max = dataMax.toISOString().split('T')[0];
         }
 
-        function filtraHorarios() {
-            const data = new Date(document.getElementById('dataAgendamento').value);
-            const dia = data.getUTCDay(); // 0 Dom, 3 Qua, 4 Qui, 5 Sex, 6 Sab
+        function validarRegrasHorario() {
+            const dataInput = document.getElementById('dataAgendamento').value;
+            const data = new Date(dataInput);
+            const diaSemana = data.getUTCDay(); // 0 Dom, 3 Qua...
             const select = document.getElementById('horarioAgendamento');
-            select.innerHTML = '';
-            
-            const hComum = ["09:00", "10:00", "11:00", "13:30", "14:30", "15:30", "16:00"];
-            const hDom = ["09:00", "10:00", "11:00", "12:00"];
+            select.innerHTML = '<option value="">Selecione...</option>';
 
-            if(dia < 3 && dia !== 0) { alert("Funcionamento: Quarta a Domingo"); return; }
-            
-            const lista = (dia === 0) ? hDom : hComum;
+            if (diaSemana < 3 && diaSemana !== 0) {
+                alert("Nilo Pet atende de Quarta a Sábado e aos Domingos.");
+                return;
+            }
+
+            const horasSemana = ["09:00", "10:00", "11:00", "13:30", "14:30", "15:30", "16:00"];
+            const horasDom = ["09:00", "10:00", "11:00", "12:00"];
+            const lista = (diaSemana === 0) ? horasDom : horasSemana;
+
             lista.forEach(h => {
+                let txt = h;
+                if(h === "10:00") txt += " (Pet Grande Pelo Curto)";
+                if(h === "15:30" || (diaSemana===0 && h==="12:00")) txt += " (Pet Grande Peludo)";
+                if(h === "16:00") txt += " (Gatos)";
+                if(h === "13:30") txt += " (Apenas Banho ou Tosa Higiênica)";
+
                 let opt = document.createElement('option');
-                opt.value = h; opt.text = h; select.add(opt);
+                opt.value = h; opt.text = txt; select.add(opt);
             });
         }
 
         function msgCancel(t) {
-            alert(t === 'avulso' ? "Seu agendamento foi cancelado caso precise agendar novamente é só fazer seu agendamento." : "cancelando uma data do pacote o seu pacote será cancelado por completo e vc terá que refazer todo o seu agendamento, entre em contato com nossos atendentes para mudar sua data pelo WhatsApp.");
+            alert(t === 'avulso' ? "Seu agendamento foi cancelado caso precise agendar novamente é só fazer seu agendamento." : "Cancelando uma data do pacote o seu pacote será cancelado por completo e vc terá que refazer todo o seu agendamento, entre em contato com nossos atendentes para mudar sua data pelo WhatsApp.");
             location.reload();
         }
 
         function finalizar() {
-            alert("agendamento confirmado logo mais nossa equipe entrar em contato para passar valores de imediato envie um foto do pet para acelerar o processo.");
+            if(!document.getElementById('horarioAgendamento').value) return alert("Selecione um horário!");
+            alert("Agendamento confirmado logo mais nossa equipe entrar em contato para passar valores de imediato envie um foto do pet para acelerar o processo.");
             location.reload();
         }
 
         function validaPasso1() {
-            if(!document.getElementById('nomeCliente').value || document.getElementById('whatsapp').value.length < 11) {
-                alert("Nome e WhatsApp (11 dígitos) obrigatórios!");
-                return;
-            }
+            if(!document.getElementById('nomeCliente').value || document.getElementById('whatsapp').value.length < 11) return alert("Preencha Nome e WhatsApp corretamente!");
             next(2);
         }
     </script>
