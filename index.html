@@ -48,11 +48,12 @@
                     <label class="label-req">WhatsApp (11 dígitos) *</label>
                     <input type="tel" id="whatsapp" placeholder="11999998888" maxlength="11">
                     
-                    <label class="label-req">Endereço (Rua e Número) *</label>
-                    <div class="flex gap-2">
-                        <input type="text" id="rua" placeholder="Ex: Rua das Flores, 123" class="flex-grow">
-                        <input type="text" value="Sol Nascente" readonly class="w-32 bg-slate-100 font-bold text-slate-500 text-center border-none text-xs">
+                    <label class="label-req">Rua e Número *</label>
+                    <div class="flex gap-2 mb-3">
+                        <input type="text" id="rua" placeholder="Ex: Rua das Flores, 123" class="flex-grow mb-0">
+                        <input type="text" value="Sol Nascente" readonly class="w-32 bg-slate-100 font-bold text-slate-500 text-center border-none text-[10px] mb-0" tabindex="-1">
                     </div>
+                    
                     <button type="button" onclick="validaAgendamento()" class="btn-next mt-4">PRÓXIMO</button>
                 </div>
 
@@ -102,9 +103,9 @@
                 <h2 class="font-bold mb-4 text-slate-700 uppercase underline text-sm">Etapa 3: Serviços</h2>
                 <select id="tipoPlano" onchange="renderServicos()">
                     <option value="avulso">AVULSO</option>
-                    <option value="basico">BÁSICO</option>
-                    <option value="basico_tosa">BÁSICO COM TOSA</option>
-                    <option value="premium">PREMIUM</option>
+                    <option value="basico">PACOTE BÁSICO</option>
+                    <option value="basico_tosa">PACOTE BÁSICO COM TOSA</option>
+                    <option value="premium">PACOTE PREMIUM</option>
                 </select>
                 <div id="boxServico"></div>
                 <button type="button" onclick="next(4)" class="btn-next">ESCOLHER HORÁRIOS</button>
@@ -112,7 +113,7 @@
             </div>
         </div>
 
-        <!-- ETAPA 4: DATAS -->
+        <!-- ETAPA 4: HORÁRIOS -->
         <div id="step4" class="step-content">
             <div class="card">
                 <h2 class="font-bold mb-4 text-slate-700 uppercase underline text-sm">Etapa 4: Horários</h2>
@@ -149,7 +150,7 @@
         }
 
         function confirmarCancelamento(tipo) {
-            alert("Solicitação de cancelamento de " + tipo + " enviada com sucesso! Logo entraremos em contato.");
+            alert("Solicitação de cancelamento de " + tipo + " enviada com sucesso!");
             location.reload();
         }
 
@@ -170,11 +171,6 @@
                         <label class="label-req">Porte</label>
                         <select><option>Pequeno</option><option>Médio</option><option>Grande pelo curto</option><option>Grande peludo</option></select>
                     </div>
-                    <label class="label-req">Possui Alergia?</label>
-                    <select onchange="this.nextElementSibling.classList.toggle('hidden', this.value==='Não')">
-                        <option>Não</option><option>Sim</option>
-                    </select>
-                    <textarea class="hidden mt-2" placeholder="Descreva aqui..."></textarea>
                 </div>`;
             }
         }
@@ -200,13 +196,13 @@
             const container = document.getElementById('datasContainer');
             container.innerHTML = '';
             for(let i=1; i<=num; i++) {
-                container.innerHTML += `<div class="mb-4 p-4 border rounded bg-slate-50"><label class="label-req">Data ${i}</label><input type="date" required><label class="label-req">Horários Disponíveis</label><select><option>09:00</option><option>11:00</option><option>14:30</option></select></div>`;
+                container.innerHTML += `<div class="mb-4 p-4 border rounded bg-slate-50"><label class="label-req">Data ${i}</label><input type="date" required><label class="label-req">Horários</label><select><option>09:00</option><option>11:00</option><option>14:30</option></select></div>`;
             }
         }
 
         function finish() {
             const nome = document.getElementById('nomeCliente').value;
-            alert("AGENDAMENTO CONFIRMADO!\n\n" + nome + ", logo mais nossa equipe entrará em contato para passar valores. De imediato envie uma foto do pet para acelerar o processo.");
+            alert("AGENDAMENTO CONFIRMADO!\n\n" + nome + ", logo mais nossa equipe entrará em contato para passar valores. Envie a foto do pet no WhatsApp.");
         }
     </script>
 </body>
