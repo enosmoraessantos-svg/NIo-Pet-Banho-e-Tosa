@@ -8,7 +8,7 @@
     <style>
         body { background-color: #f0f9ff; font-family: sans-serif; color: #1e293b; }
         .card { background: white; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); margin: 15px; padding: 25px; border: 1px solid #e2e8f0; }
-        input, select { width: 100%; padding: 14px; border-radius: 10px; border: 2px solid #e2e8f0; margin-bottom: 12px; font-size: 16px; color: black; }
+        input, select, textarea { width: 100%; padding: 14px; border-radius: 10px; border: 2px solid #e2e8f0; margin-bottom: 12px; font-size: 16px; color: black; }
         .btn-next { background-color: #dc2626; color: white; width: 100%; padding: 18px; border-radius: 12px; font-weight: 800; font-size: 18px; border: none; cursor: pointer; }
         .btn-cancel-final { background-color: #ef4444; color: white; width: 100%; padding: 15px; border-radius: 12px; font-weight: 800; margin-top: 10px; cursor: pointer; }
         .step-content { display: none; }
@@ -44,10 +44,15 @@
                 <div id="camposAgendar" class="hidden">
                     <label class="label-req">Nome do Cliente *</label>
                     <input type="text" id="nomeCliente" placeholder="Nome completo">
+                    
                     <label class="label-req">WhatsApp (11 dígitos) *</label>
                     <input type="tel" id="whatsapp" placeholder="11999998888" maxlength="11">
-                    <label class="label-req">Endereço (Sol Nascente) *</label>
-                    <input type="text" id="rua" placeholder="Rua e Número">
+                    
+                    <label class="label-req">Endereço (Rua e Número) *</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="rua" placeholder="Ex: Rua das Flores, 123" class="flex-grow">
+                        <input type="text" value="Sol Nascente" readonly class="w-32 bg-slate-100 font-bold text-slate-500 text-center border-none text-xs">
+                    </div>
                     <button type="button" onclick="validaAgendamento()" class="btn-next mt-4">PRÓXIMO</button>
                 </div>
 
@@ -58,10 +63,10 @@
                     <label class="label-req">Horário *</label>
                     <input type="time" id="cancelHora">
                     <label class="label-req">Nome do Cliente *</label>
-                    <input type="text" id="cancelNome" placeholder="Nome do cliente">
+                    <input type="text" id="cancelNome" placeholder="Seu nome">
                     <label class="label-req">Nome do Pet *</label>
                     <input type="text" id="cancelPet" placeholder="Nome do pet">
-                    <button type="button" onclick="confirmarCancelamento()" class="btn-cancel-final">CONFIRMAR CANCELAMENTO DO AVULSO</button>
+                    <button type="button" onclick="confirmarCancelamento('Avulso')" class="btn-cancel-final">CONFIRMAR CANCELAMENTO DO AVULSO</button>
                 </div>
 
                 <!-- Campos para Cancelar Pacote -->
@@ -69,14 +74,14 @@
                     <div class="aviso-pacote">
                         AO CANCELAR ESTA DATA VOCÊ IRÁ CANCELAR TODO SEU PACOTE. SE FOR A TROCA DE DATA FALE COM OS ATENDENTES PARA SEGUIR COM OS DEMAIS AGENDAMENTOS DO PACOTE.
                     </div>
-                    <label class="label-req">Nome do Cliente *</label>
-                    <input type="text" id="cancelPacoteNome" placeholder="Nome do titular do pacote">
-                    <button type="button" onclick="confirmarCancelamento()" class="btn-cancel-final">CONFIRMAR CANCELAMENTO DO PACOTE</button>
+                    <label class="label-req">Nome do Cliente (Titular do Pacote) *</label>
+                    <input type="text" id="cancelPacoteNome" placeholder="Nome completo">
+                    <button type="button" onclick="confirmarCancelamento('Pacote')" class="btn-cancel-final">CONFIRMAR CANCELAMENTO DO PACOTE</button>
                 </div>
             </div>
         </div>
 
-        <!-- ETAPA 2: PETS (Apenas Agendamento) -->
+        <!-- ETAPA 2: PETS -->
         <div id="step2" class="step-content">
             <div class="card">
                 <h2 class="font-bold mb-4 text-slate-700 uppercase underline text-sm">Etapa 2: Dados do Pet</h2>
@@ -87,11 +92,11 @@
                 </select>
                 <div id="petsContainer"></div>
                 <button type="button" onclick="next(3)" class="btn-next">PRÓXIMO</button>
-                <button type="button" onclick="next(1)" class="btn-cancel bg-slate-400">VOLTAR</button>
+                <button type="button" onclick="next(1)" class="btn-cancel bg-slate-400 text-white w-full p-3 rounded-lg font-bold mt-2">VOLTAR</button>
             </div>
         </div>
 
-        <!-- ETAPA 3: SERVIÇOS (Apenas Agendamento) -->
+        <!-- ETAPA 3: SERVIÇOS -->
         <div id="step3" class="step-content">
             <div class="card">
                 <h2 class="font-bold mb-4 text-slate-700 uppercase underline text-sm">Etapa 3: Serviços</h2>
@@ -103,15 +108,17 @@
                 </select>
                 <div id="boxServico"></div>
                 <button type="button" onclick="next(4)" class="btn-next">ESCOLHER HORÁRIOS</button>
+                <button type="button" onclick="next(2)" class="btn-cancel bg-slate-400 text-white w-full p-3 rounded-lg font-bold mt-2">VOLTAR</button>
             </div>
         </div>
 
-        <!-- ETAPA 4: DATAS (Apenas Agendamento) -->
+        <!-- ETAPA 4: DATAS -->
         <div id="step4" class="step-content">
             <div class="card">
                 <h2 class="font-bold mb-4 text-slate-700 uppercase underline text-sm">Etapa 4: Horários</h2>
                 <div id="datasContainer"></div>
-                <button type="button" onclick="finish()" class="btn-next">CONFIRMAR ✅</button>
+                <button type="button" onclick="finish()" class="btn-next">CONFIRMAR AGENDAMENTO ✅</button>
+                <button type="button" onclick="next(3)" class="btn-cancel bg-slate-400 text-white w-full p-3 rounded-lg font-bold mt-2">VOLTAR</button>
             </div>
         </div>
     </form>
@@ -134,14 +141,15 @@
         }
 
         function validaAgendamento() {
-            if(!document.getElementById('nomeCliente').value || document.getElementById('whatsapp').value.length !== 11) {
-                return alert("Preencha Nome e WhatsApp (11 dígitos)!");
-            }
+            const n = document.getElementById('nomeCliente').value;
+            const w = document.getElementById('whatsapp').value;
+            const r = document.getElementById('rua').value;
+            if(!n || w.length !== 11 || !r) return alert("Preencha Nome, WhatsApp (11 dígitos) e Rua!");
             next(2);
         }
 
-        function confirmarCancelamento() {
-            alert("Sua solicitação de cancelamento foi enviada com sucesso. Nossa equipe entrará em contato.");
+        function confirmarCancelamento(tipo) {
+            alert("Solicitação de cancelamento de " + tipo + " enviada com sucesso! Logo entraremos em contato.");
             location.reload();
         }
 
@@ -155,21 +163,35 @@
                     <label class="label-req italic">Nome do Pet ${i} *</label>
                     <input type="text" class="pet-nome" required>
                     <label class="label-req">Espécie</label>
-                    <select onchange="this.nextElementSibling.style.display=(this.value==='Gato'?'none':'block')">
-                        <option>Cachorro</option><option>Gato</option>
+                    <select onchange="checkEspecie(this)">
+                        <option value="Cachorro">Cachorro</option><option value="Gato">Gato</option>
                     </select>
                     <div class="porte-div">
                         <label class="label-req">Porte</label>
-                        <select><option>Pequeno</option><option>Médio</option><option>Grande</option></select>
+                        <select><option>Pequeno</option><option>Médio</option><option>Grande pelo curto</option><option>Grande peludo</option></select>
                     </div>
+                    <label class="label-req">Possui Alergia?</label>
+                    <select onchange="this.nextElementSibling.classList.toggle('hidden', this.value==='Não')">
+                        <option>Não</option><option>Sim</option>
+                    </select>
+                    <textarea class="hidden mt-2" placeholder="Descreva aqui..."></textarea>
                 </div>`;
             }
+        }
+
+        function checkEspecie(el) {
+            const p = el.parentElement.querySelector('.porte-div');
+            el.value === 'Gato' ? p.classList.add('hidden') : p.classList.remove('hidden');
         }
 
         function renderServicos() {
             const t = document.getElementById('tipoPlano').value;
             const b = document.getElementById('boxServico');
-            b.innerHTML = t === 'avulso' ? `<select><option>Banho</option><option>Banho+TH</option><option>Banho+Tosa</option></select>` : `<input type="text" value="SERVIÇO DO PACOTE FIXO" readonly class="bg-gray-100 font-bold">`;
+            if(t === 'avulso') {
+                b.innerHTML = `<label class="label-req">Serviço:</label><select><option>Banho</option><option>Banho + Tosa Higiênica</option><option>Banho + Tosa</option></select>`;
+            } else {
+                b.innerHTML = `<div class="p-3 bg-gray-100 rounded-lg font-bold text-red-600 text-xs">SERVIÇO DO PACOTE BLOQUEADO</div>`;
+            }
         }
 
         function renderDatas() {
@@ -178,12 +200,13 @@
             const container = document.getElementById('datasContainer');
             container.innerHTML = '';
             for(let i=1; i<=num; i++) {
-                container.innerHTML += `<div class="mb-4 p-4 border rounded"><label class="label-req">Data ${i}</label><input type="date" required><select><option>09:00</option><option>11:00</option><option>14:30</option></select></div>`;
+                container.innerHTML += `<div class="mb-4 p-4 border rounded bg-slate-50"><label class="label-req">Data ${i}</label><input type="date" required><label class="label-req">Horários Disponíveis</label><select><option>09:00</option><option>11:00</option><option>14:30</option></select></div>`;
             }
         }
 
         function finish() {
-            alert("AGENDAMENTO CONFIRMADO! Envie a foto do pet no WhatsApp para acelerar o processo.");
+            const nome = document.getElementById('nomeCliente').value;
+            alert("AGENDAMENTO CONFIRMADO!\n\n" + nome + ", logo mais nossa equipe entrará em contato para passar valores. De imediato envie uma foto do pet para acelerar o processo.");
         }
     </script>
 </body>
