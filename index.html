@@ -27,7 +27,6 @@
     </div>
 
     <form id="niloForm">
-        <!-- ETAPA 1 -->
         <div id="step1" class="step-content active">
             <div class="card">
                 <h2 class="font-bold mb-4 text-slate-700 uppercase underline text-sm">Etapa 1: Início</h2>
@@ -43,7 +42,7 @@
                     <input type="text" id="nomeCliente" placeholder="Nome completo">
                     <label class="label-req">WhatsApp (11 dígitos) *</label>
                     <input type="tel" id="whatsapp" placeholder="11999998888" maxlength="11">
-                    <label class="label-req">Endereço *</label>
+                    <label class="label-req">Rua e Número *</label>
                     <div class="flex gap-2">
                         <input type="text" id="rua" placeholder="Rua e Número" class="flex-grow">
                         <input type="text" value="Sol Nascente" readonly class="w-32 bg-slate-100 font-bold text-slate-500 text-center border-none text-[10px] mb-3">
@@ -66,7 +65,6 @@
             </div>
         </div>
 
-        <!-- ETAPA 2 -->
         <div id="step2" class="step-content">
             <div class="card">
                 <h2 class="font-bold mb-4 text-slate-700 uppercase underline text-sm">Etapa 2: Dados do Pet</h2>
@@ -80,7 +78,6 @@
             </div>
         </div>
 
-        <!-- ETAPA 3 -->
         <div id="step3" class="step-content">
             <div class="card">
                 <h2 class="font-bold mb-4 text-slate-700 uppercase underline text-sm">Etapa 3: Serviços</h2>
@@ -90,7 +87,6 @@
             </div>
         </div>
 
-        <!-- ETAPA 4 -->
         <div id="step4" class="step-content">
             <div class="card">
                 <h2 class="font-bold mb-4 text-slate-700 uppercase underline text-sm">Etapa 4: Horários</h2>
@@ -175,13 +171,11 @@
             const container = document.getElementById('datasHorariosContainer');
             container.innerHTML = '';
             const hoje = new Date();
-            const diaHoje = hoje.getDate();
 
             for(let i=1; i<=q; i++) {
                 const nomePet = document.getElementById(`nomePet${i}`)?.value || 'Pet ' + i;
                 const plano = document.getElementById(`planoPet${i}`).value;
                 let semanas = (plano === 'premium') ? 5 : (plano.includes('basico') ? 2 : 1);
-
                 container.innerHTML += `<p class="font-black text-xs text-red-600 uppercase mt-4 mb-2">${nomePet}</p>`;
                 for(let s=1; s<=semanas; s++) {
                     container.innerHTML += `
@@ -192,7 +186,7 @@
                     </div>`;
                     const input = document.getElementById(`data_p${i}_s${s}`);
                     input.min = hoje.toISOString().split('T');
-                    let mesMax = hoje.getMonth() + (diaHoje >= 20 ? 2 : 1);
+                    let mesMax = hoje.getMonth() + (hoje.getDate() >= 20 ? 2 : 1);
                     let anoMax = hoje.getFullYear();
                     if(mesMax > 11) { mesMax -= 12; anoMax++; }
                     input.max = new Date(anoMax, mesMax, 0).toISOString().split('T');
@@ -223,20 +217,21 @@
                 if(dia !== 0) {
                     if (isTosa && !["09:00", "11:00", "14:30"].includes(h)) block = true;
                     if (por === 'grande_curto' && h !== "10:00") block = true;
-                    if (h === "10:00" && por !== 'grande_curto') block = true;
-                    if (h === "13:30" && isTosa) block = true;
                     if (por === 'grande_peludo' && h !== "15:30") block = true;
-                    if (h === "15:30" && por !== 'grande_peludo') block = true;
                     if (esp === 'gato' && h !== "16:00") block = true;
-                    if (h === "16:00" && esp !== 'gato') block = true;
+                    // Banhos (Peq/Med) podem entrar em qualquer horário exceto restrições técnicas
+                    if (!isTosa && por !== 'grande_curto' && por !== 'grande_peludo' && esp !== 'gato') {
+                        block = false; // Garante que banho comum veja todos
+                    }
                 } 
                 // REGRAS DOMINGO
                 else {
                     if (isTosa && !["09:00", "11:00"].includes(h)) block = true;
                     if (por === 'grande_curto' && h !== "10:00") block = true;
-                    if (h === "10:00" && por !== 'grande_curto') block = true;
                     if (por === 'grande_peludo' && h !== "12:00") block = true;
-                    if (h === "12:00" && por !== 'grande_peludo') block = true;
+                    if (!isTosa && por !== 'grande_curto' && por !== 'grande_peludo' && esp !== 'gato') {
+                        block = false;
+                    }
                 }
 
                 if (!block) {
@@ -246,8 +241,8 @@
             });
         }
 
-        function msgCancel(t) { alert("cancelado com sucesso."); location.reload(); }
-        function finalizar() { alert("agendamento confirmado logo mais nossa equipe entrar em contato para passar valores de imediato envie um foto do pet para acelerar o processo."); location.reload(); }
+        function msgCancel(t) { alert("Cancelado com sucesso."); location.reload(); }
+        function finalizar() { alert("Agendamento confirmado! Logo mais nossa equipe entrará em contato."); location.reload(); }
         function validaPasso1() { if(!document.getElementById('nomeCliente').value || document.getElementById('whatsapp').value.length < 11) return alert("Preencha corretamente!"); next(2); }
     </script>
 </body>
