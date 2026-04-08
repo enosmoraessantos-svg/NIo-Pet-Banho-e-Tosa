@@ -112,6 +112,10 @@
                     <label class="label-req">Espécie</label>
                     <select id="especie${i}" onchange="togglePorte(${i}); renderServicos();"><option value="cachorro">Cachorro</option><option value="gato">Gato</option></select>
                     <div id="divPorte${i}"><label class="label-req">Porte</label><select id="porte${i}"><option value="pequeno">Pequeno</option><option value="medio">Médio</option><option value="grande_curto">Grande pelo curto</option><option value="grande_peludo">Grande peludo</option></select></div>
+                    <label class="label-req">Possui Alergia?</label>
+                    <select id="alergia${i}"><option value="nao">Não</option><option value="sim">Sim</option></select>
+                    <label class="label-req">Observação</label>
+                    <textarea id="obs${i}" placeholder="Descreva aqui..."></textarea>
                 </div>`;
             }
         }
@@ -159,7 +163,7 @@
                     container.innerHTML += `
                     <div class="pet-box !mb-2">
                         <label class="label-req">${plano === 'avulso' ? 'Agendamento' : txt}</label>
-                        ${plano !== 'avulso' ? `<input type="text" class="lock-servico" value="${txt.split(': ')[1]}" readonly>` : ''}
+                        ${plano !== 'avulso' ? `<input type="text" class="lock-servico" value="${txt}" readonly>` : ''}
                         <input type="date" id="data_p${i}_s${s}" onchange="loadHours(${i}, ${s})">
                         <select id="hora_p${i}_s${s}"><option value="">Selecione...</option></select>
                     </div>`;
@@ -179,7 +183,8 @@
             const sel = document.getElementById(`hora_p${p}_s${s}`);
             const esp = document.getElementById(`especie${p}`).value;
             const por = document.getElementById(`porte${p}`).value;
-            const serv = document.getElementById(`servicoPet${p}`)?.value || 'pacote';
+            const plano = document.getElementById(`planoPet${p}`).value;
+            const serv = plano === 'avulso' ? document.getElementById(`servicoPet${p}`).value : (plano === 'basico_tosa' ? 'banho_tosa' : 'banho');
 
             sel.innerHTML = '<option value="">Selecione...</option>';
             if (dia < 3 && dia !== 0) return alert("Atendimento de Quarta a Domingo!");
@@ -188,10 +193,17 @@
 
             lista.forEach(h => {
                 let block = false;
-                if (esp === 'gato' && h !== "16:00") block = true;
-                if (por === 'grande_curto' && h !== "10:00") block = true;
-                if (por === 'grande_peludo' && (dia !== 0 ? h !== "15:30" : h !== "12:00")) block = true;
-                if ((serv === 'banho_tosa' || document.getElementById(`planoPet${p}`).value === 'basico_tosa') && !["09:00", "11:00", "14:30"].includes(h)) block = true;
+                const isTosa = (serv === 'banho_tosa');
+                if(dia !== 0) {
+                    if (isTosa && !["09:00", "11:00", "14:30"].includes(h)) block = true;
+                    if (por === 'grande_curto' && h !== "10:00") block = true;
+                    if (por === 'grande_peludo' && h !== "15:30") block = true;
+                    if (esp === 'gato' && h !== "16:00") block = true;
+                } else {
+                    if (isTosa && !["09:00", "11:00"].includes(h)) block = true;
+                    if (por === 'grande_curto' && h !== "10:00") block = true;
+                    if (por === 'grande_peludo' && h !== "12:00") block = true;
+                }
                 if (!block) { let o = document.createElement('option'); o.value = h; o.text = h; sel.add(o); }
             });
         }
