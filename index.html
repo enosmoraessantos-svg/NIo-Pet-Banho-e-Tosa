@@ -18,7 +18,7 @@
         .label-req { display: block; font-size: 10px; margin-bottom: 4px; text-transform: uppercase; font-weight: 900; }
         .hidden { display: none; }
         .info-regras-topo { background: #fef2f2; border: 1px solid #fee2e2; padding: 15px; border-radius: 12px; margin-bottom: 20px; font-size: 11px; color: #991b1b; line-height: 1.5; }
-        .semana-card { border-left: 4px solid #dc2626; background: #f8fafc; padding: 15px; border-radius: 0 12px 12px 0; margin-bottom: 15px; border-top: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee; }
+        .semana-card { border-left: 4px solid #dc2626; background: #f8fafc; padding: 15px; border-radius: 0 12px 12px 0; margin-bottom: 15px; border: 1px solid #eee; }
     </style>
 </head>
 <body>
@@ -32,7 +32,7 @@
         <!-- ETAPA 1 -->
         <div id="step1" class="step-content active">
             <div class="card">
-                <h2 class="font-bold mb-4 text-slate-700 uppercase underline text-sm">Etapa 1: O que deseja fazer?</h2>
+                <h2 class="font-bold mb-4 text-slate-700 uppercase underline text-sm">Etapa 1: Início</h2>
                 <select id="acaoInicial" onchange="toggleAcao()">
                     <option value="">Selecione...</option>
                     <option value="agendar">NOVO AGENDAMENTO</option>
@@ -46,7 +46,7 @@
                     <label class="label-req">WhatsApp (11 dígitos) *</label>
                     <input type="tel" id="whatsapp" placeholder="11999998888" maxlength="11">
                     <label class="label-req">Rua e Número *</label>
-                    <div class="flex gap-2 mb-3">
+                    <div class="flex gap-2">
                         <input type="text" id="rua" placeholder="Ex: Rua das Flores, 123" class="flex-grow mb-0">
                         <input type="text" value="Sol Nascente" readonly class="w-32 bg-slate-100 font-bold text-slate-500 text-center border-none text-[10px] mb-0">
                     </div>
@@ -61,8 +61,8 @@
                 </div>
 
                 <div id="camposCancelPacote" class="hidden">
-                    <label class="label-req">Nome do Cliente *</label><input type="text" id="cancelPacoteNome">
-                    <label class="label-req">Nome do Pet *</label><input type="text" id="cancelPetPacote">
+                    <label class="label-req">Nome Cliente *</label><input type="text" id="cancelPacoteNome">
+                    <label class="label-req">Nome Pet *</label><input type="text" id="cancelPetPacote">
                     <button type="button" onclick="msgCancel('pacote')" class="btn-cancel-final">CONFIRMAR CANCELAMENTO</button>
                 </div>
             </div>
@@ -93,10 +93,10 @@
                     <option value="premium">PACOTE PREMIUM</option>
                 </select>
                 <div id="boxServicoAvulso">
-                    <label class="label-req">Escolha o serviço avulso *</label>
+                    <label class="label-req">Serviço Avulso *</label>
                     <select id="servicoAvulsoOpcao">
                         <option value="banho">BANHO</option>
-                        <option value="banho_tosa_higenica">BANHO + TOSA HIGIÊNICA</option>
+                        <option value="banho_higi">BANHO + TOSA HIGIÊNICA</option>
                         <option value="banho_tosa">BANHO + TOSA</option>
                     </select>
                 </div>
@@ -109,18 +109,15 @@
         <div id="step4" class="step-content">
             <div class="card">
                 <h2 class="font-bold mb-4 text-slate-700 uppercase underline text-sm">Etapa 4: Horários</h2>
-                
-                <div class="info-regras-topo">
-                    <strong>REGRAS DE CAPACIDADE:</strong><br>
-                    • 09:00, 11:00, 14:30: Banhos ou Tosa Higiênica + 1 Tosa.<br>
-                    • 10:00: Pet Grande (Pelo Curto).<br>
-                    • 13:30: Apenas Banho ou Tosa Higiênica.<br>
-                    • 15:30 (ou 12:00 Dom): Pet Grande (Peludo).<br>
-                    • 16:00: Apenas Gatos (Banho).
+                <div class="info-regras-topo" id="infoRegras">
+                    <strong>REGRAS DE CAPACIDADE (Máx 4 Pets p/ Horário):</strong><br>
+                    • 09:00, 11:00, 14:30: Banho/Higiênica + 1 Tosa<br>
+                    • 10:00: Pet Grande (Pelo Curto)<br>
+                    • 13:30: Apenas Banho ou Tosa Higiênica<br>
+                    • 15:30 (ou 12:00 Dom): Pet Grande (Peludo)<br>
+                    • 16:00: Apenas Gatos (Banho)
                 </div>
-
                 <div id="areaAgendamentosDinamicos"></div>
-
                 <button type="button" onclick="finalizar()" class="btn-next mt-6">CONFIRMAR ✅</button>
                 <button type="button" onclick="next(3)" class="btn-back-large">VOLTAR</button>
             </div>
@@ -129,33 +126,35 @@
 
     <script>
         function toggleAcao() {
-            const val = document.getElementById('acaoInicial').value;
-            document.getElementById('camposAgendar').classList.toggle('hidden', val !== 'agendar');
-            document.getElementById('camposCancelAvulso').classList.toggle('hidden', val !== 'cancelar_avulso');
-            document.getElementById('camposCancelPacote').classList.toggle('hidden', val !== 'cancelar_pacote');
+            const v = document.getElementById('acaoInicial').value;
+            document.getElementById('camposAgendar').classList.toggle('hidden', v !== 'agendar');
+            document.getElementById('camposCancelAvulso').classList.toggle('hidden', v !== 'cancelar_avulso');
+            document.getElementById('camposCancelPacote').classList.toggle('hidden', v !== 'cancelar_pacote');
         }
 
         function next(n) {
             document.querySelectorAll('.step-content').forEach(s => s.classList.remove('active'));
             document.getElementById('step'+n).classList.add('active');
-            if(n===2) renderPets();
             if(n===4) renderEtapa4();
             window.scrollTo(0,0);
         }
 
+        function updatePetName(i) {
+            const name = document.getElementById(`nomePet${i}`).value;
+            document.getElementById(`tituloPet${i}`).innerText = name ? name.toUpperCase() : `NOME DO PET`;
+        }
+
         function renderPets() {
-            const qtd = document.getElementById('qtdPets').value;
-            const container = document.getElementById('petsContainer');
-            container.innerHTML = '';
-            for(let i=1; i<=qtd; i++) {
-                container.innerHTML += `
+            const q = document.getElementById('qtdPets').value;
+            const c = document.getElementById('petsContainer');
+            c.innerHTML = '';
+            for(let i=1; i<=q; i++) {
+                c.innerHTML += `
                 <div class="pet-box">
-                    <p class="font-black text-red-600 mb-2 uppercase text-[10px]">NOME DO PET</p>
-                    <input type="text" id="nomePet${i}" placeholder="Digite o nome do pet *">
+                    <p class="font-black text-red-600 mb-2 uppercase text-[10px]" id="tituloPet${i}">NOME DO PET</p>
+                    <input type="text" id="nomePet${i}" placeholder="Digite o nome..." oninput="updatePetName(${i})">
                     <label class="label-req">Espécie</label>
-                    <select id="especie${i}" onchange="togglePorte(${i})">
-                        <option value="cachorro">Cachorro</option><option value="gato">Gato</option>
-                    </select>
+                    <select id="especie${i}" onchange="togglePorte(${i})"><option value="cachorro">Cachorro</option><option value="gato">Gato</option></select>
                     <div id="divPorte${i}">
                         <label class="label-req">Porte</label>
                         <select id="porte${i}">
@@ -165,7 +164,7 @@
                     </div>
                     <label class="label-req">Alergia?</label>
                     <select id="alergia${i}"><option value="nao">Não</option><option value="sim">Sim</option></select>
-                    <textarea id="obs${i}" placeholder="Observações de alergia"></textarea>
+                    <textarea id="obs${i}" placeholder="Observações"></textarea>
                 </div>`;
             }
         }
@@ -177,62 +176,77 @@
             const plano = document.getElementById('tipoPlano').value;
             const container = document.getElementById('areaAgendamentosDinamicos');
             container.innerHTML = '';
-
-            const pacotes = {
-                'avulso': ['Serviço Escolhido'],
+            const labels = {
+                'avulso': ['Agendamento Avulso'],
                 'basico': ['1ª Semana: Banho', '2ª Semana: Banho + Tosa Higiênica'],
                 'basico_tosa': ['1ª Semana: Banho', '2ª Semana: Banho + Tosa'],
-                'premium': ['1ª Semana: Banho', '2ª Semana: Banho', '3ª Semana: Banho', '4ª Semana: Banho + Tosa Higiênica', '5ª Semana (Opcional): Banho']
+                'premium': ['1ª Sem: Banho', '2ª Sem: Banho', '3ª Sem: Banho', '4ª Sem: Banho + Tosa Higiênica', '5ª Sem: Banho']
             };
-
-            pacotes[plano].forEach((label, i) => {
+            labels[plano].forEach((label, i) => {
                 container.innerHTML += `
                 <div class="semana-card">
-                    <p class="font-bold text-slate-700 text-xs mb-3 uppercase tracking-widest">${label}</p>
-                    <label class="label-req">Data</label>
+                    <p class="font-bold text-slate-700 text-xs mb-2 uppercase">${label}</p>
                     <input type="date" id="data_${i}" onchange="carregarHoras(${i})">
-                    <label class="label-req">Horário</label>
                     <select id="hora_${i}"><option value="">Selecione a data...</option></select>
                 </div>`;
-                const input = document.getElementById(`data_${i}`);
+                const inp = document.getElementById(`data_${i}`);
                 const hoje = new Date();
-                input.min = hoje.toISOString().split('T')[0];
+                inp.min = hoje.toISOString().split('T')[0];
                 let mesMax = hoje.getMonth() + (hoje.getDate() >= 20 ? 2 : 1);
                 let anoMax = hoje.getFullYear();
                 if(mesMax > 11) { mesMax -= 12; anoMax++; }
-                input.max = new Date(anoMax, mesMax, 0).toISOString().split('T')[0];
+                inp.max = new Date(anoMax, mesMax, 0).toISOString().split('T')[0];
             });
         }
 
         function carregarHoras(idx) {
-            const dataInput = document.getElementById(`data_${idx}`).value;
-            const data = new Date(dataInput);
-            const dia = data.getUTCDay(); // 0 Dom
+            const data = new Date(document.getElementById(`data_${idx}`).value);
+            const dia = data.getUTCDay();
             const select = document.getElementById(`hora_${idx}`);
-            select.innerHTML = '<option value="">Selecione...</option>';
-
-            if (dia < 3 && dia !== 0) return alert("Nilo Pet atende de Quarta a Domingo!");
-
-            const lista = (dia === 0) ? ["09:00", "10:00", "11:00", "12:00"] : ["09:00", "10:00", "11:00", "13:30", "14:30", "15:30", "16:00"];
+            const plano = document.getElementById('tipoPlano').value;
+            const servico = plano === 'avulso' ? document.getElementById('servicoAvulsoOpcao').value : 'pacote';
             
-            lista.forEach(h => {
-                let opt = document.createElement('option');
-                opt.value = h; opt.text = h; select.add(opt);
+            // Pega dados do primeiro pet para validação de regras (simplificado)
+            const especie = document.getElementById('especie1').value;
+            const porte = document.getElementById('porte1').value;
+
+            select.innerHTML = '<option value="">Selecione...</option>';
+            if (dia < 3 && dia !== 0) return alert("Fechado! Atendemos de Quarta a Domingo.");
+
+            const horasDisp = (dia === 0) ? ["09:00", "10:00", "11:00", "12:00"] : ["09:00", "10:00", "11:00", "13:30", "14:30", "15:30", "16:00"];
+
+            horasDisp.forEach(h => {
+                let bloqueado = false;
+                
+                // Regras de Bloqueio por Espécie/Porte
+                if (especie === 'gato' && h !== "16:00") bloqueado = true;
+                if (especie === 'cachorro' && h === "16:00") bloqueado = true;
+                if (porte === 'grande_curto' && h !== "10:00") bloqueado = true;
+                if (porte === 'grande_peludo' && h !== "15:30" && h !== "12:00") bloqueado = true;
+                
+                // Regra de Serviço (13:30 apenas banho/higiênica)
+                if (servico === 'banho_tosa' && h === "13:30") bloqueado = true;
+                
+                if (!bloqueado) {
+                    let opt = document.createElement('option');
+                    opt.value = h; opt.text = h; select.add(opt);
+                }
             });
+            if(select.options.length === 1) alert("Não há horários disponíveis para o porte/espécie deste pet nesta data.");
         }
 
         function msgCancel(t) {
-            alert(t === 'avulso' ? "seu agendamento foi cancelado caso precise agendar novamente é só fazer seu agendamento." : "cancelando uma data do pacote o seu pacote será cancelado por completo e vc terá que refazer todo o seu agendamento, entre em contato com nossos atendentes para mudar sua data pelo WhatsApp.");
+            alert(t === 'avulso' ? "Agendamento cancelado. Refaça quando quiser." : "Cancelando o pacote, você perde todas as datas. Fale no WhatsApp para alterar apenas um dia.");
             location.reload();
         }
 
         function finalizar() {
-            alert("agendamento confirmado logo mais nossa equipe entrar em contato para passar valores de imediato envie um foto do pet para acelerar o processo.");
+            alert("AGENDAMENTO CONFIRMADO! Logo mais nossa equipe entrará em contato para passar valores. Envie uma foto do pet para acelerar.");
             location.reload();
         }
 
         function validaPasso1() {
-            if(!document.getElementById('nomeCliente').value || document.getElementById('whatsapp').value.length < 11) return alert("Preencha nome e WhatsApp corretamente!");
+            if(!document.getElementById('nomeCliente').value || document.getElementById('whatsapp').value.length < 11) return alert("Preencha Nome e WhatsApp corretamente!");
             next(2);
         }
     </script>
