@@ -80,7 +80,7 @@
         <!-- ETAPA 4 -->
         <div id="step4" class="step-content">
             <div class="card">
-                <h2 class="font-bold mb-4 text-slate-700 uppercase underline text-sm">Etapa 4: Agendamento Final</h2>
+                <h2 class="font-bold mb-4 text-slate-700 uppercase underline text-sm">Etapa 4: Horários</h2>
                 <div id="datasHorariosContainer"></div>
                 <button type="button" onclick="validaFinalizar()" class="btn-next mt-4">CONFIRMAR ✅</button>
                 <button type="button" onclick="next(3)" class="btn-back-large">VOLTAR</button>
@@ -154,16 +154,17 @@
                 let textos = [];
                 if(plano === 'basico') textos = ["1ª Semana: Banho", "2ª Semana: Banho + Tosa Higiênica"];
                 else if(plano === 'basico_tosa') textos = ["1ª Semana: Banho", "2ª Semana: Banho + Tosa"];
-                else if(plano === 'premium') textos = ["1ª Semana: Banho", "2ª Semana: Banho", "3ª Semana: Banho", "4ª Semana: Banho + Tosa Higiênica", "5ª Semana (Opcional): Banho"];
+                else if(plano === 'premium') textos = ["1ª Sem: Banho", "2ª Sem: Banho", "3ª Sem: Banho", "4ª Sem: Banho + Tosa Higiênica", "5ª Sem (Opcional): Banho"];
                 else if(plano === 'basico_gato') textos = ["1ª Semana: Banho", "2ª Semana: Banho"];
-                else textos = ["Serviço Avulso Escolhido"];
+                else textos = ["Serviço Avulso"];
 
                 container.innerHTML += `<p class="font-black text-xs text-red-600 uppercase mt-4 mb-2">${document.getElementById(`nomePet${i}`).value}</p>`;
                 textos.forEach((txt, s) => {
+                    const isOptional = (plano === 'premium' && s === 4);
                     container.innerHTML += `
                     <div class="pet-box !mb-2">
-                        <label class="label-req">${plano === 'avulso' ? 'Agendamento' : txt}</label>
-                        ${plano !== 'avulso' ? `<input type="text" class="lock-servico" value="${txt}" readonly>` : ''}
+                        <label class="label-req">${txt}${isOptional ? '' : ' *'}</label>
+                        <input type="text" class="lock-servico" value="${txt}" readonly>
                         <input type="date" id="data_p${i}_s${s}" onchange="loadHours(${i}, ${s})">
                         <select id="hora_p${i}_s${s}"><option value="">Selecione...</option></select>
                     </div>`;
@@ -178,13 +179,20 @@
         }
 
         function loadHours(p, s) {
-            const dt = new Date(document.getElementById(`data_p${p}_s${s}`).value + 'T00:00:00');
+            const dtIn = document.getElementById(`data_p${p}_s${s}`).value;
+            const dt = new Date(dtIn + 'T00:00:00');
             const dia = dt.getDay();
             const sel = document.getElementById(`hora_p${p}_s${s}`);
             const esp = document.getElementById(`especie${p}`).value;
             const por = document.getElementById(`porte${p}`).value;
             const plano = document.getElementById(`planoPet${p}`).value;
-            const serv = plano === 'avulso' ? document.getElementById(`servicoPet${p}`).value : (plano === 'basico_tosa' ? 'banho_tosa' : 'banho');
+            
+            // Lógica para definir se esta semana específica é de TOSA ou BANHO
+            let servicoAtual = 'banho';
+            if(plano === 'avulso') servicoAtual = document.getElementById(`servicoPet${p}`).value;
+            else if(plano === 'basico' && s === 1) servicoAtual = 'banho_higi';
+            else if(plano === 'basico_tosa' && s === 1) servicoAtual = 'banho_tosa';
+            else if(plano === 'premium' && s === 3) servicoAtual = 'banho_higi';
 
             sel.innerHTML = '<option value="">Selecione...</option>';
             if (dia < 3 && dia !== 0) return alert("Atendimento de Quarta a Domingo!");
@@ -193,14 +201,15 @@
 
             lista.forEach(h => {
                 let block = false;
-                const isTosa = (serv === 'banho_tosa');
+                const isTosaTotal = (servicoAtual === 'banho_tosa');
+                
                 if(dia !== 0) {
-                    if (isTosa && !["09:00", "11:00", "14:30"].includes(h)) block = true;
+                    if (isTosaTotal && !["09:00", "11:00", "14:30"].includes(h)) block = true;
                     if (por === 'grande_curto' && h !== "10:00") block = true;
                     if (por === 'grande_peludo' && h !== "15:30") block = true;
                     if (esp === 'gato' && h !== "16:00") block = true;
                 } else {
-                    if (isTosa && !["09:00", "11:00"].includes(h)) block = true;
+                    if (isTosaTotal && !["09:00", "11:00"].includes(h)) block = true;
                     if (por === 'grande_curto' && h !== "10:00") block = true;
                     if (por === 'grande_peludo' && h !== "12:00") block = true;
                 }
@@ -210,7 +219,22 @@
 
         function validaEtapa1() { if(!document.getElementById('nomeCliente').value || document.getElementById('whatsapp').value.length < 11 || !document.getElementById('rua').value) return alert("Preencha tudo!"); next(2); }
         function validaEtapa2() { const q = document.getElementById('qtdPets').value; for(let i=1; i<=q; i++) { if(!document.getElementById(`nomePet${i}`).value) return alert("Nome do pet vazio!"); } next(3); }
-        function validaFinalizar() { const selects = document.querySelectorAll('#step4 select'); for(let s of selects) { if(!s.value) return alert("Selecione os horários!"); } alert("agendamento confirmado logo mais nossa equipe entrarar em contato, para agilizar o atendimento nos envie uma foto do seu pet."); location.reload(); }
+        
+        function validaFinalizar() {
+            const q = document.getElementById('qtdPets').value;
+            for(let i=1; i<=q; i++) {
+                const plano = document.getElementById(`planoPet${i}`).value;
+                let semanas = (plano === 'premium') ? 5 : (plano.includes('basico') || plano === 'basico_gato' ? 2 : 1);
+                for(let s=0; s<semanas; s++) {
+                    const isOptional = (plano === 'premium' && s === 4);
+                    const dt = document.getElementById(`data_p${i}_s${s}`).value;
+                    const hr = document.getElementById(`hora_p${i}_s${s}`).value;
+                    if(!isOptional && (!dt || !hr)) return alert("Preencha todas as datas obrigatórias!");
+                }
+            }
+            alert("agendamento confirmado logo mais nossa equipe entrarar em contato, para agilizar o atendimento nos envie uma foto do seu pet.");
+            location.reload();
+        }
     </script>
 </body>
 </html>
