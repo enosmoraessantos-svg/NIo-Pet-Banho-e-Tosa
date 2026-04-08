@@ -7,7 +7,7 @@
     <script src="https://tailwindcss.com"></script>
     <style>
         body { background-color: #f0f9ff; font-family: sans-serif; color: #1e293b; }
-        .card { background: white; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); margin: 15px; padding: 25px; border: 1px solid #e2e8f0; }
+        .card { background: white; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); margin: 15px; padding: 25px; border: 1px solid #e2e8f0; border-top: 5px solid #dc2626; }
         input, select, textarea { width: 100%; padding: 14px; border-radius: 10px; border: 2px solid #e2e8f0; margin-bottom: 12px; font-size: 16px; color: black; }
         .btn-next { background-color: #dc2626; color: white; width: 100%; padding: 18px; border-radius: 12px; font-weight: 800; font-size: 18px; border: none; cursor: pointer; }
         .btn-back-large { background-color: #64748b; color: white; width: 100%; padding: 18px; border-radius: 12px; font-weight: 800; font-size: 18px; border: none; cursor: pointer; margin-top: 10px; }
@@ -17,8 +17,7 @@
         .pet-box { border: 2px solid #e2e8f0; padding: 15px; border-radius: 15px; margin-bottom: 15px; background: #f8fafc; }
         .label-req { display: block; font-size: 10px; margin-bottom: 4px; text-transform: uppercase; font-weight: 900; }
         .hidden { display: none; }
-        .info-topo { background: #fef2f2; border: 1px solid #fee2e2; padding: 12px; border-radius: 12px; margin-bottom: 15px; font-size: 11px; color: #991b1b; }
-        .semana-card { border: 1px solid #e2e8f0; background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 15px; border-left: 5px solid #dc2626; }
+        .info-regras-box { background: #fff1f2; border: 1px solid #fecaca; padding: 12px; border-radius: 12px; margin-bottom: 15px; font-size: 11px; color: #991b1b; line-height: 1.4; }
     </style>
 </head>
 <body>
@@ -45,7 +44,7 @@
                     <input type="text" id="nomeCliente" placeholder="Nome completo">
                     <label class="label-req">WhatsApp (11 dígitos) *</label>
                     <input type="tel" id="whatsapp" placeholder="11999998888" maxlength="11">
-                    <label class="label-req">Rua e Número *</label>
+                    <label class="label-req">Endereço *</label>
                     <div class="flex gap-2">
                         <input type="text" id="rua" placeholder="Rua e Número" class="flex-grow">
                         <input type="text" value="Sol Nascente" readonly class="w-32 bg-slate-100 font-bold text-slate-500 text-center border-none text-[10px] mb-3">
@@ -86,7 +85,7 @@
         <div id="step3" class="step-content">
             <div class="card">
                 <h2 class="font-bold mb-4 text-slate-700 uppercase underline text-sm">Etapa 3: Serviços</h2>
-                <select id="tipoPlano" onchange="toggleServicoEtapa3()">
+                <select id="tipoPlano" onchange="toggleServico3()">
                     <option value="avulso">AVULSO</option>
                     <option value="basico">PACOTE BÁSICO</option>
                     <option value="basico_tosa">PACOTE BÁSICO COM TOSA</option>
@@ -108,17 +107,17 @@
         <!-- ETAPA 4 -->
         <div id="step4" class="step-content">
             <div class="card">
-                <h2 class="font-bold mb-4 text-slate-700 uppercase underline text-sm">Etapa 4: Agendamento</h2>
-                <div class="info-topo">
-                    <strong>Regras de Horários:</strong><br>
-                    • 09:00/11:00/14:30: Banhos/Tosa Hig. + 1 Tosa<br>
-                    • 10:00: Grande Pelo Curto<br>
-                    • 13:30: Apenas Banho/Higiênica<br>
-                    • 15:30 (ou 12:00 Dom): Grande Peludo<br>
-                    • 16:00: Gatos (Banho)
+                <h2 class="font-bold mb-4 text-slate-700 uppercase underline text-sm">Etapa 4: Horários</h2>
+                <div class="info-regras-box">
+                    <strong>CAPACIDADE MÁXIMA (4 PETS):</strong><br>
+                    • 09h/11h/14:30h: 3 Banho/Higi. + 1 Tosa<br>
+                    • 10h: 3 Banho/Higi. + 1 Grande Pelo Curto<br>
+                    • 13:30h: 4 Banhos/Higiênica (Sem Tosa)<br>
+                    • 15:30h: 3 Banho/Higi. + 1 Grande Peludo<br>
+                    • 16:00h: 3 Banho/Higi. + 1 Gato (Banho)
                 </div>
                 <div id="agendaDinamica"></div>
-                <button type="button" onclick="finalizar()" class="btn-next mt-4">CONFIRMAR ✅</button>
+                <button type="button" onclick="finalizar()" class="btn-next mt-6">CONFIRMAR ✅</button>
                 <button type="button" onclick="next(3)" class="btn-back-large">VOLTAR</button>
             </div>
         </div>
@@ -162,39 +161,44 @@
                             <option value="grande_curto">Grande pelo curto</option><option value="grande_peludo">Grande peludo</option>
                         </select>
                     </div>
-                    <label class="label-req">Alergia?</label>
-                    <select id="alergia${i}"><option value="nao">Não</option><option value="sim">Sim</option></select>
+                    <select id="alergia${i}"><option value="nao">Não possui Alergia</option><option value="sim">Sim, possui</option></select>
                     <textarea id="obs${i}" placeholder="Observações"></textarea>
                 </div>`;
             }
         }
 
         function togglePorte(i) { document.getElementById('divPorte'+i).classList.toggle('hidden', document.getElementById('especie'+i).value === 'gato'); }
-        function toggleServicoEtapa3() { document.getElementById('boxAvulso').classList.toggle('hidden', document.getElementById('tipoPlano').value !== 'avulso'); }
+        function toggleServico3() { document.getElementById('boxAvulso').classList.toggle('hidden', document.getElementById('tipoPlano').value !== 'avulso'); }
 
         function renderEtapa4() {
             const plano = document.getElementById('tipoPlano').value;
             const container = document.getElementById('agendaDinamica');
             container.innerHTML = '';
-            const itens = {
-                'avulso': ['Serviço Avulso'],
+            const labels = {
+                'avulso': ['Serviço Escolhido'],
                 'basico': ['Semana 1: Banho', 'Semana 2: Banho + Tosa Higiênica'],
                 'basico_tosa': ['Semana 1: Banho', 'Semana 2: Banho + Tosa'],
                 'premium': ['Sem 1: Banho', 'Sem 2: Banho', 'Sem 3: Banho', 'Sem 4: Banho + Tosa Higiênica', 'Sem 5: Banho']
             };
-            itens[plano].forEach((txt, idx) => {
+            labels[plano].forEach((txt, idx) => {
                 container.innerHTML += `
-                <div class="semana-card">
-                    <p class="font-bold text-xs uppercase mb-2">${txt}</p>
+                <div class="card !m-0 !mb-4 !p-4 border-l-4 border-red-600 bg-slate-50">
+                    <p class="font-bold text-xs uppercase mb-3 text-slate-600">${txt}</p>
+                    <label class="label-req">Data</label>
                     <input type="date" id="d_${idx}" onchange="loadHours(${idx})">
+                    <label class="label-req">Horário</label>
                     <select id="h_${idx}"><option value="">Selecione a data...</option></select>
                 </div>`;
-                const inp = document.getElementById(`d_${idx}`);
-                const h = new Date(); inp.min = h.toISOString().split('T');
-                let m = h.getMonth() + (h.getDate() >= 20 ? 2 : 1);
-                let a = h.getFullYear(); if(m > 11) { m -= 12; a++; }
-                inp.max = new Date(a, m, 0).toISOString().split('T');
+                configCalendar(`d_${idx}`);
             });
+        }
+
+        function configCalendar(id) {
+            const inp = document.getElementById(id);
+            const h = new Date(); inp.min = h.toISOString().split('T')[0];
+            let m = h.getMonth() + (h.getDate() >= 20 ? 2 : 1);
+            let a = h.getFullYear(); if(m > 11) { m -= 12; a++; }
+            inp.max = new Date(a, m, 0).toISOString().split('T')[0];
         }
 
         function loadHours(idx) {
@@ -203,8 +207,6 @@
             const sel = document.getElementById(`h_${idx}`);
             const plano = document.getElementById('tipoPlano').value;
             const serv = plano === 'avulso' ? document.getElementById('servicoAvulso').value : 'pacote';
-            
-            // Regras baseadas no primeiro pet para o bloqueio avulso
             const esp = document.getElementById('especie1').value;
             const por = document.getElementById('porte1').value;
 
@@ -215,10 +217,11 @@
 
             lista.forEach(h => {
                 let block = false;
+                // REGRAS DE BLOQUEIO POR ESPÉCIE/PORTE/SERVIÇO
                 if (esp === 'gato' && h !== "16:00") block = true;
                 if (esp === 'cachorro' && h === "16:00") block = true;
                 if (por === 'grande_curto' && h !== "10:00") block = true;
-                if (por === 'grande_peludo' && h !== "15:30" && h !== "12:00") block = true;
+                if (por === 'grande_peludo' && (dia!==0 && h!=="15:30") && (dia===0 && h!=="12:00")) block = true;
                 if (serv === 'banho_tosa' && h === "13:30") block = true;
                 
                 if (!block) {
@@ -239,7 +242,7 @@
         }
 
         function validaPasso1() {
-            if(!document.getElementById('nomeCliente').value || document.getElementById('whatsapp').value.length < 11) return alert("Preencha corretamente!");
+            if(!document.getElementById('nomeCliente').value || document.getElementById('whatsapp').value.length < 11) return alert("Preencha Nome e WhatsApp!");
             next(2);
         }
     </script>
