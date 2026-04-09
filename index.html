@@ -38,6 +38,8 @@
                     <option value="cancelar_avulso">CANCELAR SERVIÇO AVULSO</option>
                     <option value="cancelar_pacote">CANCELAR PACOTE</option>
                 </select>
+
+                <!-- CAMPOS AGENDAR -->
                 <div id="camposAgendar" class="hidden">
                     <label class="label-req">Nome do Cliente *</label>
                     <input type="text" id="nomeCliente" placeholder="Nome completo">
@@ -49,6 +51,17 @@
                         <input type="text" value="Sol Nascente" readonly class="w-32 bg-slate-100 font-bold text-slate-500 text-center border-none text-[10px] mb-3">
                     </div>
                     <button type="button" onclick="validaEtapa1()" class="btn-next mt-4">PRÓXIMO</button>
+                </div>
+
+                <!-- CAMPOS CANCELAR -->
+                <div id="camposCancelar" class="hidden">
+                    <label class="label-req">Nome do Cliente *</label>
+                    <input type="text" id="nomeCanc" placeholder="Nome completo">
+                    <label class="label-req">Nome do Pet *</label>
+                    <input type="text" id="petCanc" placeholder="Nome do pet">
+                    <label class="label-req">Data do Agendamento *</label>
+                    <input type="date" id="dataCanc">
+                    <button type="button" onclick="confirmarCancelamento()" class="btn-cancel-final">CONFIRMAR CANCELAMENTO</button>
                 </div>
             </div>
         </div>
@@ -89,7 +102,27 @@
     </form>
 
     <script>
-        function toggleAcao() { document.getElementById('camposAgendar').classList.toggle('hidden', document.getElementById('acaoInicial').value !== 'agendar'); }
+        function toggleAcao() {
+            const acao = document.getElementById('acaoInicial').value;
+            document.getElementById('camposAgendar').classList.toggle('hidden', acao !== 'agendar');
+            document.getElementById('camposCancelar').classList.toggle('hidden', acao !== 'cancelar_avulso' && acao !== 'cancelar_pacote');
+        }
+
+        function confirmarCancelamento() {
+            const acao = document.getElementById('acaoInicial').value;
+            const nome = document.getElementById('nomeCanc').value;
+            const pet = document.getElementById('petCanc').value;
+            const data = document.getElementById('dataCanc').value;
+
+            if(!nome || !pet || !data) return alert("Preencha todos os campos para cancelar!");
+
+            if(acao === 'cancelar_avulso') {
+                alert("Seu agendamento foi cancelado e você pode estar fazendo um novo agendamento.");
+            } else if(acao === 'cancelar_pacote') {
+                alert("O seu agendamento do pacote será cancelado todos os agendamentos se você deseja alterar alguma data do serviço entre em contato com nossos atendentes.");
+            }
+            location.reload();
+        }
 
         function next(n) {
             document.querySelectorAll('.step-content').forEach(s => s.classList.remove('active'));
@@ -111,7 +144,7 @@
                     <input type="text" id="nomePet${i}" placeholder="Nome do pet *" oninput="document.getElementById('lblPet${i}').innerText = this.value.toUpperCase() || 'NOME DO PET'">
                     <label class="label-req">Espécie</label>
                     <select id="especie${i}" onchange="togglePorte(${i}); renderServicos();"><option value="cachorro">Cachorro</option><option value="gato">Gato</option></select>
-                    <div id="divPorte${i}"><label class="label-req">Porte</label><select id="porte${i}"><option value="pequeno">Pequeno</option><option value="medio">Médio</option><option value="grande_curto">Grande pelo curto</option><option value="grande_peludo">Grande peludo</option></select></div>
+                    <div id="divPorte${i}"><label class="label-req">Porte</label><select id="porte${i}" onchange="renderServicos();"><option value="pequeno">Pequeno</option><option value="medio">Médio</option><option value="grande_curto">Grande pelo curto</option><option value="grande_peludo">Grande peludo</option></select></div>
                     <label class="label-req">Possui Alergia?</label>
                     <select id="alergia${i}"><option value="nao">Não</option><option value="sim">Sim</option></select>
                     <label class="label-req">Observação</label>
@@ -128,15 +161,24 @@
             container.innerHTML = '';
             for(let i=1; i<=q; i++) {
                 const ehGato = document.getElementById(`especie${i}`).value === 'gato';
+                const porte = document.getElementById(`porte${i}`) ? document.getElementById(`porte${i}`).value : '';
+                const ehGrande = (porte === 'grande_curto' || porte === 'grande_peludo') && !ehGato;
+
                 container.innerHTML += `
                 <div class="pet-box">
                     <p class="font-bold text-xs uppercase mb-2 text-red-600">${document.getElementById(`nomePet${i}`).value || 'Pet '+i}</p>
                     <label class="label-req">Plano</label>
-                    <select id="planoPet${i}" onchange="toggleOpcoesServico(${i})">
+                    <select id="planoPet${i}" onchange="toggleOpcoesServico(${i})" ${ehGrande ? 'disabled class="lock-servico"' : ''}>
                         <option value="avulso">AVULSO</option>
                         ${ehGato ? '<option value="basico_gato">PACOTE GATO (BANHO)</option>' : '<option value="basico">PACOTE BÁSICO</option><option value="basico_tosa">PACOTE BÁSICO COM TOSA</option><option value="premium">PACOTE PREMIUM</option>'}
                     </select>
-                    <div id="boxAvulso${i}"><label class="label-req">Serviço</label><select id="servicoPet${i}"><option value="banho">BANHO</option>${ehGato ? '' : '<option value="banho_higi">BANHO + TOSA HIGIÊNICA</option><option value="banho_tosa">BANHO + TOSA</option>'}</select></div>
+                    <div id="boxAvulso${i}">
+                        <label class="label-req">Serviço</label>
+                        <select id="servicoPet${i}" ${ehGrande ? 'disabled class="lock-servico"' : ''}>
+                            <option value="banho">BANHO</option>
+                            ${ehGato || ehGrande ? '' : '<option value="banho_higi">BANHO + TOSA HIGIÊNICA</option><option value="banho_tosa">BANHO + TOSA</option>'}
+                        </select>
+                    </div>
                 </div>`;
             }
         }
@@ -148,6 +190,7 @@
             const container = document.getElementById('datasHorariosContainer');
             container.innerHTML = '';
             const hoje = new Date();
+            const diaHoje = hoje.getDate();
 
             for(let i=1; i<=q; i++) {
                 const plano = document.getElementById(`planoPet${i}`).value;
@@ -168,18 +211,22 @@
                         <input type="date" id="data_p${i}_s${s}" onchange="loadHours(${i}, ${s})">
                         <select id="hora_p${i}_s${s}"><option value="">Selecione...</option></select>
                     </div>`;
+                    
                     const input = document.getElementById(`data_p${i}_s${s}`);
-                    input.min = hoje.toISOString().split('T');
-                    let mesMax = hoje.getMonth() + (hoje.getDate() >= 20 ? 2 : 1);
+                    // Bloqueia dias anteriores
+                    input.min = hoje.toISOString().split('T')[0];
+                    
+                    let mesMax = hoje.getMonth() + (diaHoje >= 20 ? 2 : 1);
                     let anoMax = hoje.getFullYear();
                     if(mesMax > 11) { mesMax -= 12; anoMax++; }
-                    input.max = new Date(anoMax, mesMax, 0).toISOString().split('T');
+                    input.max = new Date(anoMax, mesMax, 0).toISOString().split('T')[0];
                 });
             }
         }
 
         function loadHours(p, s) {
             const dtIn = document.getElementById(`data_p${p}_s${s}`).value;
+            if(!dtIn) return;
             const dt = new Date(dtIn + 'T00:00:00');
             const dia = dt.getDay();
             const sel = document.getElementById(`hora_p${p}_s${s}`);
@@ -187,7 +234,6 @@
             const por = document.getElementById(`porte${p}`).value;
             const plano = document.getElementById(`planoPet${p}`).value;
             
-            // Lógica para definir se esta semana específica é de TOSA ou BANHO
             let servicoAtual = 'banho';
             if(plano === 'avulso') servicoAtual = document.getElementById(`servicoPet${p}`).value;
             else if(plano === 'basico' && s === 1) servicoAtual = 'banho_higi';
@@ -198,7 +244,7 @@
             if (dia < 3 && dia !== 0) return alert("Atendimento de Quarta a Domingo!");
 
             const lista = (dia === 0) ? ["09:00", "10:00", "11:00", "12:00"] : ["09:00", "10:00", "11:00", "13:30", "14:30", "15:30", "16:00"];
-
+            
             lista.forEach(h => {
                 let block = false;
                 const isTosaTotal = (servicoAtual === 'banho_tosa');
