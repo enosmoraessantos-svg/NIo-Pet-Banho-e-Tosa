@@ -59,8 +59,18 @@
                     <input type="text" id="nomeCanc" placeholder="Nome completo">
                     <label class="label-req">Nome do Pet *</label>
                     <input type="text" id="petCanc" placeholder="Nome do pet">
+                    
+                    <div id="divTipoPacote" class="hidden">
+                        <label class="label-req">Tipo de Pacote *</label>
+                        <select id="tipoPacoteCanc">
+                            <option value="basico">Pacote Básico</option>
+                            <option value="premium">Pacote Premium</option>
+                            <option value="basico_tosa">Pacote Básico + Tosa</option>
+                        </select>
+                    </div>
+
                     <label class="label-req">Data do Agendamento *</label>
-                    <input type="date" id="dataCanc">
+                    <input type="date" id="dataCanc" onchange="validaDataCancelamento(this)">
                     <button type="button" onclick="confirmarCancelamento()" class="btn-cancel-final">CONFIRMAR CANCELAMENTO</button>
                 </div>
             </div>
@@ -106,6 +116,25 @@
             const acao = document.getElementById('acaoInicial').value;
             document.getElementById('camposAgendar').classList.toggle('hidden', acao !== 'agendar');
             document.getElementById('camposCancelar').classList.toggle('hidden', acao !== 'cancelar_avulso' && acao !== 'cancelar_pacote');
+            document.getElementById('divTipoPacote').classList.toggle('hidden', acao !== 'cancelar_pacote');
+            
+            if(acao.includes('cancelar')) {
+                const input = document.getElementById('dataCanc');
+                const hoje = new Date();
+                input.min = hoje.toISOString().split('T')[0];
+                let mesMax = hoje.getMonth() + (hoje.getDate() >= 20 ? 2 : 1);
+                let anoMax = hoje.getFullYear();
+                if(mesMax > 11) { mesMax -= 12; anoMax++; }
+                input.max = new Date(anoMax, mesMax, 0).toISOString().split('T')[0];
+            }
+        }
+
+        function validaDataCancelamento(el) {
+            const d = new Date(el.value + 'T00:00:00').getDay();
+            if(d === 1 || d === 2) {
+                alert("Não trabalhamos segunda e terça. Selecione outra data.");
+                el.value = "";
+            }
         }
 
         function confirmarCancelamento() {
@@ -114,14 +143,19 @@
             const pet = document.getElementById('petCanc').value;
             const data = document.getElementById('dataCanc').value;
 
-            if(!nome || !pet || !data) return alert("Preencha todos os campos para cancelar!");
+            if(!nome || !pet || !data) return alert("Preencha todos os campos!");
 
+            let msg = "";
             if(acao === 'cancelar_avulso') {
-                alert("Seu agendamento foi cancelado e você pode estar fazendo um novo agendamento.");
-            } else if(acao === 'cancelar_pacote') {
-                alert("O seu agendamento do pacote será cancelado todos os agendamentos se você deseja alterar alguma data do serviço entre em contato com nossos atendentes.");
+                msg = "Ao confirmar cancelamento o seu agendamento será cancelado e você terá que refazer um novo agendamento.";
+            } else {
+                msg = "Ao confirmar cancelamento seu pacote será cancelado por completo, caso queira alterar a data do agendamento entre em contato com nossos atendentes pelo whatsapp.";
             }
-            location.reload();
+
+            if(confirm(msg)) {
+                alert("Cancelamento realizado com sucesso.");
+                location.reload();
+            }
         }
 
         function next(n) {
@@ -161,22 +195,20 @@
             container.innerHTML = '';
             for(let i=1; i<=q; i++) {
                 const ehGato = document.getElementById(`especie${i}`).value === 'gato';
-                const porte = document.getElementById(`porte${i}`) ? document.getElementById(`porte${i}`).value : '';
-                const ehGrande = (porte === 'grande_curto' || porte === 'grande_peludo') && !ehGato;
-
+                
                 container.innerHTML += `
                 <div class="pet-box">
                     <p class="font-bold text-xs uppercase mb-2 text-red-600">${document.getElementById(`nomePet${i}`).value || 'Pet '+i}</p>
                     <label class="label-req">Plano</label>
-                    <select id="planoPet${i}" onchange="toggleOpcoesServico(${i})" ${ehGrande ? 'disabled class="lock-servico"' : ''}>
+                    <select id="planoPet${i}" onchange="toggleOpcoesServico(${i})">
                         <option value="avulso">AVULSO</option>
-                        ${ehGato ? '<option value="basico_gato">PACOTE GATO (BANHO)</option>' : '<option value="basico">PACOTE BÁSICO</option><option value="basico_tosa">PACOTE BÁSICO COM TOSA</option><option value="premium">PACOTE PREMIUM</option>'}
+                        ${ehGato ? '' : '<option value="basico">PACOTE BÁSICO</option><option value="basico_tosa">PACOTE BÁSICO COM TOSA</option><option value="premium">PACOTE PREMIUM</option>'}
                     </select>
                     <div id="boxAvulso${i}">
                         <label class="label-req">Serviço</label>
-                        <select id="servicoPet${i}" ${ehGrande ? 'disabled class="lock-servico"' : ''}>
+                        <select id="servicoPet${i}">
                             <option value="banho">BANHO</option>
-                            ${ehGato || ehGrande ? '' : '<option value="banho_higi">BANHO + TOSA HIGIÊNICA</option><option value="banho_tosa">BANHO + TOSA</option>'}
+                            ${ehGato ? '' : '<option value="banho_higi">BANHO + TOSA HIGIÊNICA</option><option value="banho_tosa">BANHO + TOSA</option>'}
                         </select>
                     </div>
                 </div>`;
@@ -198,7 +230,6 @@
                 if(plano === 'basico') textos = ["1ª Semana: Banho", "2ª Semana: Banho + Tosa Higiênica"];
                 else if(plano === 'basico_tosa') textos = ["1ª Semana: Banho", "2ª Semana: Banho + Tosa"];
                 else if(plano === 'premium') textos = ["1ª Sem: Banho", "2ª Sem: Banho", "3ª Sem: Banho", "4ª Sem: Banho + Tosa Higiênica", "5ª Sem (Opcional): Banho"];
-                else if(plano === 'basico_gato') textos = ["1ª Semana: Banho", "2ª Semana: Banho"];
                 else textos = ["Serviço Avulso"];
 
                 container.innerHTML += `<p class="font-black text-xs text-red-600 uppercase mt-4 mb-2">${document.getElementById(`nomePet${i}`).value}</p>`;
@@ -213,9 +244,7 @@
                     </div>`;
                     
                     const input = document.getElementById(`data_p${i}_s${s}`);
-                    // Bloqueia dias anteriores
                     input.min = hoje.toISOString().split('T')[0];
-                    
                     let mesMax = hoje.getMonth() + (diaHoje >= 20 ? 2 : 1);
                     let anoMax = hoje.getFullYear();
                     if(mesMax > 11) { mesMax -= 12; anoMax++; }
@@ -234,6 +263,11 @@
             const por = document.getElementById(`porte${p}`).value;
             const plano = document.getElementById(`planoPet${p}`).value;
             
+            const hoje = new Date();
+            const isHoje = dt.toDateString() === hoje.toDateString();
+            const horaAtual = hoje.getHours();
+            const minAtual = hoje.getMinutes();
+
             let servicoAtual = 'banho';
             if(plano === 'avulso') servicoAtual = document.getElementById(`servicoPet${p}`).value;
             else if(plano === 'basico' && s === 1) servicoAtual = 'banho_higi';
@@ -246,6 +280,11 @@
             const lista = (dia === 0) ? ["09:00", "10:00", "11:00", "12:00"] : ["09:00", "10:00", "11:00", "13:30", "14:30", "15:30", "16:00"];
             
             lista.forEach(h => {
+                const [hSel, mSel] = h.split(':').map(Number);
+                
+                // Se for hoje, esconde horários que já passaram
+                if(isHoje && (hSel < horaAtual || (hSel === horaAtual && minAtual >= 0))) return;
+
                 let block = false;
                 const isTosaTotal = (servicoAtual === 'banho_tosa');
                 
@@ -270,7 +309,7 @@
             const q = document.getElementById('qtdPets').value;
             for(let i=1; i<=q; i++) {
                 const plano = document.getElementById(`planoPet${i}`).value;
-                let semanas = (plano === 'premium') ? 5 : (plano.includes('basico') || plano === 'basico_gato' ? 2 : 1);
+                let semanas = (plano === 'premium') ? 5 : (plano.includes('basico') ? 2 : 1);
                 for(let s=0; s<semanas; s++) {
                     const isOptional = (plano === 'premium' && s === 4);
                     const dt = document.getElementById(`data_p${i}_s${s}`).value;
