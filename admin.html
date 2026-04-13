@@ -31,7 +31,7 @@
     </div>
 
     <script>
-        // CONFIGURAÇÃO CORRIGIDA
+        // CONFIGURAÇÃO DEFINITIVA CONECTADA AO SEU PROJETO
         const SB_URL = "https://supabase.co";
         const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
 
@@ -47,17 +47,25 @@
 
         async function carregarDados() {
             const container = document.getElementById('listaAgendamentos');
+            container.innerHTML = "<p class='text-center text-slate-400 mt-10 font-bold uppercase text-xs'>Buscando novos pedidos...</p>";
+            
             try {
                 const res = await fetch(SB_URL + "?select=*&order=created_at.desc", {
+                    method: "GET",
                     headers: { 
                         "apikey": SB_KEY, 
-                        "Authorization": "Bearer " + SB_KEY 
+                        "Authorization": "Bearer " + SB_KEY,
+                        "Content-Type": "application/json"
                     }
                 });
+
+                if (!res.ok) throw new Error("Erro na conexão");
+
                 const dados = await res.json();
                 exibirDados(dados);
             } catch (e) { 
-                alert("Erro ao carregar dados. Verifique se o RLS está desativado no Supabase."); 
+                console.error(e);
+                alert("Erro ao conectar com o banco. Se o erro persistir, faça um novo agendamento de teste."); 
             }
         }
 
@@ -72,20 +80,20 @@
                 <div class="card-adm">
                     <div class="flex justify-between items-start mb-2">
                         <div>
-                            <h3 class="font-black text-xl text-slate-800 uppercase italic">${item.cliente}</h3>
-                            <p class="text-xs text-slate-500 font-bold underline italic">Endereço: ${item.rua}</p>
+                            <h3 class="font-black text-xl text-slate-800 uppercase italic">${item.cliente || 'Sem Nome'}</h3>
+                            <p class="text-xs text-slate-500 font-bold underline italic">Endereço: ${item.rua || 'Não informado'}</p>
                         </div>
                         <a href="https://wa.me{item.whatsapp}" target="_blank" class="bg-green-500 text-white px-3 py-1 rounded-lg text-[10px] font-black uppercase shadow-sm">WhatsApp 📱</a>
                     </div>
                     
                     <div class="mt-4 space-y-3">
-                        ${item.pets.map(p => `
+                        ${(item.pets || []).map(p => `
                             <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
                                 <div class="flex justify-between mb-2">
                                     <span class="badge-pet">${p.plano}</span>
                                     <span class="font-black text-slate-700 uppercase text-xs italic">${p.nome}</span>
                                 </div>
-                                ${p.agenda.map(a => `
+                                ${(p.agenda || []).map(a => `
                                     <div class="flex justify-between text-[11px] text-slate-600 border-b border-dashed py-1">
                                         <span class="font-bold underline italic">📅 ${a.data.split('-').reverse().join('/')}</span>
                                         <span class="font-black text-red-600 uppercase">⏰ ${a.hora}</span>
