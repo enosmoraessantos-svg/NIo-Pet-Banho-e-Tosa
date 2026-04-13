@@ -14,56 +14,68 @@
     <!-- LOGIN -->
     <div id="loginArea" class="max-w-sm mx-auto mt-20 bg-white p-8 rounded-2xl shadow-xl text-center">
         <h1 class="font-black text-2xl mb-2 italic uppercase">Nilo Pet <span class="text-red-600">ADM</span></h1>
+        <p class="text-[10px] text-slate-400 mb-6 uppercase font-bold tracking-widest">Painel Administrativo</p>
         <input type="password" id="senhaAdm" placeholder="Senha de Acesso" class="w-full p-4 border-2 rounded-xl mb-4 text-center outline-none focus:border-red-600">
-        <button onclick="logar()" class="w-full bg-red-600 text-white font-bold p-4 rounded-xl">ENTRAR NO PAINEL</button>
+        <button onclick="logar()" class="w-full bg-red-600 text-white font-bold p-4 rounded-xl hover:bg-red-700 transition">ENTRAR NO PAINEL</button>
     </div>
 
     <!-- CONTEÚDO DO PAINEL -->
     <div id="painelArea" class="hidden p-4 max-w-4xl mx-auto">
         <div class="flex justify-between items-center mb-6">
-            <h2 class="font-black text-slate-800 uppercase italic italic">Agendamentos Recebidos</h2>
-            <button onclick="carregarDados()" class="bg-white px-4 py-2 rounded-lg shadow text-xs font-bold text-slate-600 uppercase">Atualizar ↻</button>
+            <h2 class="font-black text-slate-800 uppercase italic">Agendamentos Recebidos</h2>
+            <button onclick="carregarDados()" class="bg-white px-4 py-2 rounded-lg shadow text-xs font-bold text-slate-600 uppercase hover:bg-slate-50">Atualizar ↻</button>
         </div>
         <div id="listaAgendamentos">
-            <p class="text-center text-slate-400">Buscando novos pedidos...</p>
+            <p class="text-center text-slate-400 mt-10 font-bold uppercase text-xs">Buscando novos pedidos...</p>
         </div>
     </div>
 
     <script>
+        // CONFIGURAÇÃO CORRIGIDA
         const SB_URL = "https://supabase.co";
         const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
 
         function logar() {
-            // Defina sua senha aqui
             if(document.getElementById('senhaAdm').value === 'nilopet2024') {
                 document.getElementById('loginArea').classList.add('hidden');
                 document.getElementById('painelArea').classList.remove('hidden');
                 carregarDados();
-            } else { alert("Senha incorreta!"); }
+            } else { 
+                alert("Senha incorreta!"); 
+            }
         }
 
         async function carregarDados() {
+            const container = document.getElementById('listaAgendamentos');
             try {
                 const res = await fetch(SB_URL + "?select=*&order=created_at.desc", {
-                    headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY }
+                    headers: { 
+                        "apikey": SB_KEY, 
+                        "Authorization": "Bearer " + SB_KEY 
+                    }
                 });
                 const dados = await res.json();
                 exibirDados(dados);
-            } catch (e) { alert("Erro ao carregar dados."); }
+            } catch (e) { 
+                alert("Erro ao carregar dados. Verifique se o RLS está desativado no Supabase."); 
+            }
         }
 
         function exibirDados(lista) {
             const container = document.getElementById('listaAgendamentos');
-            if(lista.length === 0) { container.innerHTML = "Nenhum agendamento encontrado."; return; }
+            if(!lista || lista.length === 0) { 
+                container.innerHTML = "<p class='text-center text-slate-400 mt-10'>Nenhum agendamento encontrado.</p>"; 
+                return; 
+            }
 
             container.innerHTML = lista.map(item => `
                 <div class="card-adm">
                     <div class="flex justify-between items-start mb-2">
                         <div>
-                            <h3 class="font-black text-xl text-slate-800 uppercase">${item.cliente}</h3>
-                            <p class="text-xs text-slate-500 font-bold underline">Endereço: ${item.rua}</p>
+                            <h3 class="font-black text-xl text-slate-800 uppercase italic">${item.cliente}</h3>
+                            <p class="text-xs text-slate-500 font-bold underline italic">Endereço: ${item.rua}</p>
                         </div>
-                        <a href="https://wa.me{item.whatsapp}" target="_blank" class="bg-green-500 text-white px-3 py-1 rounded-lg text-[10px] font-black uppercase">WhatsApp 📱</a>
+                        <a href="https://wa.me{item.whatsapp}" target="_blank" class="bg-green-500 text-white px-3 py-1 rounded-lg text-[10px] font-black uppercase shadow-sm">WhatsApp 📱</a>
                     </div>
                     
                     <div class="mt-4 space-y-3">
@@ -71,12 +83,12 @@
                             <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
                                 <div class="flex justify-between mb-2">
                                     <span class="badge-pet">${p.plano}</span>
-                                    <span class="font-black text-slate-700 uppercase text-xs">${p.nome}</span>
+                                    <span class="font-black text-slate-700 uppercase text-xs italic">${p.nome}</span>
                                 </div>
                                 ${p.agenda.map(a => `
                                     <div class="flex justify-between text-[11px] text-slate-600 border-b border-dashed py-1">
-                                        <span>📅 ${a.data.split('-').reverse().join('/')}</span>
-                                        <span class="font-bold">⏰ ${a.hora}</span>
+                                        <span class="font-bold underline italic">📅 ${a.data.split('-').reverse().join('/')}</span>
+                                        <span class="font-black text-red-600 uppercase">⏰ ${a.hora}</span>
                                     </div>
                                 `).join('')}
                             </div>
