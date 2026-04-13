@@ -112,7 +112,7 @@
     </form>
 
     <script>
-        // CONFIGURAÇÕES SUPABASE
+        // CONFIGURAÇÕES SUPABASE ATUALIZADAS
         const SB_URL = "https://supabase.co";
         const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
 
@@ -201,7 +201,6 @@
                 const ehGato = document.getElementById(`especie${i}`).value === 'gato';
                 const porte = document.getElementById(`porte${i}`).value;
                 const ehGrande = (porte === 'grande_curto' || porte === 'grande_peludo');
-                
                 container.innerHTML += `
                 <div class="pet-box">
                     <p class="font-bold text-xs uppercase mb-2 text-red-600">${document.getElementById(`nomePet${i}`).value || 'Pet '+i}</p>
