@@ -105,13 +105,17 @@
             <div class="card">
                 <h2 class="font-bold mb-4 text-slate-700 uppercase underline text-sm">Etapa 4: Horários</h2>
                 <div id="datasHorariosContainer"></div>
-                <button type="button" onclick="validaFinalizar()" class="btn-next mt-4">CONFIRMAR ✅</button>
+                <button type="button" id="btnFinalizar" onclick="validaFinalizar()" class="btn-next mt-4">CONFIRMAR ✅</button>
                 <button type="button" onclick="next(3)" class="btn-back-large">VOLTAR</button>
             </div>
         </div>
     </form>
 
     <script>
+        // CONFIGURAÇÕES SUPABASE
+        const SB_URL = "https://supabase.co";
+        const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
+
         function toggleAcao() {
             const acao = document.getElementById('acaoInicial').value;
             document.getElementById('camposAgendar').classList.toggle('hidden', acao !== 'agendar');
@@ -287,7 +291,6 @@
             
             lista.forEach(h => {
                 const [hSel, mSel] = h.split(':').map(Number);
-                
                 if(isHoje && (hSel < horaAtual || (hSel === horaAtual && minAtual >= 0))) return;
 
                 let block = false;
@@ -310,20 +313,53 @@
         function validaEtapa1() { if(!document.getElementById('nomeCliente').value || document.getElementById('whatsapp').value.length < 11 || !document.getElementById('rua').value) return alert("Preencha tudo!"); next(2); }
         function validaEtapa2() { const q = document.getElementById('qtdPets').value; for(let i=1; i<=q; i++) { if(!document.getElementById(`nomePet${i}`).value) return alert("Nome do pet vazio!"); } next(3); }
         
-        function validaFinalizar() {
+        async function validaFinalizar() {
+            const btn = document.getElementById('btnFinalizar');
+            btn.innerText = "ENVIANDO..."; btn.disabled = true;
+
             const q = document.getElementById('qtdPets').value;
+            const agendamento = {
+                cliente: document.getElementById('nomeCliente').value,
+                whatsapp: document.getElementById('whatsapp').value,
+                rua: document.getElementById('rua').value,
+                pets: []
+            };
+
             for(let i=1; i<=q; i++) {
                 const plano = document.getElementById(`planoPet${i}`).value;
+                let petData = {
+                    nome: document.getElementById(`nomePet${i}`).value,
+                    plano: plano,
+                    agenda: []
+                };
                 let semanas = (plano === 'premium') ? 5 : (plano.includes('basico') ? 2 : 1);
                 for(let s=0; s<semanas; s++) {
                     const isOptional = (plano === 'premium' && s === 4);
                     const dt = document.getElementById(`data_p${i}_s${s}`).value;
                     const hr = document.getElementById(`hora_p${i}_s${s}`).value;
-                    if(!isOptional && (!dt || !hr)) return alert("Preencha todas as datas obrigatórias!");
+                    if(!isOptional && (!dt || !hr)) {
+                        btn.innerText = "CONFIRMAR ✅"; btn.disabled = false;
+                        return alert("Preencha todas as datas obrigatórias!");
+                    }
+                    if(dt && hr) petData.agenda.push({ data: dt, hora: hr });
                 }
+                agendamento.pets.push(petData);
             }
-            alert("agendamento confirmado logo mais nossa equipe entrarar em contato, para agilizar o atendimento nos envie uma foto do seu pet.");
-            location.reload();
+
+            try {
+                const response = await fetch(SB_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY },
+                    body: JSON.stringify(agendamento)
+                });
+                if(response.ok) {
+                    alert("agendamento confirmado logo mais nossa equipe entrarar em contato, para agilizar o atendimento nos envie uma foto do seu pet.");
+                    location.reload();
+                }
+            } catch (err) {
+                alert("Erro ao enviar agendamento.");
+                btn.innerText = "CONFIRMAR ✅"; btn.disabled = false;
+            }
         }
     </script>
 </body>
