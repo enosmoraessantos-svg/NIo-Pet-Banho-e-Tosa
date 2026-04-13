@@ -112,9 +112,10 @@
     </form>
 
     <script>
-        // CONFIGURAÇÕES SUPABASE ATUALIZADAS
-        const SB_URL = "https://supabase.co";
-        const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
+        // Substitua as suas linhas antigas por estas duas:
+const SB_URL = "https://supabase.co";
+const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
+
 
         function toggleAcao() {
             const acao = document.getElementById('acaoInicial').value;
@@ -345,12 +346,20 @@
                 agendamento.pets.push(petData);
             }
 
+            // ... código anterior ...
             try {
                 const response = await fetch(SB_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY },
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'apikey': SB_KEY, 
+                        'Authorization': 'Bearer ' + SB_KEY, // Tinha uma vírgula aqui? Mantenha.
+                        'Prefer': 'return=minimal' // VOCÊ SÓ ADICIONA ESTA LINHA
+                    },
                     body: JSON.stringify(agendamento)
                 });
+// ... resto do código ...
+
                 if(response.ok) {
                     alert("agendamento confirmado logo mais nossa equipe entrarar em contato, para agilizar o atendimento nos envie uma foto do seu pet.");
                     location.reload();
@@ -363,3 +372,4 @@
     </script>
 </body>
 </html>
+
