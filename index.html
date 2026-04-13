@@ -195,6 +195,8 @@
             container.innerHTML = '';
             for(let i=1; i<=q; i++) {
                 const ehGato = document.getElementById(`especie${i}`).value === 'gato';
+                const porte = document.getElementById(`porte${i}`).value;
+                const ehGrande = (porte === 'grande_curto' || porte === 'grande_peludo');
                 
                 container.innerHTML += `
                 <div class="pet-box">
@@ -202,13 +204,17 @@
                     <label class="label-req">Plano</label>
                     <select id="planoPet${i}" onchange="toggleOpcoesServico(${i})">
                         <option value="avulso">AVULSO</option>
-                        ${ehGato ? '' : '<option value="basico">PACOTE BÁSICO</option><option value="basico_tosa">PACOTE BÁSICO COM TOSA</option><option value="premium">PACOTE PREMIUM</option>'}
+                        ${ehGato ? '' : `
+                            <option value="basico">PACOTE BÁSICO</option>
+                            ${ehGrande ? '' : '<option value="basico_tosa">PACOTE BÁSICO COM TOSA</option>'}
+                            <option value="premium">PACOTE PREMIUM</option>
+                        `}
                     </select>
                     <div id="boxAvulso${i}">
                         <label class="label-req">Serviço</label>
                         <select id="servicoPet${i}">
                             <option value="banho">BANHO</option>
-                            ${ehGato ? '' : '<option value="banho_higi">BANHO + TOSA HIGIÊNICA</option><option value="banho_tosa">BANHO + TOSA</option>'}
+                            ${ehGato || ehGrande ? '' : '<option value="banho_higi">BANHO + TOSA HIGIÊNICA</option><option value="banho_tosa">BANHO + TOSA</option>'}
                         </select>
                     </div>
                 </div>`;
@@ -282,7 +288,6 @@
             lista.forEach(h => {
                 const [hSel, mSel] = h.split(':').map(Number);
                 
-                // Se for hoje, esconde horários que já passaram
                 if(isHoje && (hSel < horaAtual || (hSel === horaAtual && minAtual >= 0))) return;
 
                 let block = false;
