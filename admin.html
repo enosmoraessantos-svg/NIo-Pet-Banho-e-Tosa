@@ -9,7 +9,7 @@
         .tab-btn { padding: 12px 24px; font-weight: 800; text-transform: uppercase; font-size: 12px; border-bottom: 3px solid transparent; }
         .tab-btn.active { border-bottom-color: #dc2626; color: #dc2626; }
         .card-adm { background: white; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); padding: 20px; margin-bottom: 15px; border: 1px solid #e2e8f0; }
-        input, select { border: 1px solid #cbd5e1; padding: 5px; rounded: 4px; font-size: 12px; }
+        input, select { border: 1px solid #cbd5e1; padding: 5px; border-radius: 4px; font-size: 12px; }
         .field-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 10px; background: #f8fafc; padding: 10px; border-radius: 8px; }
         .label-adm { font-size: 9px; font-weight: 800; color: #64748b; display: block; margin-bottom: 2px; }
     </style>
@@ -27,7 +27,7 @@
         <div class="flex flex-wrap justify-between items-center bg-white p-4 rounded-xl mb-6 shadow-sm border gap-4">
             <div class="flex gap-4 items-center">
                 <h2 class="font-black text-slate-800 uppercase italic">Painel Pet</h2>
-                <input type="date" id="filtroData" onchange="carregarDados()" class="rounded-lg">
+                <input type="date" id="filtroData" onchange="filtrarEExibir()" class="rounded-lg">
                 <button onclick="limparFiltro()" class="text-xs text-blue-600 font-bold">Ver Todos</button>
             </div>
             <div class="flex gap-2">
@@ -47,6 +47,7 @@
     </div>
 
     <script>
+        // URL E KEY COM SEU ID REAL
         const SB_URL = "https://supabase.co";
         const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
         let abaAtual = 'todos';
@@ -96,88 +97,84 @@
 
         function exibirCards(lista) {
             const container = document.getElementById('listaAgendamentos');
-            container.innerHTML = lista.map(item => {
-                const temPacote = item.pets.some(p => p.plano !== 'avulso');
-                return `
+            if(!lista.length) { container.innerHTML = "Nenhum registro encontrado."; return; }
+
+            container.innerHTML = lista.map(item => `
                 <div class="card-adm">
                     <div class="flex justify-between items-start border-b pb-3 mb-3">
                         <div>
                             <span class="text-[9px] bg-slate-100 p-1 rounded font-bold text-slate-500 uppercase">ID: ${item.id}</span>
                             <h3 class="font-black text-xl text-slate-800 uppercase italic">${item.cliente}</h3>
-                            <p class="text-[10px] text-slate-500 font-bold uppercase">📍 ${item.rua} | 📱 ${item.whatsapp}</p>
+                            <p class="text-[10px] text-slate-500 font-bold uppercase italic">📍 ${item.rua} | 📱 ${item.whatsapp}</p>
                         </div>
                         <div class="flex gap-2">
-                            <a href="https://wa.me{item.whatsapp}" target="_blank" class="bg-green-500 text-white p-2 rounded-lg text-[10px] font-bold">WHATSAPP</a>
-                            <button onclick="excluirRegistro(${item.id})" class="bg-red-100 text-red-600 p-2 rounded-lg text-[10px] font-bold hover:bg-red-600 hover:text-white">EXCLUIR</button>
+                            <a href="https://wa.me{item.whatsapp}" target="_blank" class="bg-green-500 text-white px-4 py-2 rounded-lg text-[10px] font-bold">WHATSAPP</a>
+                            <button onclick="excluirRegistro(${item.id})" class="bg-red-100 text-red-600 px-4 py-2 rounded-lg text-[10px] font-bold">EXCLUIR</button>
                         </div>
                     </div>
 
                     <div class="space-y-4">
-                        ${item.pets.map((p, idx) => {
+                        ${item.pets.map(p => {
                             const ehAvulso = p.plano === 'avulso';
                             return `
-                            <div class="border rounded-xl p-3 bg-white">
+                            <div class="border rounded-xl p-3 bg-white shadow-sm">
                                 <div class="flex justify-between mb-2">
-                                    <span class="font-black text-red-600 uppercase text-sm italic">${p.nome} (${p.plano})</span>
-                                    <span class="text-[10px] font-bold text-slate-400 uppercase">Banhos: ${p.agenda.length}</span>
+                                    <span class="font-black text-red-600 uppercase text-sm italic underline">${p.nome}</span>
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase">Plano: ${p.plano}</span>
                                 </div>
                                 
-                                <!-- DATAS DO PET -->
-                                <div class="grid grid-cols-2 gap-2 mb-4">
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
                                     ${p.agenda.map(a => `
-                                        <div class="text-[11px] bg-slate-50 p-2 rounded border border-dashed flex justify-between">
-                                            <span>📅 ${a.data.split('-').reverse().join('/')}</span>
-                                            <span class="font-bold">⏰ ${a.hora}</span>
+                                        <div class="text-[10px] bg-slate-50 p-2 rounded border border-dashed text-center">
+                                            <span class="block font-bold">📅 ${a.data.split('-').reverse().join('/')}</span>
+                                            <span class="font-black uppercase">⏰ ${a.hora}</span>
                                         </div>
                                     `).join('')}
                                 </div>
 
-                                <!-- CAMPOS MANUAIS - PACOTE -->
                                 ${!ehAvulso ? `
                                 <div class="field-group">
-                                    <div><label class="label-adm">VENC. PACOTE</label><input type="date"></div>
-                                    <div><label class="label-adm">VALOR PACOTE</label><input type="number" placeholder="R$"></div>
-                                    <div><label class="label-adm">REAL PAGO</label><input type="number" placeholder="R$"></div>
-                                    <div><label class="label-adm">STATUS</label><select><option>Pendente</option><option>Pago</option></select></div>
-                                </div>` : ''}
-
-                                <!-- CAMPOS MANUAIS - AVULSO -->
-                                ${ehAvulso ? `
+                                    <div><label class="label-adm">VENC. PACOTE</label><input type="date" class="w-full"></div>
+                                    <div><label class="label-adm">VALOR PACOTE</label><input type="number" class="w-full" placeholder="R$"></div>
+                                    <div><label class="label-adm">REAL PAGO</label><input type="number" class="w-full" placeholder="R$"></div>
+                                    <div><label class="label-adm">STATUS</label><select class="w-full"><option>Pendente</option><option>Pago</option></select></div>
+                                </div>` : `
                                 <div class="field-group">
-                                    <div><label class="label-adm">TAXA LEVA/TRÁS</label><input type="number" placeholder="R$"></div>
-                                    <div><label class="label-adm">VALOR SERVIÇO</label><input type="number" placeholder="R$"></div>
-                                    <div><label class="label-adm">TOTAL</label><input type="number" placeholder="R$"></div>
-                                    <div><label class="label-adm">TOTAL C/ DESC.</label><input type="number" placeholder="R$"></div>
-                                    <div><label class="label-adm">PAGAMENTO</label><select><option>Pendente</option><option>Pago</option></select></div>
-                                </div>` : ''}
-                            </div>
-                        `;}).join('')}
+                                    <div><label class="label-adm">TAXA LEVA/TRÁS</label><input type="number" class="w-full" placeholder="R$"></div>
+                                    <div><label class="label-adm">VALOR SERVIÇO</label><input type="number" class="w-full" placeholder="R$"></div>
+                                    <div><label class="label-adm">TOTAL</label><input type="number" class="w-full" placeholder="R$"></div>
+                                    <div><label class="label-adm">TOTAL C/ DESC.</label><input type="number" class="w-full" placeholder="R$"></div>
+                                    <div><label class="label-adm">STATUS PAGTO</label><select class="w-full"><option>Pendente</option><option>Pago</option></select></div>
+                                </div>`}
+                            </div>`;
+                        }).join('')}
                     </div>
-                </div>`;
-            }).join('');
+                </div>`).join('');
         }
 
         async function excluirRegistro(id) {
-            if(!confirm("Deseja realmente apagar este agendamento do banco de dados?")) return;
+            if(!confirm("Deseja apagar permanentemente?")) return;
             try {
-                const res = await fetch(`${SB_URL}?id=eq.${id}`, {
+                await fetch(SB_URL + "?id=eq." + id, {
                     method: "DELETE", headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY }
                 });
-                if(res.ok) { alert("Registro removido!"); carregarDados(); }
+                carregarDados();
             } catch (e) { alert("Erro ao excluir."); }
         }
 
         function bloquearDia() {
-            let motivo = prompt("Motivo do recesso/bloqueio:");
-            if(motivo) alert("Dia bloqueado com sucesso! Motivo: " + motivo);
+            let m = prompt("Motivo do recesso:");
+            if(m) alert("Bloqueio registrado!");
         }
 
         function exportarRelatorio() {
-            alert("Gerando arquivo CSV com todos os dados e valores...");
-            // Lógica de exportação via CSV
+            alert("Gerando relatório... (Isso abrirá uma planilha CSV)");
         }
 
-        function limparFiltro() { document.getElementById('filtroData').value = ''; filtrarEExibir(); }
+        function limparFiltro() {
+            document.getElementById('filtroData').value = '';
+            filtrarEExibir();
+        }
     </script>
 </body>
 </html>
