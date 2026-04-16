@@ -14,9 +14,11 @@
         .menu-item:hover { background: #334155; }
         .menu-item.active { background: #334155; border-left-color: #ef4444; color: #ef4444; }
         .card-pet { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 15px; }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
         .hidden { display: none; }
-        .input-edit { background: transparent; border: 1px solid transparent; width: 100%; font-weight: bold; }
-        .input-edit:focus { background: #f1f5f9; border-color: #cbd5e1; outline: none; border-radius: 4px; padding: 2px; }
+        .input-edit { background: transparent; border: 1px solid transparent; transition: 0.2s; width: 100%; }
+        .input-edit:hover, .input-edit:focus { background: #f1f5f9; border-color: #cbd5e1; border-radius: 4px; padding: 2px; }
+        @media (max-width: 768px) { .sidebar { left: -260px; } .content { margin-left: 0; } .sidebar.open { left: 0; } }
     </style>
 </head>
 <body>
@@ -25,17 +27,19 @@
         <div class="w-full max-w-md p-8 bg-white rounded-2xl shadow-2xl text-center">
             <h1 class="text-3xl font-black text-slate-800 uppercase italic">Nilo Pet</h1>
             <input type="password" id="senhaAdm" placeholder="Senha de acesso" class="w-full p-4 border-2 rounded-xl mb-4 text-center">
-            <button onclick="logar()" class="w-full bg-red-600 text-white font-black p-4 rounded-xl">ENTRAR NO SISTEMA</button>
+            <button onclick="logar()" class="w-full bg-red-600 text-white font-black p-4 rounded-xl">ENTRAR</button>
         </div>
     </div>
 
     <div id="painelArea" class="hidden">
-        <div class="sidebar" id="sidebar">
-            <div class="p-6 border-b border-slate-700"><h2 class="font-black text-xl uppercase italic text-center">Nilo Pet ADM</h2></div>
+        <div class="sidebar">
+            <div class="p-6 border-b border-slate-700"><h2 class="font-black text-xl uppercase italic">Nilo Pet ADM</h2></div>
             <nav class="mt-4">
                 <div onclick="mudarFiltro('geral', this)" class="menu-item active">📊 Agendamentos Geral</div>
+                <div onclick="mudarFiltro('dia', this)" class="menu-item">📅 Agendamentos do Dia</div>
+                <div onclick="mudarFiltro('pacotes', this)" class="menu-item">📦 Controle de Pacotes</div>
                 <div onclick="mudarFiltro('vagas', this)" class="menu-item text-orange-400">🔒 Gestão de Vagas</div>
-                <div onclick="exportarExcel()" class="menu-item text-green-400 mt-10">📥 Exportar Relatório</div>
+                <div onclick="exportarRelatorio()" class="menu-item text-green-400 mt-10">📥 Exportar Relatório</div>
                 <div onclick="location.reload()" class="menu-item text-slate-400 mt-2">🚪 Sair</div>
             </nav>
         </div>
@@ -50,7 +54,7 @@
     </div>
 
     <script>
-        const SB_URL = "https://yczhjyxisqrvfxxgipop.supabase.co/rest/v1/agendamentos";
+        const SB_URL = "https://supabase.co";
         const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
         const headers = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json", "Prefer": "return=minimal" };
         
@@ -73,35 +77,61 @@
                 const res = await fetch(`${SB_URL}${endpoint}?select=*`, { headers });
                 todosDados = await res.json();
                 renderizar();
-            } catch (e) { alert("Erro ao conectar ao banco!"); }
+            } catch (e) { alert("Erro ao carregar banco!"); }
         }
 
         function renderizar() {
             const container = document.getElementById('containerCards');
             if(filtroAtual === 'vagas') return renderVagas(container);
 
-            container.innerHTML = todosDados.length === 0 ? "Nenhum agendamento encontrado." : "";
-            todosDados.forEach(item => {
-                const div = document.createElement('div');
-                div.className = "card-pet p-5 shadow-sm";
-                div.innerHTML = `
-                    <div class="flex justify-between border-b pb-3 mb-4">
+            const hoje = new Date().toISOString().split('T')[0];
+            let filtrados = todosDados;
+            if(filtroAtual === 'dia') filtrados = todosDados.filter(i => i.pets?.some(p => p.agenda?.some(a => a.data === hoje)));
+            else if (filtroAtual === 'pacotes') filtrados = todosDados.filter(i => i.pets?.some(p => p.plano !== 'avulso'));
+
+            container.innerHTML = filtrados.map(item => `
+                <div class="card-pet shadow-sm">
+                    <div class="flex justify-between items-start border-b pb-3 mb-4">
                         <div class="w-full">
-                            <input type="text" value="${item.cliente}" onchange="salvarCli('${item.id}', 'cliente', this.value)" class="input-edit text-lg uppercase italic text-slate-800">
-                            <input type="text" value="${item.whatsapp}" onchange="salvarCli('${item.id}', 'whatsapp', this.value)" class="input-edit text-[10px] text-slate-500 uppercase">
+                            <input type="text" value="${item.cliente}" onchange="updateDB('${item.id}', 'cliente', this.value)" class="input-edit font-black text-lg text-slate-800 uppercase italic">
+                            <div class="flex gap-2">
+                                <input type="text" value="${item.whatsapp}" onchange="updateDB('${item.id}', 'whatsapp', this.value)" class="input-edit text-[10px] text-slate-500 font-bold uppercase w-24">
+                                <span class="text-slate-300">|</span>
+                                <input type="text" value="${item.rua}" onchange="updateDB('${item.id}', 'rua', this.value)" class="input-edit text-[10px] text-slate-500 font-bold uppercase">
+                            </div>
                         </div>
-                        <button onclick="excluir('${item.id}')" class="bg-slate-100 text-slate-400 px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-red-600 hover:text-white">Excluir</button>
+                        <div class="flex gap-2">
+                            <a href="https://wa.me{item.whatsapp}" target="_blank" class="bg-green-500 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase">WhatsApp</a>
+                            <button onclick="excluir('${item.id}')" class="bg-slate-100 text-slate-400 px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-red-600 hover:text-white">Excluir</button>
+                        </div>
                     </div>
-                    <div class="space-y-2">
-                        ${(item.pets || []).map(p => `<div class="text-xs font-bold text-red-600 uppercase">🐾 ${p.nome} - ${p.plano}</div>`).join('')}
-                    </div>`;
-                container.appendChild(div);
-            });
+                    <div class="space-y-4">
+                        ${(item.pets || []).map(p => `
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                <div class="flex justify-between items-center mb-3">
+                                    <span class="badge ${p.plano !== 'avulso' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}">${p.plano}</span>
+                                    <span class="font-black text-red-600 uppercase italic underline">${p.nome}</span>
+                                </div>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+                                    ${(p.agenda || []).map(a => `<div class="bg-white p-2 border rounded text-center text-[10px] font-bold">${a.data.split('-').reverse().join('/')}<br>${a.hora}</div>`).join('')}
+                                </div>
+                                <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4 pt-4 border-t border-slate-200">
+                                    <div><label class="text-[9px] font-bold text-slate-400 uppercase">Status</label><select class="w-full text-xs p-1 border"><option>Pendente</option><option>Pago</option></select></div>
+                                    <div class="flex items-end"><button class="bg-slate-800 text-white w-full py-2 rounded text-[10px] font-bold uppercase">Salvar</button></div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>`).join('');
+        }
+
+        async function updateDB(id, campo, valor) {
+            await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: "PATCH", headers, body: JSON.stringify({ [campo]: valor }) });
         }
 
         function renderVagas(container) {
-            const dias = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-            container.innerHTML = `<div class="card-pet"><h3 class="font-bold mb-4 uppercase text-sm">Limites de Horários</h3>` + 
+            const dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+            container.innerHTML = `<div class="card-pet"><h3 class="font-bold mb-4 uppercase text-sm">Gestão de Vagas</h3>` + 
             todosDados.map(v => `
                 <div class="flex items-center justify-between border-b py-2">
                     <span class="text-[11px] font-bold uppercase w-32">${dias[v.dia_semana]} - ${v.horario}</span>
@@ -109,25 +139,31 @@
                         <input type="number" value="${v.vagas_banho}" onchange="upVaga(${v.id}, 'vagas_banho', this.value)" class="w-12 border rounded text-xs p-1">
                         <div class="flex items-center gap-1">
                             <input type="checkbox" ${v.bloqueado ? 'checked' : ''} onchange="upVaga(${v.id}, 'bloqueado', this.checked)">
-                            <label class="text-[9px] font-bold">FECHAR</label>
+                            <label class="text-[9px] font-bold uppercase">Fechar</label>
                         </div>
                     </div>
                 </div>`).join('') + `</div>`;
         }
 
-        async function salvarCli(id, campo, valor) { await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: "PATCH", headers, body: JSON.stringify({ [campo]: valor }) }); }
-        async function upVaga(id, campo, valor) { await fetch(`${SB_URL}/configuracoes_agenda?id=eq.${id}`, { method: "PATCH", headers, body: JSON.stringify({ [campo]: valor }) }); }
-        async function excluir(id) { if(confirm("Excluir?")) { await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: "DELETE", headers }); carregarDados(); } }
-        function mudarFiltro(tipo, el) { 
-            filtroAtual = tipo; 
+        async function upVaga(id, campo, valor) {
+            await fetch(`${SB_URL}/configuracoes_agenda?id=eq.${id}`, { method: "PATCH", headers, body: JSON.stringify({ [campo]: valor }) });
+        }
+
+        async function excluir(id) {
+            if(confirm("Excluir?")) { await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: "DELETE", headers }); carregarDados(); }
+        }
+
+        function exportarRelatorio() {
+            const ws = XLSX.utils.json_to_sheet(todosDados.map(i => ({ Cliente: i.cliente, WhatsApp: i.whatsapp, Rua: i.rua })));
+            const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Relatorio");
+            XLSX.writeFile(wb, "NiloPet_Export.xlsx");
+        }
+
+        function mudarFiltro(tipo, el) {
+            filtroAtual = tipo;
             document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
             el.classList.add('active');
-            carregarDados(); 
-        }
-        function exportarExcel() {
-            const ws = XLSX.utils.json_to_sheet(todosDados.map(i => ({ Cliente: i.cliente, Whats: i.whatsapp })));
-            const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Dados");
-            XLSX.writeFile(wb, "NiloPet_Relatorio.xlsx");
+            carregarDados();
         }
     </script>
 </body>
