@@ -15,7 +15,7 @@
         .menu-item.active { background: #334155; border-left-color: #ef4444; color: #ef4444; }
         .card { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .hidden { display: none; }
-        input, select { border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px; outline: none; font-size: 14px; }
+        input { border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px; outline: none; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -23,7 +23,7 @@
     <div id="loginArea" class="flex items-center justify-center min-h-screen bg-slate-100">
         <div class="w-full max-w-md p-8 bg-white rounded-2xl shadow-xl text-center">
             <h1 class="text-3xl font-black text-slate-800 uppercase italic">Nilo Pet ADM</h1>
-            <input type="password" id="senhaAdm" placeholder="Senha de acesso" class="w-full p-4 border rounded-xl my-4 text-center">
+            <input type="password" id="senhaAdm" placeholder="Senha" class="w-full p-4 border rounded-xl my-4 text-center">
             <button onclick="logar()" class="w-full bg-red-600 text-white font-black p-4 rounded-xl">ENTRAR</button>
         </div>
     </div>
@@ -33,9 +33,9 @@
             <div class="p-6 border-b border-slate-700"><h2 class="font-black text-xl uppercase italic text-red-500">Nilo Pet</h2></div>
             <nav class="mt-4">
                 <div onclick="mudarFiltro('geral', this)" class="menu-item active">📊 Geral</div>
-                <div onclick="mudarFiltro('dia', this)" class="menu-item">📅 Agenda do Dia</div>
+                <div onclick="mudarFiltro('dia', this)" class="menu-item">📅 Hoje</div>
                 <div onclick="mudarFiltro('pacotes', this)" class="menu-item">📦 Pacotes</div>
-                <div onclick="mudarFiltro('bloqueio', this)" class="menu-item text-orange-400">🔒 Bloquear Agenda</div>
+                <div onclick="mudarFiltro('bloqueio', this)" class="menu-item text-orange-400">🔒 Bloqueios/Vagas</div>
                 <div onclick="exportarRelatorio()" class="menu-item text-green-400">📥 Exportar Excel</div>
                 <div onclick="location.reload()" class="menu-item text-slate-400 mt-10">🚪 Sair</div>
             </nav>
@@ -43,15 +43,15 @@
 
         <div class="content">
             <header class="flex justify-between items-center mb-6">
-                <h2 id="tituloPagina" class="text-2xl font-black text-slate-800 uppercase italic">Agendamentos Geral</h2>
-                <button onclick="carregarDados()" class="bg-white border px-4 py-2 rounded-xl font-bold text-xs uppercase shadow-sm">Atualizar ↻</button>
+                <h2 id="tituloPagina" class="text-2xl font-black text-slate-800 uppercase">Agendamentos Geral</h2>
+                <button onclick="carregarDados()" class="bg-white border px-4 py-2 rounded-xl font-bold text-xs shadow-sm">Sincronizar ↻</button>
             </header>
             <div id="containerCards"></div>
         </div>
     </div>
 
     <script>
-        const SB_URL = "https://yczhjyxisqrvfxxgipop.supabase.co/rest/v1/agendamentos";
+        const SB_URL = "https://supabase.co";
         const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
         let todosDados = [];
         let filtroAtual = 'geral';
@@ -71,9 +71,12 @@
                 const res = await fetch(`${SB_URL}?select=*&order=created_at.desc`, {
                     headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY }
                 });
+                if (!res.ok) throw new Error("Falha na rede");
                 todosDados = await res.json();
                 renderizar();
-            } catch (e) { alert("Erro de conexão!"); }
+            } catch (e) { 
+                container.innerHTML = "<p class='text-red-500 font-bold'>ERRO DE CONEXÃO COM O BANCO.</p>";
+            }
         }
 
         function renderizar() {
@@ -81,16 +84,16 @@
             container.innerHTML = "";
             const hoje = new Date().toISOString().split('T')[0];
 
-            let filtrados = todosDados;
-            if(filtroAtual === 'dia') {
-                filtrados = todosDados.filter(item => item.pets?.some(p => p.agenda?.some(a => a.data === hoje)));
-            } else if(filtroAtual === 'pacotes') {
-                filtrados = todosDados.filter(item => item.pets?.some(p => p.plano !== 'avulso'));
+            if(filtroAtual === 'bloqueio') {
+                container.innerHTML = `<div class="card"><h3 class="font-bold mb-4">Gestão de Vagas e Regras</h3><p class="text-sm">Configure aqui os limites (Esta função requer a nova tabela SQL).</p></div>`;
+                return;
             }
 
-            if(filtroAtual === 'bloqueio') {
-                container.innerHTML = `<div class="card"><h3 class="font-bold mb-4">Gerenciar Bloqueios</h3><p class="text-sm text-slate-500 mb-4">Escolha uma data para fechar a agenda:</p><input type="date" id="dataBloqueio" class="p-2 border rounded mr-2"><button onclick="alert('Data Bloqueada!')" class="bg-red-600 text-white px-4 py-2 rounded font-bold text-xs">BLOQUEAR DATA</button></div>`;
-                return;
+            let filtrados = todosDados;
+            if(filtroAtual === 'dia') {
+                filtrados = todosDados.filter(item => item.pets && item.pets.some(p => p.agenda && p.agenda.some(a => a.data === hoje)));
+            } else if(filtroAtual === 'pacotes') {
+                filtrados = todosDados.filter(item => item.pets && item.pets.some(p => p.plano !== 'avulso'));
             }
 
             filtrados.forEach(item => {
@@ -98,27 +101,33 @@
                 div.className = "card";
                 div.innerHTML = `
                     <div class="flex justify-between border-b pb-3 mb-3">
-                        <div>
-                            <input type="text" value="${item.cliente}" id="nome_${item.id}" class="font-black uppercase italic text-slate-800 bg-transparent block w-full">
-                            <input type="text" value="${item.whatsapp}" id="whats_${item.id}" class="text-xs text-slate-500 font-bold w-full bg-transparent">
+                        <div class="w-full">
+                            <input type="text" value="${item.cliente || ''}" id="nome_${item.id}" class="font-black uppercase italic text-slate-800 bg-transparent block w-full mb-1">
+                            <input type="text" value="${item.whatsapp || ''}" id="whats_${item.id}" class="text-xs text-slate-500 font-bold w-full bg-transparent">
+                            <p class="text-[9px] text-slate-400 uppercase font-bold mt-1">Endereço: ${item.rua || 'Não informado'}</p>
                         </div>
-                        <div class="flex gap-2">
-                            <button onclick="salvarAlteracoes('${item.id}')" class="bg-green-600 text-white px-3 py-1 rounded text-[10px] font-bold uppercase">Salvar</button>
-                            <button onclick="excluir('${item.id}')" class="bg-slate-100 text-slate-400 px-3 py-1 rounded text-[10px] font-bold uppercase hover:bg-red-600 hover:text-white">Excluir</button>
+                        <div class="flex flex-col gap-1">
+                            <button onclick="salvarAlteracoes('${item.id}')" class="bg-green-600 text-white px-3 py-2 rounded text-[10px] font-bold uppercase">Salvar</button>
+                            <button onclick="excluir('${item.id}')" class="bg-slate-100 text-slate-400 px-3 py-2 rounded text-[10px] font-bold uppercase hover:bg-red-600 hover:text-white">Excluir</button>
                         </div>
                     </div>
                     <div class="space-y-3">
-                        ${item.pets?.map(p => `
+                        ${item.pets ? item.pets.map(p => `
                             <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
                                 <div class="flex justify-between items-center mb-2">
-                                    <span class="text-[10px] font-bold px-2 py-1 rounded ${p.plano === 'avulso' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}">${p.plano.toUpperCase()}</span>
-                                    <span class="font-black text-red-600 uppercase italic">${p.nome}</span>
+                                    <span class="text-[9px] font-black px-2 py-1 rounded bg-slate-200">${p.plano ? p.plano.toUpperCase() : ''}</span>
+                                    <span class="font-black text-red-600 uppercase italic">${p.nome || 'Pet'}</span>
                                 </div>
                                 <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                    ${p.agenda?.map(a => `<div class="bg-white p-2 border rounded text-center text-[11px] font-bold">${a.data.split('-').reverse().join('/')}<br><span class="text-slate-900">${a.hora}</span></div>`).join('')}
+                                    ${p.agenda ? p.agenda.map(a => `
+                                        <div class="bg-white p-2 border rounded text-center text-[10px] font-bold">
+                                            ${a.data ? a.data.split('-').reverse().join('/') : ''}<br>
+                                            <span class="text-slate-900">${a.hora || ''}</span>
+                                        </div>
+                                    `).join('') : ''}
                                 </div>
                             </div>
-                        `).join('')}
+                        `).join('') : ''}
                     </div>
                 `;
                 container.appendChild(div);
@@ -128,25 +137,33 @@
         async function salvarAlteracoes(id) {
             const cliente = document.getElementById(`nome_${id}`).value;
             const whatsapp = document.getElementById(`whats_${id}`).value;
-            const res = await fetch(`${SB_URL}?id=eq.${id}`, {
-                method: "PATCH",
-                headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json" },
-                body: JSON.stringify({ cliente, whatsapp })
-            });
-            if(res.ok) alert("Atualizado!"); else alert("Erro ao salvar.");
+            try {
+                const res = await fetch(`${SB_URL}?id=eq.${id}`, {
+                    method: "PATCH",
+                    headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json", "Prefer": "return=minimal" },
+                    body: JSON.stringify({ cliente, whatsapp })
+                });
+                if(res.ok) alert("Dados salvos!"); else alert("Erro ao salvar.");
+            } catch(e) { alert("Erro de conexão."); }
         }
 
         async function excluir(id) {
-            if(!confirm("Excluir agendamento?")) return;
+            if(!confirm("Excluir definitivamente?")) return;
             await fetch(`${SB_URL}?id=eq.${id}`, { method: "DELETE", headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY } });
             carregarDados();
         }
 
         function exportarRelatorio() {
-            const data = todosDados.map(i => ({ Cliente: i.cliente, WhatsApp: i.whatsapp, Data: i.created_at }));
+            if(todosDados.length === 0) return alert("Sem dados para exportar.");
+            const data = todosDados.map(i => ({ 
+                Cliente: i.cliente, 
+                WhatsApp: i.whatsapp, 
+                Rua: i.rua,
+                Data_Cadastro: i.created_at 
+            }));
             const ws = XLSX.utils.json_to_sheet(data);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Relatorio");
+            XLSX.utils.book_append_sheet(wb, ws, "Agendamentos");
             XLSX.writeFile(wb, "NiloPet_Relatorio.xlsx");
         }
 
