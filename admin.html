@@ -3,71 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADM - Nilo Pet</title>
+    <title>ADM Pro - Nilo Pet</title>
     <script src="https://tailwindcss.com"></script>
+    <!-- Biblioteca para Exportar Excel -->
+    <script src="https://cloudflare.com"></script>
     <style>
-        body { background-color: #f8fafc; font-family: sans-serif; overflow-x: hidden; }
-        .sidebar { width: 260px; height: 100vh; position: fixed; left: 0; top: 0; background: #1e293b; color: white; transition: 0.3s; z-index: 1000; }
-        .content { margin-left: 260px; padding: 20px; transition: 0.3s; }
-        .menu-item { padding: 15px 20px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 600; border-left: 4px solid transparent; }
-        .menu-item:hover { background: #334155; }
-        .menu-item.active { background: #334155; border-left-color: #ef4444; color: #ef4444; }
-        .card-pet { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 15px; }
-        .badge { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+        body { background-color: #f1f5f9; font-family: sans-serif; }
+        .sidebar { width: 260px; height: 100vh; position: fixed; background: #0f172a; color: white; z-index: 1000; }
+        .content { margin-left: 260px; padding: 30px; }
+        .menu-item { padding: 15px 20px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 600; transition: 0.2s; border-left: 4px solid transparent; }
+        .menu-item:hover { background: #1e293b; }
+        .menu-item.active { background: #1e293b; border-left-color: #ef4444; color: #ef4444; }
+        .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
+        .btn-save { background: #10b981; color: white; padding: 8px 15px; border-radius: 6px; font-size: 12px; font-weight: bold; }
         .hidden { display: none; }
-        @media (max-width: 768px) { .sidebar { left: -260px; } .content { margin-left: 0; } .sidebar.open { left: 0; } }
+        input, select { border: 1px solid #cbd5e1; border-radius: 6px; padding: 5px; outline: none; }
+        input:focus { border-color: #ef4444; }
     </style>
 </head>
 <body>
 
-    <!-- TELA DE LOGIN -->
-    <div id="loginArea" class="flex items-center justify-center min-h-screen bg-slate-100">
-        <div class="w-full max-w-md p-8 bg-white rounded-2xl shadow-2xl text-center">
-            <h1 class="text-3xl font-black text-slate-800 uppercase italic tracking-tighter">Nilo Pet</h1>
-            <p class="text-red-600 font-bold text-xs uppercase mb-8">Banho e Tosa</p>
-            <input type="password" id="senhaAdm" placeholder="Digite a senha de acesso" class="w-full p-4 border-2 rounded-xl mb-4 outline-none focus:border-red-600 text-center text-lg">
-            <button onclick="logar()" class="w-full bg-red-600 text-white font-black p-4 rounded-xl hover:bg-red-700 transition duration-300">ENTRAR NO SISTEMA</button>
-            <p onclick="resetSenha()" class="text-slate-400 text-[10px] font-bold uppercase mt-4 cursor-pointer hover:underline">Esqueci a senha de acesso</p>
+    <!-- LOGIN -->
+    <div id="loginArea" class="flex items-center justify-center min-h-screen">
+        <div class="w-full max-w-md p-8 bg-white rounded-2xl shadow-xl text-center">
+            <h1 class="text-3xl font-black text-slate-800 uppercase italic">Nilo Pet ADM</h1>
+            <input type="password" id="senhaAdm" placeholder="Senha" class="w-full p-4 border-2 rounded-xl my-4 text-center">
+            <button onclick="logar()" class="w-full bg-red-600 text-white font-black p-4 rounded-xl">ENTRAR</button>
         </div>
     </div>
 
-    <!-- ESTRUTURA DO PAINEL (ABRE APÓS LOGIN) -->
+    <!-- PAINEL -->
     <div id="painelArea" class="hidden">
-        <!-- MENU LATERAL -->
-        <div class="sidebar" id="sidebar">
-            <div class="p-6 border-b border-slate-700">
-                <h2 class="font-black text-xl uppercase italic">Nilo Pet ADM</h2>
-            </div>
+        <div class="sidebar">
+            <div class="p-6 border-b border-slate-800"><h2 class="font-black text-xl italic uppercase">Painel Nilo Pet</h2></div>
             <nav class="mt-4">
-                <div onclick="mudarFiltro('geral', this)" class="menu-item active">📊 Agendamentos Geral</div>
-                <div onclick="mudarFiltro('dia', this)" class="menu-item">📅 Agendamentos do Dia</div>
-                <div onclick="mudarFiltro('pacotes', this)" class="menu-item">📦 Controle de Pacotes</div>
-                <div onclick="bloquearAgenda()" class="menu-item text-orange-400 mt-10">🔒 Bloquear Agenda</div>
-                <div onclick="location.reload()" class="menu-item text-slate-400 mt-2">🚪 Sair</div>
+                <div onclick="mudarFiltro('geral', this)" class="menu-item active">📊 Todos Agendamentos</div>
+                <div onclick="mudarFiltro('dia', this)" class="menu-item">📅 Agenda de Hoje</div>
+                <div onclick="mudarFiltro('vagas', this)" class="menu-item">🔒 Gestão de Vagas/Bloqueios</div>
+                <div onclick="exportarRelatorio()" class="menu-item text-green-400">📥 Exportar Relatório</div>
+                <div onclick="location.reload()" class="menu-item text-slate-400 mt-10">🚪 Sair</div>
             </nav>
         </div>
 
-        <!-- CONTEÚDO PRINCIPAL -->
         <div class="content">
-            <header class="flex justify-between items-center mb-8">
-                <div>
-                    <h2 id="tituloPagina" class="text-2xl font-black text-slate-800 uppercase italic">Agendamentos Geral</h2>
-                    <p class="text-slate-500 text-sm font-medium">Gerencie os serviços e pagamentos abaixo.</p>
-                </div>
-                <button onclick="carregarDados()" class="bg-white border p-3 rounded-xl shadow-sm font-bold text-xs uppercase hover:bg-slate-50">Atualizar Dados ↻</button>
-            </header>
-
-            <div id="containerCards" class="grid grid-cols-1 gap-4">
-                <!-- Os agendamentos aparecem aqui -->
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="tituloPagina" class="text-2xl font-black text-slate-800 uppercase">Agendamentos</h2>
+                <button onclick="carregarDados()" class="bg-white px-4 py-2 rounded-lg border font-bold text-xs shadow-sm hover:bg-slate-50">Sincronizar ↻</button>
             </div>
+
+            <div id="containerCards"></div>
         </div>
     </div>
 
     <script>
-        // CORREÇÃO: URL deve apontar para a REST API e a TABELA específica
-        const SB_URL = "https://yczhjyxisqrvfxxgipop.supabase.co/rest/v1/agendamentos";
+        const SB_URL = "https://supabase.co";
         const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
-        
         let todosDados = [];
         let filtroAtual = 'geral';
 
@@ -79,121 +69,115 @@
             } else { alert("Senha incorreta!"); }
         }
 
-        function resetSenha() {
-            alert("Para recuperar o acesso, verifique o código-fonte ou o painel do Supabase.");
-        }
-
         async function carregarDados() {
-            const container = document.getElementById('containerCards');
-            container.innerHTML = "<p class='text-slate-400 font-bold uppercase text-xs'>Sincronizando com Supabase...</p>";
             try {
-                const res = await fetch(SB_URL + "?select=*", {
+                const res = await fetch(`${SB_URL}?select=*&order=created_at.desc`, {
                     method: "GET", headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY }
                 });
                 todosDados = await res.json();
                 renderizar();
-            } catch (e) { 
-                alert("Erro de conexão! Verifique se a URL e a KEY do Supabase estão corretas."); 
-                container.innerHTML = "";
+            } catch (e) { alert("Erro ao carregar dados."); }
+        }
+
+        function renderizar() {
+            const container = document.getElementById('containerCards');
+            container.innerHTML = "";
+            const hoje = new Date().toISOString().split('T')[0];
+
+            let filtrados = todosDados;
+            if(filtroAtual === 'dia') {
+                filtrados = todosDados.filter(item => item.pets.some(p => p.agenda.some(a => a.data === hoje)));
             }
+
+            if(filtroAtual === 'vagas') {
+                container.innerHTML = `<div class="card"><h3 class="font-bold">Painel de Bloqueio</h3><p>Configure aqui limites de cães/gatos por horário (Em desenvolvimento).</p></div>`;
+                return;
+            }
+
+            filtrados.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "card";
+                card.innerHTML = `
+                    <div class="flex flex-wrap justify-between gap-4 mb-4 border-b pb-4">
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase">Cliente</span>
+                            <input type="text" value="${item.cliente}" id="edit_nome_${item.id}" class="block font-black text-lg uppercase italic bg-transparent">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase">WhatsApp</span>
+                            <input type="text" value="${item.whatsapp}" id="edit_whats_${item.id}" class="block text-sm">
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <button onclick="atualizarCadastro('${item.id}')" class="btn-save">SALVAR ALTERAÇÕES</button>
+                            <button onclick="excluir('${item.id}')" class="text-red-500 font-bold text-[10px] uppercase">Apagar Registro</button>
+                        </div>
+                    </div>
+                    <div id="pets_${item.id}" class="space-y-4">
+                        ${item.pets.map((pet, pIdx) => `
+                            <div class="bg-slate-50 p-4 rounded-lg border">
+                                <div class="flex justify-between mb-2">
+                                    <input type="text" value="${pet.nome}" id="edit_petname_${item.id}_${pIdx}" class="font-bold text-red-600 uppercase bg-transparent">
+                                    <span class="badge bg-slate-200 px-2 py-1 rounded text-[10px] font-bold">${pet.plano}</span>
+                                </div>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                    ${pet.agenda.map((ag, aIdx) => `
+                                        <div class="bg-white p-2 rounded shadow-sm text-center">
+                                            <input type="date" value="${ag.data}" class="text-[10px] w-full block">
+                                            <input type="time" value="${ag.hora}" class="font-bold text-xs w-full block text-center">
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        async function atualizarCadastro(id) {
+            const novoNome = document.getElementById(`edit_nome_${id}`).value;
+            const novoWhats = document.getElementById(`edit_whats_${id}`).value;
+            
+            try {
+                const res = await fetch(`${SB_URL}?id=eq.${id}`, {
+                    method: "PATCH",
+                    headers: { 
+                        "apikey": SB_KEY, 
+                        "Authorization": "Bearer " + SB_KEY,
+                        "Content-Type": "application/json",
+                        "Prefer": "return=minimal"
+                    },
+                    body: JSON.stringify({ cliente: novoNome, whatsapp: novoWhats })
+                });
+                if(res.ok) alert("Dados atualizados com sucesso!");
+            } catch (e) { alert("Erro ao atualizar."); }
+        }
+
+        async function excluir(id) {
+            if(!confirm("Apagar permanentemente?")) return;
+            await fetch(`${SB_URL}?id=eq.${id}`, {
+                method: "DELETE", headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY }
+            });
+            carregarDados();
+        }
+
+        function exportarRelatorio() {
+            const worksheet = XLSX.utils.json_to_sheet(todosDados.map(item => ({
+                Cliente: item.cliente,
+                WhatsApp: item.whatsapp,
+                Rua: item.rua,
+                Pets: item.pets.map(p => p.nome).join(', '),
+                Data_Cadastro: new Date(item.created_at).toLocaleDateString()
+            })));
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Agendamentos");
+            XLSX.writeFile(workbook, "Relatorio_NiloPet.xlsx");
         }
 
         function mudarFiltro(tipo, el) {
             filtroAtual = tipo;
             document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
             el.classList.add('active');
-            
-            const titulos = { geral: "Agendamentos Geral", dia: "Agendamentos do Dia", pacotes: "Controle de Pacotes" };
-            document.getElementById('tituloPagina').innerText = titulos[tipo];
             renderizar();
-        }
-
-        function renderizar() {
-            const container = document.getElementById('containerCards');
-            const hoje = new Date().toISOString().split('T')[0];
-            
-            let filtrados = todosDados;
-
-            if(filtroAtual === 'dia') {
-                filtrados = todosDados.filter(item => item.pets.some(p => p.agenda.some(a => a.data === hoje)));
-            } else if (filtroAtual === 'pacotes') {
-                filtrados = todosDados.filter(item => item.pets.some(p => p.plano !== 'avulso'));
-            }
-
-            if(filtrados.length === 0) {
-                container.innerHTML = "<p class='text-slate-400'>Nenhum registro encontrado nesta categoria.</p>";
-                return;
-            }
-
-            container.innerHTML = filtrados.map(item => `
-                <div class="card-pet shadow-sm">
-                    <div class="flex justify-between items-start border-b pb-3 mb-4">
-                        <div>
-                            <h3 class="font-black text-lg text-slate-800 uppercase italic">${item.cliente}</h3>
-                            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-tight">Rua: ${item.rua} | WhatsApp: ${item.whatsapp}</p>
-                        </div>
-                        <div class="flex gap-2">
-                            <a href="https://wa.me{item.whatsapp}" target="_blank" class="bg-green-500 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase">WhatsApp</a>
-                            <button onclick="excluir('${item.id}')" class="bg-slate-100 text-slate-400 px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-red-600 hover:text-white">Excluir</button>
-                        </div>
-                    </div>
-
-                    <div class="space-y-4">
-                        ${item.pets.map(p => {
-                            const ehPacote = p.plano !== 'avulso';
-                            if(filtroAtual === 'pacotes' && !ehPacote) return '';
-
-                            return `
-                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                                <div class="flex justify-between items-center mb-3">
-                                    <span class="badge ${ehPacote ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}">${p.plano}</span>
-                                    <span class="font-black text-red-600 uppercase italic underline">${p.nome}</span>
-                                </div>
-
-                                <!-- DATAS -->
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
-                                    ${p.agenda.map((a, i) => `
-                                        <div class="bg-white p-2 rounded border text-[11px] text-center">
-                                            <span class="block text-slate-400 font-bold uppercase text-[8px]">${i+1}ª Semana</span>
-                                            <span class="font-bold">${a.data.split('-').reverse().join('/')}</span><br>
-                                            <span class="font-black text-slate-900">${a.hora}</span>
-                                        </div>
-                                    `).join('')}
-                                </div>
-
-                                <!-- CAMPOS FINANCEIROS (MANUAIS) -->
-                                <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4 pt-4 border-t border-slate-200">
-                                    ${ehPacote ? `
-                                        <div><label class="text-[9px] font-bold text-slate-400 uppercase">Vencimento</label><input type="date" class="w-full text-xs p-1 border"></div>
-                                        <div><label class="text-[9px] font-bold text-slate-400 uppercase">Valor Pacote</label><input type="text" placeholder="R$ 0,00" class="w-full text-xs p-1 border"></div>
-                                        <div><label class="text-[9px] font-bold text-slate-400 uppercase">Real Pago</label><input type="text" placeholder="R$ 0,00" class="w-full text-xs p-1 border"></div>
-                                        <div><label class="text-[9px] font-bold text-slate-400 uppercase">Status</label><select class="w-full text-xs p-1 border"><option>Pendente</option><option>Pago</option></select></div>
-                                        <div class="flex items-end"><button class="bg-slate-800 text-white w-full py-2 rounded text-[10px] font-bold uppercase">Salvar</button></div>
-                                    ` : `
-                                        <div><label class="text-[9px] font-bold text-slate-400 uppercase">Taxa Leva/Trás</label><input type="text" placeholder="R$ 0,00" class="w-full text-xs p-1 border"></div>
-                                        <div><label class="text-[9px] font-bold text-slate-400 uppercase">Valor Serviço</label><input type="text" placeholder="R$ 0,00" class="w-full text-xs p-1 border"></div>
-                                        <div><label class="text-[9px] font-bold text-slate-400 uppercase">Desconto</label><input type="text" placeholder="R$ 0,00" class="w-full text-xs p-1 border"></div>
-                                        <div><label class="text-[9px] font-bold text-slate-400 uppercase">Total Final</label><input type="text" placeholder="R$ 0,00" class="w-full text-xs p-1 border bg-yellow-50 font-bold"></div>
-                                        <div><label class="text-[9px] font-bold text-slate-400 uppercase">Status</label><select class="w-full text-xs p-1 border"><option>Pendente</option><option>Pago</option></select></div>
-                                    `}
-                                </div>
-                            </div>
-                        `;}).join('')}
-                    </div>
-                </div>`).join('');
-        }
-
-        async function excluir(id) {
-            if(!confirm("Deseja apagar este registro permanentemente?")) return;
-            await fetch(SB_URL + "?id=eq." + id, {
-                method: "DELETE", headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY }
-            });
-            carregarDados();
-        }
-
-        function bloquearAgenda() {
-            let m = prompt("Digite o motivo do bloqueio (Recesso, Feriado...):");
-            if(m) alert("Bloqueio registrado para a visualização dos clientes.");
         }
     </script>
 </body>
