@@ -3,58 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Gestor - Nilo Pet</title>
+    <title>ADM - Nilo Pet</title>
     <script src="https://tailwindcss.com"></script>
+    <script src="https://cloudflare.com"></script>
     <style>
-        body { background-color: #f1f5f9; font-family: sans-serif; }
-        .sidebar { width: 260px; height: 100vh; position: fixed; background: #0f172a; color: white; }
-        .content { margin-left: 260px; padding: 25px; }
-        .menu-item { padding: 15px 20px; cursor: pointer; font-weight: bold; border-left: 4px solid transparent; }
-        .menu-item.active { background: #1e293b; border-left-color: #ef4444; color: #ef4444; }
-        .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
+        body { background-color: #f8fafc; font-family: sans-serif; overflow-x: hidden; }
+        .sidebar { width: 260px; height: 100vh; position: fixed; left: 0; top: 0; background: #1e293b; color: white; transition: 0.3s; z-index: 1000; }
+        .content { margin-left: 260px; padding: 20px; transition: 0.3s; }
+        .menu-item { padding: 15px 20px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 600; border-left: 4px solid transparent; }
+        .menu-item:hover { background: #334155; }
+        .menu-item.active { background: #334155; border-left-color: #ef4444; color: #ef4444; }
+        .card-pet { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 15px; }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
         .hidden { display: none; }
-        .badge-vaga { background: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 800; }
+        .input-inline { background: transparent; border: 1px solid transparent; width: 100%; transition: 0.2s; }
+        .input-inline:hover { border-color: #e2e8f0; background: #f8fafc; }
+        @media (max-width: 768px) { .sidebar { left: -260px; } .content { margin-left: 0; } .sidebar.open { left: 0; } }
     </style>
 </head>
 <body>
 
-    <div id="loginArea" class="flex items-center justify-center min-h-screen">
-        <div class="bg-white p-8 rounded-2xl shadow-xl w-80 text-center">
-            <h1 class="text-2xl font-black mb-4 uppercase">Nilo Pet ADM</h1>
-            <input type="password" id="senhaAdm" placeholder="Senha" class="w-full p-3 border rounded-lg mb-4 text-center">
-            <button onclick="logar()" class="w-full bg-red-600 text-white p-3 rounded-lg font-bold">ENTRAR</button>
+    <div id="loginArea" class="flex items-center justify-center min-h-screen bg-slate-100">
+        <div class="w-full max-w-md p-8 bg-white rounded-2xl shadow-2xl text-center">
+            <h1 class="text-3xl font-black text-slate-800 uppercase italic tracking-tighter">Nilo Pet</h1>
+            <p class="text-red-600 font-bold text-xs uppercase mb-8">Banho e Tosa</p>
+            <input type="password" id="senhaAdm" placeholder="Digite a senha de acesso" class="w-full p-4 border-2 rounded-xl mb-4 outline-none focus:border-red-600 text-center text-lg">
+            <button onclick="logar()" class="w-full bg-red-600 text-white font-black p-4 rounded-xl hover:bg-red-700 transition duration-300">ENTRAR NO SISTEMA</button>
         </div>
     </div>
 
     <div id="painelArea" class="hidden">
-        <div class="sidebar">
-            <div class="p-6 font-black text-xl italic border-b border-slate-800">NILO PET</div>
+        <div class="sidebar" id="sidebar">
+            <div class="p-6 border-b border-slate-700"><h2 class="font-black text-xl uppercase italic">Nilo Pet ADM</h2></div>
             <nav class="mt-4">
-                <div onclick="mudarFiltro('geral', this)" class="menu-item active">📊 Agendamentos</div>
+                <div onclick="mudarFiltro('geral', this)" class="menu-item active">📊 Agendamentos Geral</div>
+                <div onclick="mudarFiltro('dia', this)" class="menu-item">📅 Agendamentos do Dia</div>
+                <div onclick="mudarFiltro('pacotes', this)" class="menu-item">📦 Controle de Pacotes</div>
                 <div onclick="mudarFiltro('vagas', this)" class="menu-item text-orange-400">🔒 Gestão de Vagas</div>
-                <div onclick="location.reload()" class="menu-item text-slate-400 mt-10">🚪 Sair</div>
+                <div onclick="exportarExcel()" class="menu-item text-green-400 mt-10">📥 Exportar Relatório</div>
+                <div onclick="location.reload()" class="menu-item text-slate-400 mt-2">🚪 Sair</div>
             </nav>
         </div>
 
         <div class="content">
-            <h2 id="tituloPagina" class="text-2xl font-black text-slate-800 uppercase mb-6">Agendamentos</h2>
-            <div id="containerPrincipal"></div>
+            <header class="flex justify-between items-center mb-8">
+                <div>
+                    <h2 id="tituloPagina" class="text-2xl font-black text-slate-800 uppercase italic">Agendamentos Geral</h2>
+                </div>
+                <button onclick="carregarDados()" class="bg-white border p-3 rounded-xl shadow-sm font-bold text-xs uppercase hover:bg-slate-50">Atualizar Dados ↻</button>
+            </header>
+            <div id="containerCards" class="grid grid-cols-1 gap-4"></div>
         </div>
     </div>
 
     <script>
         const SB_URL = "https://supabase.co";
         const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
-        const headers = { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" };
+        const headers = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json", "Prefer": "return=minimal" };
         
+        let todosDados = [];
         let filtroAtual = 'geral';
 
         function logar() {
             if(document.getElementById('senhaAdm').value === 'nilopet2024') {
                 document.getElementById('loginArea').classList.add('hidden');
                 document.getElementById('painelArea').classList.remove('hidden');
-                carregarPagina();
+                carregarDados();
             } else { alert("Senha incorreta!"); }
+        }
+
+        async function carregarDados() {
+            const container = document.getElementById('containerCards');
+            container.innerHTML = "Sincronizando...";
+            try {
+                const endpoint = filtroAtual === 'vagas' ? "/configuracoes_agenda" : "/agendamentos";
+                const res = await fetch(`${SB_URL}${endpoint}?select=*`, { headers });
+                todosDados = await res.json();
+                renderizar();
+            } catch (e) { alert("Erro de conexão!"); }
         }
 
         function mudarFiltro(tipo, el) {
@@ -62,91 +88,77 @@
             document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
             el.classList.add('active');
             document.getElementById('tituloPagina').innerText = el.innerText;
-            carregarPagina();
+            carregarDados();
         }
 
-        async function carregarPagina() {
-            const container = document.getElementById('containerPrincipal');
-            container.innerHTML = "Carregando...";
+        function renderizar() {
+            const container = document.getElementById('containerCards');
+            if(filtroAtual === 'vagas') return renderVagas(container);
 
-            if (filtroAtual === 'geral') {
-                const res = await fetch(`${SB_URL}/agendamentos?select=*&order=created_at.desc`, { headers });
-                const dados = await res.json();
-                renderAgendamentos(dados);
-            } else {
-                const res = await fetch(`${SB_URL}/configuracoes_agenda?select=*&order=dia_semana.asc,horario.asc`, { headers });
-                const dados = await res.json();
-                renderVagas(dados);
-            }
-        }
+            const hoje = new Date().toISOString().split('T')[0];
+            let filtrados = todosDados;
+            if(filtroAtual === 'dia') filtrados = todosDados.filter(item => item.pets?.some(p => p.agenda?.some(a => a.data === hoje)));
+            else if (filtroAtual === 'pacotes') filtrados = todosDados.filter(item => item.pets?.some(p => p.plano !== 'avulso'));
 
-        function renderAgendamentos(dados) {
-            const container = document.getElementById('containerPrincipal');
-            container.innerHTML = dados.length ? "" : "Nenhum agendamento.";
-            dados.forEach(item => {
-                const div = document.createElement('div');
-                div.className = "card";
-                div.innerHTML = `
-                    <div class="flex justify-between items-start border-b pb-3 mb-3">
-                        <div>
-                            <input type="text" id="nome_${item.id}" value="${item.cliente}" class="font-black uppercase block bg-transparent border-none p-0 focus:ring-0">
-                            <input type="text" id="whats_${item.id}" value="${item.whatsapp}" class="text-xs text-slate-500 font-bold bg-transparent border-none p-0 focus:ring-0">
+            container.innerHTML = filtrados.map(item => `
+                <div class="card-pet shadow-sm">
+                    <div class="flex justify-between items-start border-b pb-3 mb-4">
+                        <div class="w-full pr-4">
+                            <input type="text" value="${item.cliente}" onchange="updateCli('${item.id}', 'cliente', this.value)" class="input-inline font-black text-lg text-slate-800 uppercase italic">
+                            <div class="flex gap-2">
+                                <input type="text" value="${item.whatsapp}" onchange="updateCli('${item.id}', 'whatsapp', this.value)" class="input-inline text-[10px] text-slate-500 font-bold uppercase w-24">
+                                <input type="text" value="${item.rua}" onchange="updateCli('${item.id}', 'rua', this.value)" class="input-inline text-[10px] text-slate-500 font-bold uppercase">
+                            </div>
                         </div>
-                        <button onclick="salvarCli('${item.id}')" class="bg-green-600 text-white px-3 py-1 rounded text-[10px] font-bold">SALVAR</button>
+                        <div class="flex gap-2">
+                            <a href="https://wa.me{item.whatsapp}" target="_blank" class="bg-green-500 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase">WhatsApp</a>
+                            <button onclick="excluir('${item.id}')" class="bg-slate-100 text-slate-400 px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-red-600 hover:text-white">Excluir</button>
+                        </div>
                     </div>
-                    <div class="text-[10px] font-bold text-red-600 uppercase">Pets:</div>
-                    ${item.pets.map(p => `<div class="text-xs py-1 border-b last:border-0">${p.nome} - ${p.plano}</div>`).join('')}
-                `;
-                container.appendChild(div);
-            });
+                    <div class="space-y-4">
+                        ${(item.pets || []).map(p => `
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                <div class="flex justify-between items-center mb-3">
+                                    <span class="badge ${p.plano !== 'avulso' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}">${p.plano}</span>
+                                    <span class="font-black text-red-600 uppercase italic underline">${p.nome}</span>
+                                </div>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+                                    ${(p.agenda || []).map((a, i) => `<div class="bg-white p-2 rounded border text-[11px] text-center"><span class="font-bold">${a.data.split('-').reverse().join('/')}</span><br><b>${a.hora}</b></div>`).join('')}
+                                </div>
+                                <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4 pt-4 border-t border-slate-200">
+                                    <div><label class="text-[9px] font-bold text-slate-400">STATUS</label><select class="w-full text-xs p-1 border"><option>Pendente</option><option>Pago</option></select></div>
+                                    <div class="flex items-end"><button class="bg-slate-800 text-white w-full py-2 rounded text-[10px] font-bold uppercase">Salvar</button></div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>`).join('');
         }
 
-        function renderVagas(dados) {
-            const container = document.getElementById('containerPrincipal');
+        async function updateCli(id, campo, valor) { await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: "PATCH", headers, body: JSON.stringify({ [campo]: valor }) }); }
+
+        function renderVagas(container) {
             const dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-            container.innerHTML = `<p class="text-xs mb-4 text-slate-500 italic">Aqui você define quantos banhos e tosas aceita em cada horário.</p>`;
-            
-            dados.forEach(v => {
-                const div = document.createElement('div');
-                div.className = "flex items-center justify-between bg-white p-3 rounded-lg border mb-2 shadow-sm";
-                div.innerHTML = `
-                    <div class="flex flex-col">
-                        <span class="text-[10px] font-black uppercase text-slate-400">${dias[v.dia_semana]}</span>
-                        <span class="font-bold text-slate-800">${v.horario}</span>
+            container.innerHTML = `<div class="card-pet"><h3 class="font-bold mb-4">Configurar Limites</h3>` + 
+            todosDados.map(v => `
+                <div class="flex items-center justify-between border-b py-2">
+                    <span class="text-[10px] font-bold uppercase w-32">${dias[v.dia_semana]} - ${v.horario}</span>
+                    <div class="flex gap-2">
+                        <input type="number" value="${v.vagas_banho}" onchange="upVaga(${v.id},'vagas_banho',this.value)" class="w-12 border rounded text-xs p-1">
+                        <input type="checkbox" ${v.bloqueado ? 'checked' : ''} onchange="upVaga(${v.id},'bloqueado',this.checked)" class="ml-2"> <span class="text-[9px] font-bold uppercase">Bloquear</span>
                     </div>
-                    <div class="flex gap-4">
-                        <div>
-                            <label class="text-[8px] font-black uppercase block">Banhos</label>
-                            <input type="number" id="v_banho_${v.id}" value="${v.vagas_banho}" class="w-12 border rounded p-1 text-xs">
-                        </div>
-                        <div>
-                            <label class="text-[8px] font-black uppercase block">Tosas</label>
-                            <input type="number" id="v_tosa_${v.id}" value="${v.vagas_tosa}" class="w-12 border rounded p-1 text-xs">
-                        </div>
-                        <div class="flex items-center gap-1 mt-3">
-                            <input type="checkbox" id="v_lock_${v.id}" ${v.bloqueado ? 'checked' : ''}>
-                            <label class="text-[8px] font-black uppercase">Bloquear</label>
-                        </div>
-                        <button onclick="salvarVaga('${v.id}')" class="bg-slate-800 text-white px-3 py-1 rounded text-[10px] font-bold mt-3">OK</button>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
+                </div>`).join('') + `</div>`;
         }
 
-        async function salvarCli(id) {
-            const cliente = document.getElementById(`nome_${id}`).value;
-            const whatsapp = document.getElementById(`whats_${id}`).value;
-            await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: "PATCH", headers, body: JSON.stringify({ cliente, whatsapp }) });
-            alert("Cliente atualizado!");
-        }
+        async function upVaga(id, campo, valor) { await fetch(`${SB_URL}/configuracoes_agenda?id=eq.${id}`, { method: "PATCH", headers, body: JSON.stringify({ [campo]: valor }) }); }
 
-        async function salvarVaga(id) {
-            const vagas_banho = document.getElementById(`v_banho_${id}`).value;
-            const vagas_tosa = document.getElementById(`v_tosa_${id}`).value;
-            const bloqueado = document.getElementById(`v_lock_${id}`).checked;
-            await fetch(`${SB_URL}/configuracoes_agenda?id=eq.${id}`, { method: "PATCH", headers, body: JSON.stringify({ vagas_banho, vagas_tosa, bloqueado }) });
-            alert("Regra de horário salva!");
+        async function excluir(id) { if(confirm("Excluir?")) { await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: "DELETE", headers }); carregarDados(); } }
+
+        function exportarExcel() {
+            const ws = XLSX.utils.json_to_sheet(todosDados.map(i => ({ Cliente: i.cliente, WhatsApp: i.whatsapp, Rua: i.rua })));
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Dados");
+            XLSX.writeFile(wb, "NiloPet_Relatorio.xlsx");
         }
     </script>
 </body>
