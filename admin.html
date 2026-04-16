@@ -1,170 +1,75 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADM - Nilo Pet</title>
-    <script src="https://tailwindcss.com"></script>
-    <script src="https://cloudflare.com"></script>
-    <style>
-        body { background-color: #f8fafc; font-family: sans-serif; overflow-x: hidden; }
-        .sidebar { width: 260px; height: 100vh; position: fixed; left: 0; top: 0; background: #1e293b; color: white; transition: 0.3s; z-index: 1000; }
-        .content { margin-left: 260px; padding: 20px; transition: 0.3s; }
-        .menu-item { padding: 15px 20px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 600; border-left: 4px solid transparent; }
-        .menu-item:hover { background: #334155; }
-        .menu-item.active { background: #334155; border-left-color: #ef4444; color: #ef4444; }
-        .card-pet { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 15px; }
-        .badge { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
-        .hidden { display: none; }
-        .input-edit { background: transparent; border: 1px solid transparent; transition: 0.2s; width: 100%; }
-        .input-edit:hover, .input-edit:focus { background: #f1f5f9; border-color: #cbd5e1; border-radius: 4px; padding: 2px; }
-        @media (max-width: 768px) { .sidebar { left: -260px; } .content { margin-left: 0; } .sidebar.open { left: 0; } }
-    </style>
-</head>
-<body>
+function renderVagas(container) {
+    const dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+    
+    // Agrupar por dia para ficar organizado
+    container.innerHTML = `<h3 class="font-black mb-4 uppercase italic text-slate-800">Gestão de Capacidade e Bloqueios</h3>`;
+    
+    container.innerHTML += todosDados.map(v => `
+        <div class="card-pet mb-2 border-l-4 ${v.bloqueado ? 'border-l-red-500 bg-red-50' : 'border-l-green-500'}">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div class="w-full md:w-auto">
+                    <span class="badge ${v.bloqueado ? 'bg-red-200 text-red-700' : 'bg-green-100 text-green-700'}">
+                        ${v.bloqueado ? 'BLOQUEADO' : 'ATIVO'}
+                    </span>
+                    <p class="font-black uppercase text-sm">${dias[v.dia_semana]} - ${v.horario}</p>
+                </div>
 
-    <div id="loginArea" class="flex items-center justify-center min-h-screen bg-slate-100">
-        <div class="w-full max-w-md p-8 bg-white rounded-2xl shadow-2xl text-center">
-            <h1 class="text-3xl font-black text-slate-800 uppercase italic">Nilo Pet</h1>
-            <input type="password" id="senhaAdm" placeholder="Senha de acesso" class="w-full p-4 border-2 rounded-xl mb-4 text-center">
-            <button onclick="logar()" class="w-full bg-red-600 text-white font-black p-4 rounded-xl">ENTRAR</button>
-        </div>
-    </div>
-
-    <div id="painelArea" class="hidden">
-        <div class="sidebar">
-            <div class="p-6 border-b border-slate-700"><h2 class="font-black text-xl uppercase italic">Nilo Pet ADM</h2></div>
-            <nav class="mt-4">
-                <div onclick="mudarFiltro('geral', this)" class="menu-item active">📊 Agendamentos Geral</div>
-                <div onclick="mudarFiltro('dia', this)" class="menu-item">📅 Agendamentos do Dia</div>
-                <div onclick="mudarFiltro('pacotes', this)" class="menu-item">📦 Controle de Pacotes</div>
-                <div onclick="mudarFiltro('vagas', this)" class="menu-item text-orange-400">🔒 Gestão de Vagas</div>
-                <div onclick="exportarRelatorio()" class="menu-item text-green-400 mt-10">📥 Exportar Relatório</div>
-                <div onclick="location.reload()" class="menu-item text-slate-400 mt-2">🚪 Sair</div>
-            </nav>
-        </div>
-
-        <div class="content">
-            <header class="flex justify-between items-center mb-8">
-                <h2 id="tituloPagina" class="text-2xl font-black text-slate-800 uppercase italic">Agendamentos Geral</h2>
-                <button onclick="carregarDados()" class="bg-white border p-3 rounded-xl shadow-sm font-bold text-xs uppercase">Sincronizar ↻</button>
-            </header>
-            <div id="containerCards" class="grid grid-cols-1 gap-4"></div>
-        </div>
-    </div>
-
-    <script>
-        const SB_URL = "https://yczhjyxisqrvfxxgipop.supabase.co/rest/v1";
-        const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
-        const headers = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json", "Prefer": "return=minimal" };
-        
-        let todosDados = [];
-        let filtroAtual = 'geral';
-
-        function logar() {
-            if(document.getElementById('senhaAdm').value === 'nilopet2024') {
-                document.getElementById('loginArea').classList.add('hidden');
-                document.getElementById('painelArea').classList.remove('hidden');
-                carregarDados();
-            } else { alert("Senha incorreta!"); }
-        }
-
-        async function carregarDados() {
-            const container = document.getElementById('containerCards');
-            container.innerHTML = "Carregando...";
-            try {
-                const endpoint = filtroAtual === 'vagas' ? "/configuracoes_agenda" : "/agendamentos";
-                const res = await fetch(`${SB_URL}${endpoint}?select=*`, { headers });
-                todosDados = await res.json();
-                renderizar();
-            } catch (e) { alert("Erro ao carregar banco!"); }
-        }
-
-        function renderizar() {
-            const container = document.getElementById('containerCards');
-            if(filtroAtual === 'vagas') return renderVagas(container);
-
-            const hoje = new Date().toISOString().split('T')[0];
-            let filtrados = todosDados;
-            if(filtroAtual === 'dia') filtrados = todosDados.filter(i => i.pets?.some(p => p.agenda?.some(a => a.data === hoje)));
-            else if (filtroAtual === 'pacotes') filtrados = todosDados.filter(i => i.pets?.some(p => p.plano !== 'avulso'));
-
-            container.innerHTML = filtrados.map(item => `
-                <div class="card-pet shadow-sm">
-                    <div class="flex justify-between items-start border-b pb-3 mb-4">
-                        <div class="w-full">
-                            <input type="text" value="${item.cliente}" onchange="updateDB('${item.id}', 'cliente', this.value)" class="input-edit font-black text-lg text-slate-800 uppercase italic">
-                            <div class="flex gap-2">
-                                <input type="text" value="${item.whatsapp}" onchange="updateDB('${item.id}', 'whatsapp', this.value)" class="input-edit text-[10px] text-slate-500 font-bold uppercase w-24">
-                                <span class="text-slate-300">|</span>
-                                <input type="text" value="${item.rua}" onchange="updateDB('${item.id}', 'rua', this.value)" class="input-edit text-[10px] text-slate-500 font-bold uppercase">
-                            </div>
-                        </div>
-                        <div class="flex gap-2">
-                            <a href="https://wa.me{item.whatsapp}" target="_blank" class="bg-green-500 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase">WhatsApp</a>
-                            <button onclick="excluir('${item.id}')" class="bg-slate-100 text-slate-400 px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-red-600 hover:text-white">Excluir</button>
-                        </div>
+                <div class="grid grid-cols-3 gap-2 flex-grow max-w-md">
+                    <div>
+                        <label class="label-req !text-[8px]">Banho</label>
+                        <input type="number" value="${v.vagas_banho || 0}" onchange="upVaga(${v.id}, 'vagas_banho', this.value)" class="w-full border rounded text-xs p-1">
                     </div>
-                    <div class="space-y-4">
-                        ${(item.pets || []).map(p => `
-                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                                <div class="flex justify-between items-center mb-3">
-                                    <span class="badge ${p.plano !== 'avulso' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}">${p.plano}</span>
-                                    <span class="font-black text-red-600 uppercase italic underline">${p.nome}</span>
-                                </div>
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
-                                    ${(p.agenda || []).map(a => `<div class="bg-white p-2 border rounded text-center text-[10px] font-bold">${a.data.split('-').reverse().join('/')}<br>${a.hora}</div>`).join('')}
-                                </div>
-                                <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4 pt-4 border-t border-slate-200">
-                                    <div><label class="text-[9px] font-bold text-slate-400 uppercase">Status</label><select class="w-full text-xs p-1 border"><option>Pendente</option><option>Pago</option></select></div>
-                                    <div class="flex items-end"><button class="bg-slate-800 text-white w-full py-2 rounded text-[10px] font-bold uppercase">Salvar</button></div>
-                                </div>
+                    <div>
+                        <label class="label-req !text-[8px]">Tosa</label>
+                        <input type="number" value="${v.vagas_tosa || 0}" onchange="upVaga(${v.id}, 'vagas_tosa', this.value)" class="w-full border rounded text-xs p-1">
+                    </div>
+                    <div>
+                        <label class="label-req !text-[8px]">Gato</label>
+                        <input type="number" value="${v.vagas_gato || 0}" onchange="upVaga(${v.id}, 'vagas_gato', this.value)" class="w-full border rounded text-xs p-1">
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 bg-slate-100 p-2 rounded-lg">
+                    <input type="checkbox" id="block${v.id}" ${v.bloqueado ? 'checked' : ''} 
+                        onchange="upVaga(${v.id}, 'bloqueado', this.checked); carregarDados();" 
+                        class="w-5 h-5 accent-red-600">
+                    <label for="block${v.id}" class="text-[10px] font-black uppercase text-red-600 cursor-pointer">Bloquear Horário</label>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+        function renderVagas(container) {
+            const dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+            container.innerHTML = `<h3 class="font-black mb-4 uppercase italic text-slate-800 px-2">Gestão de Vagas e Bloqueios</h3>`;
+            
+            container.innerHTML += todosDados.map(v => `
+                <div class="card-pet shadow-sm border-l-4 ${v.bloqueado ? 'border-red-500 bg-red-50' : 'border-green-500'}">
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <p class="font-black text-xs uppercase text-slate-600">${dias[v.dia_semana]}</p>
+                            <p class="font-black text-lg text-slate-800">${v.horario}</p>
+                        </div>
+
+                        <div class="flex gap-3 flex-grow justify-center">
+                            <div class="text-center">
+                                <label class="block text-[8px] font-black uppercase text-slate-400">Banho</label>
+                                <input type="number" value="${v.vagas_banho || 0}" onchange="upVaga(${v.id}, 'vagas_banho', this.value)" class="w-12 border rounded text-center font-bold p-1">
                             </div>
-                        `).join('')}
+                            <div class="text-center">
+                                <label class="block text-[8px] font-black uppercase text-slate-400">Tosa</label>
+                                <input type="number" value="${v.vagas_tosa || 0}" onchange="upVaga(${v.id}, 'vagas_tosa', this.value)" class="w-12 border rounded text-center font-bold p-1">
+                            </div>
+                            <div class="text-center">
+                                <label class="block text-[8px] font-black uppercase text-slate-400">Gato</label>
+                                <input type="number" value="${v.vagas_gato || 0}" onchange="upVaga(${v.id}, 'vagas_gato', this.value)" class="w-12 border rounded text-center font-bold p-1">
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2 border-l pl-4">
+                            <input type="checkbox" id="check${v.id}" ${v.bloqueado ? 'checked' : ''} onchange="upVaga(${v.id}, 'bloqueado', this.checked); carregarDados();" class="w-5 h-5 accent-red-600">
+                            <label for="check${v.id}" class="text-[10px] font-black uppercase ${v.bloqueado ? 'text-red-600' : 'text-slate-400'}">Bloquear</label>
+                        </div>
                     </div>
                 </div>`).join('');
         }
-
-        async function updateDB(id, campo, valor) {
-            await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: "PATCH", headers, body: JSON.stringify({ [campo]: valor }) });
-        }
-
-        function renderVagas(container) {
-            const dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-            container.innerHTML = `<div class="card-pet"><h3 class="font-bold mb-4 uppercase text-sm">Gestão de Vagas</h3>` + 
-            todosDados.map(v => `
-                <div class="flex items-center justify-between border-b py-2">
-                    <span class="text-[11px] font-bold uppercase w-32">${dias[v.dia_semana]} - ${v.horario}</span>
-                    <div class="flex gap-4">
-                        <input type="number" value="${v.vagas_banho}" onchange="upVaga(${v.id}, 'vagas_banho', this.value)" class="w-12 border rounded text-xs p-1">
-                        <div class="flex items-center gap-1">
-                            <input type="checkbox" ${v.bloqueado ? 'checked' : ''} onchange="upVaga(${v.id}, 'bloqueado', this.checked)">
-                            <label class="text-[9px] font-bold uppercase">Fechar</label>
-                        </div>
-                    </div>
-                </div>`).join('') + `</div>`;
-        }
-
-        async function upVaga(id, campo, valor) {
-            await fetch(`${SB_URL}/configuracoes_agenda?id=eq.${id}`, { method: "PATCH", headers, body: JSON.stringify({ [campo]: valor }) });
-        }
-
-        async function excluir(id) {
-            if(confirm("Excluir?")) { await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: "DELETE", headers }); carregarDados(); }
-        }
-
-        function exportarRelatorio() {
-            const ws = XLSX.utils.json_to_sheet(todosDados.map(i => ({ Cliente: i.cliente, WhatsApp: i.whatsapp, Rua: i.rua })));
-            const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Relatorio");
-            XLSX.writeFile(wb, "NiloPet_Export.xlsx");
-        }
-
-        function mudarFiltro(tipo, el) {
-            filtroAtual = tipo;
-            document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
-            el.classList.add('active');
-            carregarDados();
-        }
-    </script>
-</body>
-</html>
