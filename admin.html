@@ -3,168 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADM Nilo Pet - Oficial</title>
+    <title>Painel Gestor - Nilo Pet</title>
     <script src="https://tailwindcss.com"></script>
-    <script src="https://cloudflare.com"></script>
     <style>
-        body { background-color: #f8fafc; font-family: sans-serif; }
-        .sidebar { width: 260px; height: 100vh; position: fixed; background: #1e293b; color: white; z-index: 1000; }
-        .content { margin-left: 260px; padding: 20px; }
-        .menu-item { padding: 15px 20px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 600; border-left: 4px solid transparent; }
-        .menu-item:hover { background: #334155; }
-        .menu-item.active { background: #334155; border-left-color: #ef4444; color: #ef4444; }
-        .card { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        body { background-color: #f1f5f9; font-family: sans-serif; }
+        .sidebar { width: 260px; height: 100vh; position: fixed; background: #0f172a; color: white; }
+        .content { margin-left: 260px; padding: 25px; }
+        .menu-item { padding: 15px 20px; cursor: pointer; font-weight: bold; border-left: 4px solid transparent; }
+        .menu-item.active { background: #1e293b; border-left-color: #ef4444; color: #ef4444; }
+        .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
         .hidden { display: none; }
-        input { border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px; outline: none; font-size: 14px; }
+        .badge-vaga { background: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 800; }
     </style>
 </head>
 <body>
 
-    <div id="loginArea" class="flex items-center justify-center min-h-screen bg-slate-100">
-        <div class="w-full max-w-md p-8 bg-white rounded-2xl shadow-xl text-center">
-            <h1 class="text-3xl font-black text-slate-800 uppercase italic">Nilo Pet ADM</h1>
-            <input type="password" id="senhaAdm" placeholder="Senha" class="w-full p-4 border rounded-xl my-4 text-center">
-            <button onclick="logar()" class="w-full bg-red-600 text-white font-black p-4 rounded-xl">ENTRAR</button>
+    <div id="loginArea" class="flex items-center justify-center min-h-screen">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-80 text-center">
+            <h1 class="text-2xl font-black mb-4 uppercase">Nilo Pet ADM</h1>
+            <input type="password" id="senhaAdm" placeholder="Senha" class="w-full p-3 border rounded-lg mb-4 text-center">
+            <button onclick="logar()" class="w-full bg-red-600 text-white p-3 rounded-lg font-bold">ENTRAR</button>
         </div>
     </div>
 
     <div id="painelArea" class="hidden">
         <div class="sidebar">
-            <div class="p-6 border-b border-slate-700"><h2 class="font-black text-xl uppercase italic text-red-500">Nilo Pet</h2></div>
+            <div class="p-6 font-black text-xl italic border-b border-slate-800">NILO PET</div>
             <nav class="mt-4">
-                <div onclick="mudarFiltro('geral', this)" class="menu-item active">📊 Geral</div>
-                <div onclick="mudarFiltro('dia', this)" class="menu-item">📅 Hoje</div>
-                <div onclick="mudarFiltro('pacotes', this)" class="menu-item">📦 Pacotes</div>
-                <div onclick="mudarFiltro('bloqueio', this)" class="menu-item text-orange-400">🔒 Bloqueios/Vagas</div>
-                <div onclick="exportarRelatorio()" class="menu-item text-green-400">📥 Exportar Excel</div>
+                <div onclick="mudarFiltro('geral', this)" class="menu-item active">📊 Agendamentos</div>
+                <div onclick="mudarFiltro('vagas', this)" class="menu-item text-orange-400">🔒 Gestão de Vagas</div>
                 <div onclick="location.reload()" class="menu-item text-slate-400 mt-10">🚪 Sair</div>
             </nav>
         </div>
 
         <div class="content">
-            <header class="flex justify-between items-center mb-6">
-                <h2 id="tituloPagina" class="text-2xl font-black text-slate-800 uppercase">Agendamentos Geral</h2>
-                <button onclick="carregarDados()" class="bg-white border px-4 py-2 rounded-xl font-bold text-xs shadow-sm">Sincronizar ↻</button>
-            </header>
-            <div id="containerCards"></div>
+            <h2 id="tituloPagina" class="text-2xl font-black text-slate-800 uppercase mb-6">Agendamentos</h2>
+            <div id="containerPrincipal"></div>
         </div>
     </div>
 
     <script>
-        const SB_URL = "https://yczhjyxisqrvfxxgipop.supabase.co/rest/v1/agendamentos";
+        const SB_URL = "https://supabase.co";
         const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
-        let todosDados = [];
+        const headers = { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" };
+        
         let filtroAtual = 'geral';
 
         function logar() {
             if(document.getElementById('senhaAdm').value === 'nilopet2024') {
                 document.getElementById('loginArea').classList.add('hidden');
                 document.getElementById('painelArea').classList.remove('hidden');
-                carregarDados();
+                carregarPagina();
             } else { alert("Senha incorreta!"); }
-        }
-
-        async function carregarDados() {
-            const container = document.getElementById('containerCards');
-            container.innerHTML = "<p class='text-slate-400 font-bold animate-pulse'>CARREGANDO...</p>";
-            try {
-                const res = await fetch(`${SB_URL}?select=*&order=created_at.desc`, {
-                    headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY }
-                });
-                if (!res.ok) throw new Error("Falha na rede");
-                todosDados = await res.json();
-                renderizar();
-            } catch (e) { 
-                container.innerHTML = "<p class='text-red-500 font-bold'>ERRO DE CONEXÃO COM O BANCO.</p>";
-            }
-        }
-
-        function renderizar() {
-            const container = document.getElementById('containerCards');
-            container.innerHTML = "";
-            const hoje = new Date().toISOString().split('T')[0];
-
-            if(filtroAtual === 'bloqueio') {
-                container.innerHTML = `<div class="card"><h3 class="font-bold mb-4">Gestão de Vagas e Regras</h3><p class="text-sm">Configure aqui os limites (Esta função requer a nova tabela SQL).</p></div>`;
-                return;
-            }
-
-            let filtrados = todosDados;
-            if(filtroAtual === 'dia') {
-                filtrados = todosDados.filter(item => item.pets && item.pets.some(p => p.agenda && p.agenda.some(a => a.data === hoje)));
-            } else if(filtroAtual === 'pacotes') {
-                filtrados = todosDados.filter(item => item.pets && item.pets.some(p => p.plano !== 'avulso'));
-            }
-
-            filtrados.forEach(item => {
-                const div = document.createElement('div');
-                div.className = "card";
-                div.innerHTML = `
-                    <div class="flex justify-between border-b pb-3 mb-3">
-                        <div class="w-full">
-                            <input type="text" value="${item.cliente || ''}" id="nome_${item.id}" class="font-black uppercase italic text-slate-800 bg-transparent block w-full mb-1">
-                            <input type="text" value="${item.whatsapp || ''}" id="whats_${item.id}" class="text-xs text-slate-500 font-bold w-full bg-transparent">
-                            <p class="text-[9px] text-slate-400 uppercase font-bold mt-1">Endereço: ${item.rua || 'Não informado'}</p>
-                        </div>
-                        <div class="flex flex-col gap-1">
-                            <button onclick="salvarAlteracoes('${item.id}')" class="bg-green-600 text-white px-3 py-2 rounded text-[10px] font-bold uppercase">Salvar</button>
-                            <button onclick="excluir('${item.id}')" class="bg-slate-100 text-slate-400 px-3 py-2 rounded text-[10px] font-bold uppercase hover:bg-red-600 hover:text-white">Excluir</button>
-                        </div>
-                    </div>
-                    <div class="space-y-3">
-                        ${item.pets ? item.pets.map(p => `
-                            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
-                                <div class="flex justify-between items-center mb-2">
-                                    <span class="text-[9px] font-black px-2 py-1 rounded bg-slate-200">${p.plano ? p.plano.toUpperCase() : ''}</span>
-                                    <span class="font-black text-red-600 uppercase italic">${p.nome || 'Pet'}</span>
-                                </div>
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                    ${p.agenda ? p.agenda.map(a => `
-                                        <div class="bg-white p-2 border rounded text-center text-[10px] font-bold">
-                                            ${a.data ? a.data.split('-').reverse().join('/') : ''}<br>
-                                            <span class="text-slate-900">${a.hora || ''}</span>
-                                        </div>
-                                    `).join('') : ''}
-                                </div>
-                            </div>
-                        `).join('') : ''}
-                    </div>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        async function salvarAlteracoes(id) {
-            const cliente = document.getElementById(`nome_${id}`).value;
-            const whatsapp = document.getElementById(`whats_${id}`).value;
-            try {
-                const res = await fetch(`${SB_URL}?id=eq.${id}`, {
-                    method: "PATCH",
-                    headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json", "Prefer": "return=minimal" },
-                    body: JSON.stringify({ cliente, whatsapp })
-                });
-                if(res.ok) alert("Dados salvos!"); else alert("Erro ao salvar.");
-            } catch(e) { alert("Erro de conexão."); }
-        }
-
-        async function excluir(id) {
-            if(!confirm("Excluir definitivamente?")) return;
-            await fetch(`${SB_URL}?id=eq.${id}`, { method: "DELETE", headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY } });
-            carregarDados();
-        }
-
-        function exportarRelatorio() {
-            if(todosDados.length === 0) return alert("Sem dados para exportar.");
-            const data = todosDados.map(i => ({ 
-                Cliente: i.cliente, 
-                WhatsApp: i.whatsapp, 
-                Rua: i.rua,
-                Data_Cadastro: i.created_at 
-            }));
-            const ws = XLSX.utils.json_to_sheet(data);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Agendamentos");
-            XLSX.writeFile(wb, "NiloPet_Relatorio.xlsx");
         }
 
         function mudarFiltro(tipo, el) {
@@ -172,7 +62,91 @@
             document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
             el.classList.add('active');
             document.getElementById('tituloPagina').innerText = el.innerText;
-            renderizar();
+            carregarPagina();
+        }
+
+        async function carregarPagina() {
+            const container = document.getElementById('containerPrincipal');
+            container.innerHTML = "Carregando...";
+
+            if (filtroAtual === 'geral') {
+                const res = await fetch(`${SB_URL}/agendamentos?select=*&order=created_at.desc`, { headers });
+                const dados = await res.json();
+                renderAgendamentos(dados);
+            } else {
+                const res = await fetch(`${SB_URL}/configuracoes_agenda?select=*&order=dia_semana.asc,horario.asc`, { headers });
+                const dados = await res.json();
+                renderVagas(dados);
+            }
+        }
+
+        function renderAgendamentos(dados) {
+            const container = document.getElementById('containerPrincipal');
+            container.innerHTML = dados.length ? "" : "Nenhum agendamento.";
+            dados.forEach(item => {
+                const div = document.createElement('div');
+                div.className = "card";
+                div.innerHTML = `
+                    <div class="flex justify-between items-start border-b pb-3 mb-3">
+                        <div>
+                            <input type="text" id="nome_${item.id}" value="${item.cliente}" class="font-black uppercase block bg-transparent border-none p-0 focus:ring-0">
+                            <input type="text" id="whats_${item.id}" value="${item.whatsapp}" class="text-xs text-slate-500 font-bold bg-transparent border-none p-0 focus:ring-0">
+                        </div>
+                        <button onclick="salvarCli('${item.id}')" class="bg-green-600 text-white px-3 py-1 rounded text-[10px] font-bold">SALVAR</button>
+                    </div>
+                    <div class="text-[10px] font-bold text-red-600 uppercase">Pets:</div>
+                    ${item.pets.map(p => `<div class="text-xs py-1 border-b last:border-0">${p.nome} - ${p.plano}</div>`).join('')}
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function renderVagas(dados) {
+            const container = document.getElementById('containerPrincipal');
+            const dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+            container.innerHTML = `<p class="text-xs mb-4 text-slate-500 italic">Aqui você define quantos banhos e tosas aceita em cada horário.</p>`;
+            
+            dados.forEach(v => {
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between bg-white p-3 rounded-lg border mb-2 shadow-sm";
+                div.innerHTML = `
+                    <div class="flex flex-col">
+                        <span class="text-[10px] font-black uppercase text-slate-400">${dias[v.dia_semana]}</span>
+                        <span class="font-bold text-slate-800">${v.horario}</span>
+                    </div>
+                    <div class="flex gap-4">
+                        <div>
+                            <label class="text-[8px] font-black uppercase block">Banhos</label>
+                            <input type="number" id="v_banho_${v.id}" value="${v.vagas_banho}" class="w-12 border rounded p-1 text-xs">
+                        </div>
+                        <div>
+                            <label class="text-[8px] font-black uppercase block">Tosas</label>
+                            <input type="number" id="v_tosa_${v.id}" value="${v.vagas_tosa}" class="w-12 border rounded p-1 text-xs">
+                        </div>
+                        <div class="flex items-center gap-1 mt-3">
+                            <input type="checkbox" id="v_lock_${v.id}" ${v.bloqueado ? 'checked' : ''}>
+                            <label class="text-[8px] font-black uppercase">Bloquear</label>
+                        </div>
+                        <button onclick="salvarVaga('${v.id}')" class="bg-slate-800 text-white px-3 py-1 rounded text-[10px] font-bold mt-3">OK</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        async function salvarCli(id) {
+            const cliente = document.getElementById(`nome_${id}`).value;
+            const whatsapp = document.getElementById(`whats_${id}`).value;
+            await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: "PATCH", headers, body: JSON.stringify({ cliente, whatsapp }) });
+            alert("Cliente atualizado!");
+        }
+
+        async function salvarVaga(id) {
+            const vagas_banho = document.getElementById(`v_banho_${id}`).value;
+            const vagas_tosa = document.getElementById(`v_tosa_${id}`).value;
+            const bloqueado = document.getElementById(`v_lock_${id}`).checked;
+            await fetch(`${SB_URL}/configuracoes_agenda?id=eq.${id}`, { method: "PATCH", headers, body: JSON.stringify({ vagas_banho, vagas_tosa, bloqueado }) });
+            alert("Regra de horário salva!");
         }
     </script>
 </body>
