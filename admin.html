@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ADM - Nilo Pet</title>
     <script src="https://tailwindcss.com"></script>
-    <script src="https://cloudflare.com"></script>
     <style>
         body { background-color: #f8fafc; font-family: sans-serif; overflow-x: hidden; }
         .sidebar { width: 260px; height: 100vh; position: fixed; left: 0; top: 0; background: #1e293b; color: white; transition: 0.3s; z-index: 1000; }
@@ -39,7 +38,6 @@
                 <div onclick="mudarFiltro('dia', this)" class="menu-item">📅 Agendamentos do Dia</div>
                 <div onclick="mudarFiltro('pacotes', this)" class="menu-item">📦 Controle de Pacotes</div>
                 <div onclick="mudarFiltro('vagas', this)" class="menu-item text-orange-400">🔒 Gestão de Vagas</div>
-                <div onclick="exportarRelatorio()" class="menu-item text-green-400 mt-10">📥 Exportar Relatório</div>
                 <div onclick="location.reload()" class="menu-item text-slate-400 mt-2">🚪 Sair</div>
             </nav>
         </div>
@@ -54,7 +52,7 @@
     </div>
 
     <script>
-        const SB_URL = "https://yczhjyxisqrvfxxgipop.supabase.co/rest/v1
+        const SB_URL = "https://supabase.co";
         const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
         const headers = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json", "Prefer": "return=minimal" };
         
@@ -149,12 +147,6 @@
 
         async function excluir(id) {
             if(confirm("Excluir?")) { await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: "DELETE", headers }); carregarDados(); }
-        }
-
-        function exportarRelatorio() {
-            const ws = XLSX.utils.json_to_sheet(todosDados.map(i => ({ Cliente: i.cliente, WhatsApp: i.whatsapp, Rua: i.rua })));
-            const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Relatorio");
-            XLSX.writeFile(wb, "NiloPet_Export.xlsx");
         }
 
         function mudarFiltro(tipo, el) {
