@@ -124,41 +124,51 @@
         }
 
                 function renderVagas(container) {
-            const dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-            
-            // Tabela de Vagas por Porte e Tipo
-            let html = `<div class="card-pet"><h3 class="font-bold mb-4 uppercase text-sm">Capacidade por Porte e Categoria (Máx 4/h)</h3>` + 
-            todosDados.map(v => `
-                <div class="flex items-center justify-between border-b py-2">
-                    <span class="text-[11px] font-bold uppercase w-32">${dias[v.dia_semana]} - ${v.horario}</span>
-                    <div class="flex gap-4">
-                        <div class="flex flex-col items-center"><label class="text-[7px] font-bold uppercase text-blue-600">P/M</label><input type="number" value="${v.vagas_banho || 0}" onchange="upVaga(${v.id}, 'vagas_banho', this.value)" class="w-10 border rounded text-xs p-1"></div>
-                        <div class="flex flex-col items-center"><label class="text-[7px] font-bold uppercase text-orange-600">G. Curto</label><input type="number" value="${v.vagas_grande_curto || 0}" onchange="upVaga(${v.id}, 'vagas_grande_curto', this.value)" class="w-10 border rounded text-xs p-1"></div>
-                        <div class="flex flex-col items-center"><label class="text-[7px] font-bold uppercase text-red-600">G. Peludo</label><input type="number" value="${v.vagas_grande_peludo || 0}" onchange="upVaga(${v.id}, 'vagas_grande_peludo', this.value)" class="w-10 border rounded text-xs p-1"></div>
-                        <div class="flex flex-col items-center"><label class="text-[7px] font-bold uppercase text-purple-600">Gatos</label><input type="number" value="${v.vagas_gato || 0}" onchange="upVaga(${v.id}, 'vagas_gato', this.value)" class="w-10 border rounded text-xs p-1"></div>
-                        <div class="flex items-center gap-1 border-l pl-2">
-                            <input type="checkbox" ${v.bloqueado ? 'checked' : ''} onchange="upVaga(${v.id}, 'bloqueado', this.checked)">
-                            <label class="text-[9px] font-bold uppercase">Bloquear</label>
-                        </div>
-                    </div>
-                </div>`).join('') + `</div>`;
-
-            // Campo de Recesso / Bloqueio por Data
-            html += `
-            <div class="card-pet mt-6">
-                <h3 class="font-bold mb-4 uppercase text-sm text-red-600 italic">Bloqueio de Recesso (Dia Inteiro)</h3>
-                <div class="flex gap-4 items-end">
-                    <div class="flex-grow">
-                        <label class="text-[10px] font-bold uppercase">Selecione a Data</label>
-                        <input type="date" id="dataRecesso" class="w-full border rounded p-2 text-sm">
-                    </div>
-                    <button onclick="bloquearData(true)" class="bg-red-600 text-white px-6 py-2 rounded-xl font-bold text-xs uppercase shadow-lg">Bloquear Dia</button>
-                    <button onclick="bloquearData(false)" class="bg-slate-500 text-white px-6 py-2 rounded-xl font-bold text-xs uppercase">Liberar Dia</button>
+    const dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+    
+    let html = `<div class="card-pet">
+        <h3 class="font-bold mb-4 uppercase text-sm">Gestão Manual de Vagas e Recesso</h3>`;
+    
+    // Parte 1: Lista de Horários com campo manual
+    html += todosDados.map(v => `
+        <div class="flex items-center justify-between border-b py-3">
+            <span class="text-[11px] font-bold uppercase w-32">${dias[v.dia_semana]} - ${v.horario}</span>
+            <div class="flex gap-4 items-center">
+                <input type="text" placeholder="Ex: 4 pets (Banho/Tosa)" value="${v.descricao_vaga || ''}" 
+                    onchange="upVaga(${v.id}, 'descricao_vaga', this.value)" 
+                    class="border rounded text-xs p-2 w-64">
+                
+                <div class="flex items-center gap-1">
+                    <input type="checkbox" ${v.bloqueado ? 'checked' : ''} onchange="upVaga(${v.id}, 'bloqueado', this.checked)">
+                    <label class="text-[9px] font-bold uppercase">Bloquear</label>
                 </div>
-            </div>`;
-            
-            container.innerHTML = html;
-        }
+            </div>
+        </div>`).join('');
+
+    // Parte 2: Campo de Recesso Simples
+    html += `
+        <div class="mt-8 pt-4 border-t border-slate-200">
+            <label class="block text-[10px] font-bold uppercase mb-2">Bloqueio de Recesso (Escreva as datas)</label>
+            <textarea placeholder="Ex: 20/12 a 05/01 - Recesso de Final de Ano" 
+                class="w-full border rounded p-2 text-sm"
+                onchange="salvarRecesso(this.value)">${todosDados[0]?.recesso_texto || ''}</textarea>
+        </div>
+    </div>`;
+    
+    container.innerHTML = html;
+}
+
+// Função para salvar o texto do recesso
+async function salvarRecesso(texto) {
+    // Salva em uma coluna de texto simples no banco
+    await fetch(`${SB_URL}/configuracoes_agenda?id=gt.0`, { 
+        method: "PATCH", 
+        headers, 
+        body: JSON.stringify({ recesso_texto: texto }) 
+    });
+    alert("Recesso atualizado!");
+}
+
 
         // Adicione esta função logo abaixo da renderVagas
         async function bloquearData(status) {
