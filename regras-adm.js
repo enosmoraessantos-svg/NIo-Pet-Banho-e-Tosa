@@ -33,7 +33,7 @@
     setTimeout(injetarBotao, 1000);
 })();
 /**
- * MÓDULO 2: GESTÃO DE VAGAS (AGENDA) - HORÁRIO COM NEGRITO FORÇADO
+ * MÓDULO 2: GESTÃO DE VAGAS (AGENDA) - VERSÃO LIMPA COM HORÁRIO EM DESTAQUE
  */
 
 // --- FUNÇÃO PARA O BOTÃO "+ NOVO HORÁRIO" ---
@@ -51,7 +51,6 @@ window.adicionarNovoHorario = function() {
         id: Date.now(),
         dia_semana: parseInt(dia),
         horario: hora,
-        bloqueado: false,
         vagas_pequeno_medio: 0,
         vagas_tosa_higi: 0,
         vagas_tosa: 0,
@@ -97,14 +96,12 @@ window.renderVagas = function(container) {
             html += `
             <div class="bg-white p-4 rounded-xl border mb-3 shadow-sm text-black">
                 <div class="flex justify-between items-center mb-2">
-                    <!-- NEGRITO FORÇADO COM STYLE WEIGHT 900 -->
-                    <span style="font-weight: 900; font-size: 1.5rem;" class="text-black">${v.horario}</span>
+                    <!-- HORÁRIO COM NEGRITO FORÇADO VIA TEXT-SHADOW -->
+                    <span style="font-weight: 900; font-size: 1.6rem; text-shadow: 1px 0px 0px black, -1px 0px 0px black; letter-spacing: 1px;" class="text-black">${v.horario}</span>
                     <span class="font-black text-sm text-slate-500 uppercase ml-2 flex-1">- CACHORRO / GATO</span>
                     
                     <div class="flex items-center gap-2">
-                         <input type="checkbox" ${v.bloqueado ? 'checked' : ''} onchange="upVaga(${v.id}, 'bloqueado', this.checked)">
-                         <span class="text-[9px] font-bold text-red-500 uppercase">Bloquear</span>
-                         <button onclick="removerHorario(${v.id})" class="ml-2 text-slate-300">✕</button>
+                         <button onclick="removerHorario(${v.id})" class="ml-2 text-slate-300 text-xl font-bold">✕</button>
                     </div>
                 </div>
 
