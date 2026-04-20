@@ -33,7 +33,7 @@
     setTimeout(injetarBotao, 1000);
 })();
 /**
- * MÓDULO 2: GESTÃO DE VAGAS (AGENDA) - COM ORDENAÇÃO AUTOMÁTICA
+ * MÓDULO 2: GESTÃO DE VAGAS (AGENDA) - COM HORÁRIO EM SUPER NEGRITO
  */
 
 // --- FUNÇÃO PARA O BOTÃO "+ NOVO HORÁRIO" ---
@@ -62,18 +62,17 @@ window.adicionarNovoHorario = function() {
 
     if (typeof todosDados !== 'undefined') {
         todosDados.push(novoItem);
-        // Busca o container atual para renderizar novamente
         const containerAtivo = document.querySelector('.card-pet')?.parentNode;
         if (containerAtivo) window.renderVagas(containerAtivo);
         alert("Horário adicionado e organizado!");
     }
 };
 
-// --- RENDERIZAÇÃO COM ORDENAÇÃO ---
+// --- RENDERIZAÇÃO ---
 window.renderVagas = function(container) {
     if (!container) return;
 
-    // ORDENA OS DADOS POR HORÁRIO ANTES DE RENDERIZAR
+    // ORDENA OS DADOS POR HORÁRIO
     if (typeof todosDados !== 'undefined') {
         todosDados.sort((a, b) => a.horario.localeCompare(b.horario));
     }
@@ -98,7 +97,10 @@ window.renderVagas = function(container) {
             html += `
             <div class="bg-white p-4 rounded-xl border mb-3 shadow-sm text-black">
                 <div class="flex justify-between items-center mb-2">
-                    <span class="font-black text-xl text-blue-700">${v.horario} - CACHORRO / GATO</span>
+                    <!-- HORÁRIO COM NEGRITO EXTRA FORTE -->
+                    <span class="font-[900] text-2xl text-black border-b-2 border-blue-600">${v.horario}</span>
+                    <span class="font-black text-sm text-slate-500 uppercase ml-2 flex-1">- CACHORRO / GATO</span>
+                    
                     <div class="flex items-center gap-2">
                          <input type="checkbox" ${v.bloqueado ? 'checked' : ''} onchange="upVaga(${v.id}, 'bloqueado', this.checked)">
                          <span class="text-[9px] font-bold text-red-500 uppercase">Bloquear</span>
