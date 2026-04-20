@@ -149,73 +149,103 @@ window.renderVagas = function(container) {
     container.innerHTML = html + `</div>`;
 };
 /**
- * MÓDULO: GERENCIAR BLOQUEIOS (VOLTAR SEM DESLOGAR)
+ * MÓDULO: GESTÃO DE BLOQUEIOS (INTEGRADO)
  */
 (function() {
     window.bloqueiosAtivos = JSON.parse(localStorage.getItem('nilo_bloqueios')) || [];
 
-    // 1. INJETOR DE BOTÃO
+    // 1. INJETOR DE BOTÃO (Dentro da área de Gestão de Vagas)
     function injetarBotaoBloqueio() {
+        // Busca o cabeçalho dentro do card de gestão
         const cabecalho = document.querySelector('.card-pet .flex.justify-between');
         if (cabecalho && !document.getElementById('btnAbrirBloqueio')) {
-            const grupo = cabecalho.querySelector('.flex.gap-2');
-            if (grupo) {
-                const btn = document.createElement('button');
-                btn.id = "btnAbrirBloqueio";
-                btn.innerHTML = "🚫 BLOQUEAR HORÁRIO / DIA";
-                btn.className = "bg-red-600 text-white px-4 py-2 rounded-lg font-black text-[10px] uppercase shadow-sm hover:bg-red-700 transition-all";
-                btn.onclick = (e) => { e.preventDefault(); window.abrirTelaBloqueio(); };
-                grupo.prepend(btn);
-            }
+            const grupo = cabecalho.querySelector('.flex.gap-2') || cabecalho;
+            
+            const btn = document.createElement('button');
+            btn.id = "btnAbrirBloqueio";
+            btn.innerHTML = `
+                <span class="flex items-center gap-2">
+                    <svg xmlns="http://w3.org" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    BLOQUEAR AGENDA
+                </span>`;
+            btn.className = "bg-slate-800 text-white px-4 py-2 rounded-lg font-bold text-[11px] uppercase tracking-wider hover:bg-red-600 transition-all shadow-sm";
+            btn.onclick = (e) => { e.preventDefault(); window.abrirTelaBloqueio(); };
+            
+            grupo.prepend(btn);
         }
     }
     setInterval(injetarBotaoBloqueio, 1000);
 
-    // 2. TELA DE BLOQUEIO
+    // 2. TELA DE BLOQUEIO (LAYOUT LIMPO)
     window.abrirTelaBloqueio = function() {
-        const container = document.getElementById('conteudo-principal') || document.querySelector('.card-pet')?.parentNode;
+        const container = document.getElementById('conteudo-principal');
         if (!container) return;
 
         container.innerHTML = `
-        <div class="bg-white p-6 rounded-2xl shadow-xl border border-slate-200">
-            <!-- CABEÇALHO -->
-            <div class="flex justify-between items-center mb-8 border-b-4 border-red-600 pb-4">
-                <h2 class="text-3xl font-black text-slate-900 uppercase italic tracking-tighter">🚫 Gerenciar Bloqueios</h2>
+        <div class="max-w-5xl mx-auto animate-in fade-in duration-300">
+            <!-- HEADER DA SEÇÃO -->
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-2xl font-black text-slate-800 tracking-tighter">GESTÃO DE BLOQUEIOS</h2>
+                    <p class="text-slate-500 text-sm font-medium">Impeça novos agendamentos em datas específicas.</p>
+                </div>
                 
-                <!-- BOTÃO VOLTAR CORRIGIDO: CHAMA AS VAGAS SEM RELOAD -->
-                <button onclick="window.renderVagas(document.getElementById('conteudo-principal'))" class="bg-slate-800 text-white px-6 py-2 rounded-xl font-black text-xs uppercase hover:bg-black transition-all">⬅ Voltar</button>
+                <button onclick="window.renderVagas(document.getElementById('conteudo-principal'))" 
+                    class="bg-white border-2 border-slate-200 text-slate-600 px-5 py-2 rounded-xl font-bold text-xs uppercase hover:bg-slate-50 transition-all flex items-center gap-2">
+                    ⬅ Voltar para Vagas
+                </button>
             </div>
 
-            <!-- FORMULÁRIO -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 bg-slate-50 p-6 rounded-2xl border-2 border-slate-200 mb-10 text-black">
-                <div class="space-y-4">
-                    <label class="block text-xs font-black text-slate-500 uppercase">📅 Período / Data</label>
-                    <input type="date" id="bl_d1" class="w-full p-3 border-2 border-slate-300 rounded-xl font-black focus:border-red-500 outline-none">
-                    <input type="date" id="bl_d2" class="w-full p-3 border-2 border-slate-300 rounded-xl font-black focus:border-red-500 outline-none">
-                </div>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                
+                <!-- COLUNA ESQUERDA: FORMULÁRIO (4/12) -->
+                <div class="lg:col-span-4 space-y-4">
+                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                        <h3 class="text-xs font-black text-red-600 uppercase mb-4 tracking-widest">Novo Bloqueio</h3>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Data Início</label>
+                                <input type="date" id="bl_d1" class="w-full p-3 bg-slate-50 border-none rounded-2xl font-bold text-slate-700 focus:ring-2 ring-red-500 outline-none">
+                            </div>
 
-                <div class="space-y-4">
-                    <label class="block text-xs font-black text-slate-500 uppercase">⏰ Horários (Opcional)</label>
-                    <div class="grid grid-cols-2 gap-3">
-                        <input type="time" id="bl_h1" class="w-full p-3 border-2 border-slate-300 rounded-xl font-black focus:border-red-500 outline-none">
-                        <input type="time" id="bl_h2" class="w-full p-3 border-2 border-slate-300 rounded-xl font-black focus:border-red-500 outline-none">
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Data Fim (Opcional)</label>
+                                <input type="date" id="bl_d2" class="w-full p-3 bg-slate-50 border-none rounded-2xl font-bold text-slate-700 focus:ring-2 ring-red-500 outline-none">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Das</label>
+                                    <input type="time" id="bl_h1" class="w-full p-3 bg-slate-50 border-none rounded-2xl font-bold text-slate-700 focus:ring-2 ring-red-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Até</label>
+                                    <input type="time" id="bl_h2" class="w-full p-3 bg-slate-50 border-none rounded-2xl font-bold text-slate-700 focus:ring-2 ring-red-500 outline-none">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Motivo</label>
+                                <textarea id="bl_mot" placeholder="Ex: Feriado Municipal" class="w-full p-3 bg-slate-50 border-none rounded-2xl font-bold text-slate-700 h-20 focus:ring-2 ring-red-500 outline-none resize-none"></textarea>
+                            </div>
+
+                            <button onclick="salvarBloqueioVivido()" class="w-full bg-red-600 text-white py-4 rounded-2xl font-black text-xs uppercase shadow-lg shadow-red-200 hover:bg-red-700 transition-all mt-2">
+                                Confirmar Bloqueio
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <div class="space-y-4">
-                    <label class="block text-xs font-black text-slate-500 uppercase">📝 Motivo do Bloqueio</label>
-                    <textarea id="bl_mot" placeholder="EX: FERIADO, FÉRIAS..." class="w-full p-3 border-2 border-slate-300 rounded-xl font-black h-24 focus:border-red-500 outline-none"></textarea>
+                <!-- COLUNA DIREITA: LISTAGEM (8/12) -->
+                <div class="lg:col-span-8">
+                    <div class="bg-slate-50 p-1 rounded-3xl min-h-[400px]">
+                        <div id="lista-vigente" class="space-y-3 p-2">
+                            ${renderListaVivida()}
+                        </div>
+                    </div>
                 </div>
 
-                <div class="lg:col-span-3">
-                    <button onclick="salvarBloqueioVivido()" class="w-full bg-red-600 text-white py-4 rounded-xl font-black text-sm uppercase shadow-lg hover:bg-red-700 transition-all">Confirmar e Bloquear Agenda Agora 🔒</button>
-                </div>
-            </div>
-
-            <!-- LISTAGEM -->
-            <h3 class="text-lg font-black text-slate-400 uppercase mb-6 tracking-tighter">Bloqueios Vigentes na Agenda</h3>
-            <div id="lista-vigente" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-black">
-                ${renderListaVivida()}
             </div>
         </div>`;
     };
@@ -227,12 +257,26 @@ window.renderVagas = function(container) {
         const h2 = document.getElementById('bl_h2').value;
         const mot = document.getElementById('bl_mot').value;
 
-        if (!d1 || !mot) return alert("⚠️ Preencha Data e Motivo!");
+        if (!d1 || !mot) return alert("⚠️ Informe pelo menos a Data de Início e o Motivo!");
 
         const f = (v) => v.split('-').reverse().join('/');
-        let info = (d2 && d2 !== d1) ? `🛑 PERÍODO: ${f(d1)} ATÉ ${f(d2)}` : (h1 && h2) ? `⏰ HORÁRIO: ${f(d1)} DAS ${h1} ÀS ${h2}` : `📅 DIA INTEIRO: ${f(d1)} (FECHADO)`;
+        let info = "";
+        
+        if (d2 && d2 !== d1) {
+            info = `PERÍODO: ${f(d1)} - ${f(d2)}`;
+        } else if (h1 && h2) {
+            info = `DIA ${f(d1)}: ${h1} ÀS ${h2}`;
+        } else {
+            info = `DIA INTEIRO: ${f(d1)}`;
+        }
 
-        window.bloqueiosAtivos.unshift({ id: Date.now(), info: info.toUpperCase(), mot: mot.toUpperCase() });
+        window.bloqueiosAtivos.unshift({ 
+            id: Date.now(), 
+            info: info.toUpperCase(), 
+            mot: mot.toUpperCase(),
+            dataCriacao: new Date().toLocaleDateString()
+        });
+
         localStorage.setItem('nilo_bloqueios', JSON.stringify(window.bloqueiosAtivos));
         window.abrirTelaBloqueio();
     };
@@ -244,14 +288,28 @@ window.renderVagas = function(container) {
     };
 
     function renderListaVivida() {
-        if (!window.bloqueiosAtivos.length) return `<div class="col-span-full py-10 text-center border-4 border-dashed border-slate-200 rounded-3xl text-slate-300 font-black uppercase">Nenhum bloqueio ativo</div>`;
+        if (!window.bloqueiosAtivos.length) {
+            return `
+            <div class="flex flex-col items-center justify-center py-20 text-slate-300">
+                <svg xmlns="http://w3.org" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="mb-4"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <p class="font-bold uppercase text-xs tracking-widest">Nenhum bloqueio registrado</p>
+            </div>`;
+        }
+        
         return window.bloqueiosAtivos.map(b => `
-            <div class="bg-white border-2 border-slate-200 p-5 rounded-2xl border-l-[12px] border-l-red-600 shadow-sm flex justify-between items-center group">
-                <div>
-                    <p class="font-black text-lg text-slate-900 leading-tight">${b.info}</p>
-                    <p class="text-[11px] font-black text-slate-500 mt-1 uppercase">MOTIVO: ${b.mot}</p>
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex justify-between items-center animate-in slide-in-from-right-4 duration-300">
+                <div class="flex items-center gap-4">
+                    <div class="bg-red-50 text-red-600 p-3 rounded-xl">
+                        <svg xmlns="http://w3.org" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
+                    </div>
+                    <div>
+                        <p class="font-black text-slate-800 text-sm leading-tight">${b.info}</p>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase mt-0.5 tracking-tighter">MOTIVO: ${b.mot}</p>
+                    </div>
                 </div>
-                <button onclick="excluirBloqueioVivido(${b.id})" class="bg-red-50 text-red-600 p-3 rounded-xl font-black text-[10px] uppercase hover:bg-red-600 hover:text-white transition-all">EXCLUIR</button>
+                <button onclick="excluirBloqueioVivido(${b.id})" class="text-slate-300 hover:text-red-600 p-2 transition-colors">
+                    <svg xmlns="http://w3.org" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
             </div>`).join('');
     }
 })();
