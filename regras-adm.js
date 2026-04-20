@@ -42,6 +42,7 @@
 
     console.log("✅ Regras Adicionais Carregadas: Recuperação de Senha Injetada.");
     /**
+
 // --- INÍCIO DA ETAPA: GESTÃO DE VAGAS (Adicione ao final do arquivo) ---
 
 window.renderVagas = function(container) {
