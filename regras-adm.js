@@ -33,10 +33,10 @@
     setTimeout(injetarBotao, 1000);
 })();
 /**
- * MÓDULO 2: GESTÃO DE VAGAS (AGENDA) - VERSÃO FINAL
+ * MÓDULO 2: GESTÃO DE VAGAS (AGENDA) - COM ORDENAÇÃO AUTOMÁTICA
  */
 
-// --- FUNÇÃO PARA O BOTÃO "+ NOVO HORÁRIO" FUNCIONAR ---
+// --- FUNÇÃO PARA O BOTÃO "+ NOVO HORÁRIO" ---
 window.adicionarNovoHorario = function() {
     const hora = prompt("Digite o horário (ex: 09:00):");
     if (!hora) return;
@@ -48,7 +48,7 @@ window.adicionarNovoHorario = function() {
     }
 
     const novoItem = {
-        id: Date.now(), // Gera um ID único
+        id: Date.now(),
         dia_semana: parseInt(dia),
         horario: hora,
         bloqueado: false,
@@ -62,16 +62,21 @@ window.adicionarNovoHorario = function() {
 
     if (typeof todosDados !== 'undefined') {
         todosDados.push(novoItem);
-        // Atualiza a tela automaticamente (assumindo que o container é o id 'vagas-container')
-        const container = document.getElementById('vagas-container');
-        if (container) window.renderVagas(container);
-        alert("Horário adicionado! Não esqueça de Salvar Alterações.");
+        // Busca o container atual para renderizar novamente
+        const containerAtivo = document.querySelector('.card-pet')?.parentNode;
+        if (containerAtivo) window.renderVagas(containerAtivo);
+        alert("Horário adicionado e organizado!");
     }
 };
 
-// --- RENDERIZAÇÃO DA INTERFACE ---
+// --- RENDERIZAÇÃO COM ORDENAÇÃO ---
 window.renderVagas = function(container) {
     if (!container) return;
+
+    // ORDENA OS DADOS POR HORÁRIO ANTES DE RENDERIZAR
+    if (typeof todosDados !== 'undefined') {
+        todosDados.sort((a, b) => a.horario.localeCompare(b.horario));
+    }
 
     const dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
     let html = `<div class="card-pet">
@@ -102,7 +107,6 @@ window.renderVagas = function(container) {
                 </div>
 
                 <div class="space-y-3">
-                    <!-- Porte Pequeno/Médio -->
                     <div class="bg-slate-50 p-2 rounded-lg border-l-2 border-blue-400">
                         <p class="font-black text-[10px] uppercase text-slate-600 mb-1">🐶 PORTE PEQUENO / MÉDIO</p>
                         <div class="flex flex-wrap gap-4 text-[11px] font-bold">
@@ -117,7 +121,6 @@ window.renderVagas = function(container) {
                         </div>
                     </div>
 
-                    <!-- Porte Grande -->
                     <div class="bg-slate-50 p-2 rounded-lg border-l-2 border-orange-400">
                         <p class="font-black text-[10px] uppercase text-slate-600 mb-1">🐕 PORTE GRANDE</p>
                         <div class="flex flex-wrap gap-4 text-[11px] font-bold">
@@ -132,7 +135,6 @@ window.renderVagas = function(container) {
                         </div>
                     </div>
 
-                    <!-- Gatos (Apenas Banho como solicitado) -->
                     <div class="bg-slate-50 p-2 rounded-lg border-l-2 border-purple-400">
                         <p class="font-black text-[10px] uppercase text-slate-600 mb-1">🐱 GATOS</p>
                         <div class="flex items-center gap-1 text-[11px] font-bold">
