@@ -1,9 +1,7 @@
 /**
- * REGRAS ADICIONAIS - NILO PET ADM (VERSÃO UNIFICADA)
+ * MÓDULO 1: RECUPERAÇÃO DE SENHA
  */
-
 (function() {
-    // --- 1. RECUPERAÇÃO DE SENHA ---
     const CONFIG_RECUPERACAO = {
         pergunta: "Qual o nome da primeira mascote da Nilo Pet?",
         respostaCorreta: "nilo",
@@ -16,7 +14,7 @@
             const btnEsqueci = document.createElement('button');
             btnEsqueci.id = "btnEsqueciInjetado";
             btnEsqueci.innerText = "ESQUECI A SENHA";
-            btnEsqueci.style = "font-size: 10px; color: #94a3b8; font-weight: 800; margin-top: 15px; cursor: pointer; text-transform: uppercase; display: block; width: 100%;";
+            btnEsqueci.style = "font-size: 10px; color: #94a3b8; font-weight: 800; margin-top: 15px; cursor: pointer; text-transform: uppercase; display: block; width: 100%; border:none; background:none;";
             btnEntrar.parentNode.appendChild(btnEsqueci);
 
             btnEsqueci.onclick = (e) => {
@@ -33,8 +31,13 @@
 
     window.addEventListener('load', injetarBotao);
     setTimeout(injetarBotao, 1000);
-
+})();
+/**
+ * MÓDULO 2: GESTÃO DE VAGAS (AGENDA)
+ */
 window.renderVagas = function(container) {
+    if (!container) return;
+
     const dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
     let html = `<div class="card-pet">
         <div class="flex justify-between items-center mb-6">
@@ -46,12 +49,15 @@ window.renderVagas = function(container) {
         </div>`;
 
     for (let i = 0; i <= 6; i++) {
-        const itens = todosDados.filter(v => v.dia_semana == i);
+        // Filtra os dados globais. Certifique-se que 'todosDados' existe no seu script principal.
+        const itens = (typeof todosDados !== 'undefined') ? todosDados.filter(v => v.dia_semana == i) : [];
+        
         html += `<div class="mb-8 border-l-4 ${itens.length ? 'border-red-600' : 'border-slate-200'} pl-4">
             <h4 class="font-black ${itens.length ? 'text-red-600' : 'text-slate-400'} uppercase text-sm mb-3">${dias[i]}</h4>`;
         
         itens.forEach(v => {
-            html += `<div class="bg-white p-4 rounded-xl border mb-3 shadow-sm text-black">
+            html += `
+            <div class="bg-white p-4 rounded-xl border mb-3 shadow-sm text-black">
                 <div class="flex justify-between border-b pb-2 mb-3">
                     <span class="font-black text-lg">${v.horario}</span>
                     <div class="flex items-center gap-2">
@@ -77,13 +83,10 @@ window.renderVagas = function(container) {
                     </div>
                     <div class="border-l pl-2">
                         <p class="text-[8px] font-black uppercase text-red-600">Serviços</p>
-                        
                         <label class="text-[7px] font-bold block">BANHO / TOSA HIGIÊNICA</label>
                         <input type="number" value="${v.vagas_tosa_higi || 0}" onchange="upVaga(${v.id}, 'vagas_tosa_higi', this.value)" class="w-full border rounded text-center border-red-100 mb-1 focus:bg-yellow-50">
-                        
                         <label class="text-[7px] font-bold block">SOMENTE BANHO</label>
                         <input type="number" value="${v.vagas_banho || 0}" onchange="upVaga(${v.id}, 'vagas_banho', this.value)" class="w-full border rounded text-center border-red-100 mb-1 focus:bg-yellow-50">
-                        
                         <label class="text-[7px] font-bold block">BANHO + TOSA</label>
                         <input type="number" value="${v.vagas_tosa || 0}" onchange="upVaga(${v.id}, 'vagas_tosa', this.value)" class="w-full border rounded text-center border-red-200 focus:bg-yellow-50">
                     </div>
