@@ -148,33 +148,91 @@ window.renderVagas = function(container) {
     }
     container.innerHTML = html + `</div>`;
 };
-    // 1. INJETOR DO BOTÃO (VERSÃO CORRIGIDA)
-    function injetarBotaoAdm() {
-        const menuGestao = document.querySelector('.card-pet .flex.gap-2') || document.querySelector('.flex.gap-2');
+/**
+ * MÓDULO 3: BLOQUEIOS DE AGENDA (ISOLADO ADM)
+ */
+(function() {
+    // Estado interno para controle da tela de bloqueio
+    let telaAtual = 'menu'; 
+
+    window.abrirPainelBloqueio = function() {
+        const container = document.querySelector('.card-pet')?.parentNode;
+        if (!container) return;
+        renderizarBloqueio(container);
+    };
+
+    function renderizarBloqueio(container) {
+        let conteudo = "";
+
+        if (telaAtual === 'menu') {
+            conteudo = `
+                <div class="space-y-4">
+                    <h3 class="font-black uppercase text-slate-800 italic mb-4">🚫 Gerenciar Bloqueios</h3>
+                    <button onclick="mudarTela('horario')" class="w-full bg-slate-100 p-4 rounded-xl font-bold text-left hover:bg-slate-200 transition">⏰ Bloquear Horário Específico</button>
+                    <button onclick="mudarTela('dia')" class="w-full bg-slate-100 p-4 rounded-xl font-bold text-left hover:bg-slate-200 transition">📅 Bloquear Dia Inteiro</button>
+                    <button onclick="mudarTela('periodo')" class="w-full bg-slate-100 p-4 rounded-xl font-bold text-left hover:bg-slate-200 transition">⏳ Bloquear Período (Férias/Folga)</button>
+                    <hr class="my-4">
+                    <button onclick="mudarTela('desbloquear')" class="w-full bg-green-100 text-green-700 p-4 rounded-xl font-bold text-left hover:bg-green-200 transition">🔓 Desbloquear Horários</button>
+                    <button onclick="window.renderVagas(document.querySelector('.card-pet').parentNode)" class="w-full text-slate-400 font-bold py-2 mt-4">⬅ Voltar para Agenda</button>
+                </div>`;
+        } else {
+            conteudo = `
+                <div class="space-y-4">
+                    <button onclick="mudarTela('menu')" class="text-blue-600 font-black text-[10px] uppercase mb-2">⬅ Voltar às opções</button>
+                    <h3 class="font-black uppercase text-red-600 italic">Bloquear ${telaAtual.toUpperCase()}</h3>
+                    
+                    <div class="flex flex-col gap-3">
+                        <label class="text-[10px] font-black text-slate-500 uppercase">Data / Início:</label>
+                        <input type="date" id="blkDataInicio" class="p-2 border rounded-lg">
+                        
+                        ${telaAtual === 'periodo' ? `
+                            <label class="text-[10px] font-black text-slate-500 uppercase">Data Fim:</label>
+                            <input type="date" id="blkDataFim" class="p-2 border rounded-lg">
+                        ` : ''}
+
+                        ${telaAtual === 'horario' ? `
+                            <label class="text-[10px] font-black text-slate-500 uppercase">Horário:</label>
+                            <input type="time" id="blkHora" class="p-2 border rounded-lg">
+                        ` : ''}
+
+                        <label class="text-[10px] font-black text-slate-500 uppercase">Motivo do Bloqueio:</label>
+                        <textarea id="blkMotivo" placeholder="Ex: Manutenção, Feriado..." class="p-2 border rounded-lg h-20"></textarea>
+                        
+                        <button onclick="confirmarBloqueio()" class="bg-red-600 text-white p-3 rounded-lg font-black uppercase mt-4">Confirmar Bloqueio 🚫</button>
+                    </div>
+                </div>`;
+        }
+
+        container.innerHTML = `<div class="card-pet bg-white p-6 rounded-2xl shadow-xl border-2 border-red-50">{conteudo}</div>`;
+    }
+
+    window.mudarTela = function(tela) {
+        telaAtual = tela;
+        window.abrirPainelBloqueio();
+    };
+
+    window.confirmarBloqueio = function() {
+        const motivo = document.getElementById('blkMotivo').value;
+        if (!motivo) return alert("Por favor, digite um motivo.");
         
-        if (menuGestao && !document.getElementById('btnAbrirBloqueio')) {
+        alert("✅ Bloqueio realizado com sucesso!\nMotivo: " + motivo);
+        mudarTela('menu');
+    };
+
+    // Função auxiliar para injetar o botão de acesso no Módulo 2 original
+    function adicionarBotaoBloqueioNoPainel() {
+        const header = document.querySelector('.card-pet .flex.gap-2');
+        if (header && !document.getElementById('btnAbrirBloqueio')) {
             const btn = document.createElement('button');
             btn.id = "btnAbrirBloqueio";
-            
-            // Estilos reforçados para garantir o clique
-            btn.style.zIndex = "9999";
-            btn.style.position = "relative";
-            btn.style.pointerEvents = "auto";
-            btn.style.cursor = "pointer";
-            
-            btn.className = "bg-slate-800 text-white px-4 py-2 rounded-xl font-black text-[11px] uppercase tracking-wider hover:bg-red-600 transition-all flex items-center gap-2 shadow-sm border-none";
-            
-            btn.innerHTML = `
-                <svg xmlns="http://w3.org" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                BLOQUEAR HORÁRIO / DIA`;
-
-            // Clique forçado
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation(); // Impede que o clique "vaze" para o card atrás
-                window.abrirTelaBloqueioAdm();
-            }, true);
-
-            menuGestao.prepend(btn);
+            btn.className = "bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-[10px] uppercase";
+            btn.innerText = "Bloqueios 🚫";
+            btn.onclick = window.abrirPainelBloqueio;
+            header.prepend(btn);
         }
     }
+
+    // Monitora a renderização do Módulo 2 para inserir o botão de Bloqueio
+    setInterval(adicionarBotaoBloqueioNoPainel, 1000);
+})();
+   
