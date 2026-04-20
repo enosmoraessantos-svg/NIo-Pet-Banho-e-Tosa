@@ -10,7 +10,6 @@
         senhaOriginal: "nilopet2024"
     };
 
-    // Função para injetar o botão de esqueci senha
     function injetarBotao() {
         const btnEntrar = document.querySelector('#loginArea button');
         if (btnEntrar && !document.getElementById('btnEsqueciInjetado')) {
@@ -18,7 +17,6 @@
             btnEsqueci.id = "btnEsqueciInjetado";
             btnEsqueci.innerText = "ESQUECI A SENHA";
             btnEsqueci.style = "font-size: 10px; color: #94a3b8; font-weight: 800; margin-top: 15px; cursor: pointer; text-transform: uppercase; display: block; width: 100%;";
-            
             btnEntrar.parentNode.appendChild(btnEsqueci);
 
             btnEsqueci.onclick = (e) => {
@@ -33,16 +31,15 @@
         }
     }
 
-    // Executa a injeção ao carregar e tenta novamente após 1s (garantia)
     window.addEventListener('load', injetarBotao);
     setTimeout(injetarBotao, 1000);
 
-    // --- 2. GESTÃO DE VAGAS ---
+    // --- 2. GESTÃO DE VAGAS (COM SERVIÇOS AGRUPADOS) ---
     window.renderVagas = function(container) {
         const dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
         let html = `<div class="card-pet">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="font-black uppercase text-lg italic">⚙️ Configuração de Agenda</h3>
+                <h3 class="font-black uppercase text-lg italic text-slate-800">⚙️ Configuração de Agenda</h3>
                 <button onclick="adicionarNovoHorario()" class="bg-green-600 text-white px-4 py-2 rounded-lg font-bold text-[10px] uppercase">+ Novo Horário</button>
             </div>`;
 
@@ -63,7 +60,7 @@
                     </div>
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                         <div>
-                            <p class="text-[8px] font-black uppercase text-slate-400">Porte</p>
+                            <p class="text-[8px] font-black uppercase text-slate-400">Porte / Espécie</p>
                             <label class="text-[7px] font-bold block">PEQ/MED</label>
                             <input type="number" value="${v.vagas_pequeno_medio || 0}" onchange="upVaga(${v.id}, 'vagas_pequeno_medio', this.value)" class="w-full border rounded text-center">
                             <label class="text-[7px] font-bold block">GATO</label>
@@ -78,11 +75,11 @@
                         </div>
                         <div class="border-l pl-2">
                             <p class="text-[8px] font-black uppercase text-red-600">Serviços</p>
-                            <label class="text-[7px] font-bold block">BANHO</label>
+                            
+                            <label class="text-[7px] font-bold block">BANHO / HIGIÊNICA</label>
                             <input type="number" value="${v.vagas_banho || 0}" onchange="upVaga(${v.id}, 'vagas_banho', this.value)" class="w-full border rounded text-center border-red-100">
-                            <label class="text-[7px] font-bold block">TOSA HIGI</label>
-                            <input type="number" value="${v.vagas_tosa_higi || 0}" onchange="upVaga(${v.id}, 'vagas_tosa_higi', this.value)" class="w-full border rounded text-center border-red-100">
-                            <label class="text-[7px] font-bold block">BANHO+TOSA</label>
+                            
+                            <label class="text-[7px] font-bold block mt-2">BANHO + TOSA (GERAL)</label>
                             <input type="number" value="${v.vagas_tosa || 0}" onchange="upVaga(${v.id}, 'vagas_tosa', this.value)" class="w-full border rounded text-center border-red-200">
                         </div>
                     </div>
@@ -112,4 +109,3 @@
     };
 
 })();
-
