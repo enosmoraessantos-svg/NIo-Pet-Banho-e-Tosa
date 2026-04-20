@@ -1,49 +1,115 @@
 /**
- * REGRAS ADICIONAIS - NILO PET ADM
- * Este arquivo modifica o comportamento do Login sem alterar o código principal.
+ * REGRAS ADICIONAIS - NILO PET ADM (VERSÃO UNIFICADA)
  */
 
 (function() {
-    // 1. Configurações de Recuperação
+    // --- 1. RECUPERAÇÃO DE SENHA ---
     const CONFIG_RECUPERACAO = {
         pergunta: "Qual o nome da primeira mascote da Nilo Pet?",
-        respostaCorreta: "nilo", // Altere aqui a resposta secreta
+        respostaCorreta: "nilo",
         senhaOriginal: "nilopet2024"
     };
 
-    // Espera o DOM carregar para injetar os elementos
-    window.addEventListener('load', () => {
-        const loginCard = document.querySelector('#loginArea div');
+    // Função para injetar o botão de esqueci senha
+    function injetarBotao() {
         const btnEntrar = document.querySelector('#loginArea button');
-
-        if (loginCard && btnEntrar) {
-            // 2. Criar e Injetar o Botão "Esqueci a Senha"
+        if (btnEntrar && !document.getElementById('btnEsqueciInjetado')) {
             const btnEsqueci = document.createElement('button');
+            btnEsqueci.id = "btnEsqueciInjetado";
             btnEsqueci.innerText = "ESQUECI A SENHA";
-            btnEsqueci.style = "font-size: 10px; color: #94a3b8; font-weight: 800; margin-top: 15px; cursor: pointer; text-transform: uppercase;";
+            btnEsqueci.style = "font-size: 10px; color: #94a3b8; font-weight: 800; margin-top: 15px; cursor: pointer; text-transform: uppercase; display: block; width: 100%;";
             
-            // Adiciona o botão logo após o botão de Entrar
             btnEntrar.parentNode.appendChild(btnEsqueci);
 
-            // 3. Ação do Botão Esqueci a Senha
-            btnEsqueci.onclick = () => {
+            btnEsqueci.onclick = (e) => {
+                e.preventDefault();
                 const respostaUser = prompt(CONFIG_RECUPERACAO.pergunta);
-                
-                if (respostaUser === null) return; // Cancelou
-
-                if (respostaUser.toLowerCase().trim() === CONFIG_RECUPERACAO.respostaCorreta) {
+                if (respostaUser?.toLowerCase().trim() === CONFIG_RECUPERACAO.respostaCorreta) {
                     alert("✅ VALIDAÇÃO COM SUCESSO!\nSua senha é: " + CONFIG_RECUPERACAO.senhaOriginal);
-                } else {
-                    alert("❌ RESPOSTA INCORRETA!\nEntre em contato com o suporte técnico.");
+                } else if (respostaUser !== null) {
+                    alert("❌ RESPOSTA INCORRETA!");
                 }
             };
         }
-    });
+    }
 
-    console.log("✅ Regras Adicionais Carregadas: Recuperação de Senha Injetada.");
-    /**
+    // Executa a injeção ao carregar e tenta novamente após 1s (garantia)
+    window.addEventListener('load', injetarBotao);
+    setTimeout(injetarBotao, 1000);
 
+    // --- 2. GESTÃO DE VAGAS ---
+    window.renderVagas = function(container) {
+        const dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+        let html = `<div class="card-pet">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="font-black uppercase text-lg italic">⚙️ Configuração de Agenda</h3>
+                <button onclick="adicionarNovoHorario()" class="bg-green-600 text-white px-4 py-2 rounded-lg font-bold text-[10px] uppercase">+ Novo Horário</button>
+            </div>`;
 
-        body: JSON.stringify({ [campo]: valor }) 
-    });
-};
+        for (let i = 0; i <= 6; i++) {
+            const itens = todosDados.filter(v => v.dia_semana == i);
+            html += `<div class="mb-8 border-l-4 ${itens.length ? 'border-red-600' : 'border-slate-200'} pl-4">
+                <h4 class="font-black ${itens.length ? 'text-red-600' : 'text-slate-400'} uppercase text-sm mb-3">${dias[i]}</h4>`;
+            
+            itens.forEach(v => {
+                html += `<div class="bg-white p-4 rounded-xl border mb-3 shadow-sm text-black">
+                    <div class="flex justify-between border-b pb-2 mb-3">
+                        <span class="font-black text-lg">${v.horario}</span>
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" ${v.bloqueado ? 'checked' : ''} onchange="upVaga(${v.id}, 'bloqueado', this.checked)">
+                            <label class="text-[9px] font-bold uppercase text-red-500">Bloquear</label>
+                            <button onclick="removerHorario(${v.id})" class="ml-2 text-slate-300">✕</button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div>
+                            <p class="text-[8px] font-black uppercase text-slate-400">Porte</p>
+                            <label class="text-[7px] font-bold block">PEQ/MED</label>
+                            <input type="number" value="${v.vagas_pequeno_medio || 0}" onchange="upVaga(${v.id}, 'vagas_pequeno_medio', this.value)" class="w-full border rounded text-center">
+                            <label class="text-[7px] font-bold block">GATO</label>
+                            <input type="number" value="${v.vagas_gato || 0}" onchange="upVaga(${v.id}, 'vagas_gato', this.value)" class="w-full border rounded text-center border-blue-200">
+                        </div>
+                        <div>
+                            <p class="text-[8px] font-black uppercase text-slate-400">Grandes</p>
+                            <label class="text-[7px] font-bold block">GRD CURTO</label>
+                            <input type="number" value="${v.vagas_grande_curto || 0}" onchange="upVaga(${v.id}, 'vagas_grande_curto', this.value)" class="w-full border rounded text-center">
+                            <label class="text-[7px] font-bold block">GRD PELUDO</label>
+                            <input type="number" value="${v.vagas_grande_peludo || 0}" onchange="upVaga(${v.id}, 'vagas_grande_peludo', this.value)" class="w-full border rounded text-center">
+                        </div>
+                        <div class="border-l pl-2">
+                            <p class="text-[8px] font-black uppercase text-red-600">Serviços</p>
+                            <label class="text-[7px] font-bold block">BANHO</label>
+                            <input type="number" value="${v.vagas_banho || 0}" onchange="upVaga(${v.id}, 'vagas_banho', this.value)" class="w-full border rounded text-center border-red-100">
+                            <label class="text-[7px] font-bold block">TOSA HIGI</label>
+                            <input type="number" value="${v.vagas_tosa_higi || 0}" onchange="upVaga(${v.id}, 'vagas_tosa_higi', this.value)" class="w-full border rounded text-center border-red-100">
+                            <label class="text-[7px] font-bold block">BANHO+TOSA</label>
+                            <input type="number" value="${v.vagas_tosa || 0}" onchange="upVaga(${v.id}, 'vagas_tosa', this.value)" class="w-full border rounded text-center border-red-200">
+                        </div>
+                    </div>
+                </div>`;
+            });
+            html += `</div>`;
+        }
+        container.innerHTML = html + `</div>`;
+    };
+
+    // --- 3. FUNÇÕES DE SUPORTE ---
+    window.adicionarNovoHorario = async function() {
+        const d = prompt("Dia (0-Dom, 1-Seg, 2-Ter, 3-Qua, 4-Qui, 5-Sex, 6-Sab):");
+        const h = prompt("Hora (ex: 10:00):");
+        if(d && h) { 
+            await fetch(`${SB_URL}/configuracoes_agenda`, { method: "POST", headers, body: JSON.stringify({ dia_semana: parseInt(d), horario: h }) });
+            carregarDados();
+        }
+    };
+
+    window.removerHorario = async function(id) {
+        if(confirm("Excluir?")) { await fetch(`${SB_URL}/configuracoes_agenda?id=eq.${id}`, { method: "DELETE", headers }); carregarDados(); }
+    };
+
+    window.upVaga = async function(id, campo, valor) {
+        await fetch(`${SB_URL}/configuracoes_agenda?id=eq.${id}`, { method: "PATCH", headers, body: JSON.stringify({ [campo]: valor }) });
+    };
+
+})();
+
