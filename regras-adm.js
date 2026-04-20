@@ -148,73 +148,53 @@ window.renderVagas = function(container) {
     }
     container.innerHTML = html + `</div>`;
 };
-// --- RENDERIZAÇÃO INTEGRADA COM BLOQUEIOS ---
-window.renderVagas = function(container) {
-    if (!container) return;
+/**
+ * MÓDULO 3: BLOQUEIOS DE AGENDA (COM SALVAMENTO PERMANENTE)
+ */
+(function() {
+    let telaBloqueioAtiva = 'menu';
+    let containerReferencia = null;
+    
+    // CARREGA BLOQUEIOS SALVOS OU CRIA LISTA VAZIA
+    window.listaBloqueios = JSON.parse(localStorage.getItem('nilo_bloqueios')) || [];
 
-    if (typeof todosDados !== 'undefined') {
-        todosDados.sort((a, b) => a.horario.localeCompare(b.horario));
+    // FUNÇÃO PARA SALVAR NO "HD" DO NAVEGADOR
+    function persistirDados() {
+        localStorage.setItem('nilo_bloqueios', JSON.stringify(window.listaBloqueios));
     }
 
-    const dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-    let html = `<div class="card-pet">
-        <div class="flex justify-between items-center mb-6">
-            <h3 class="font-black uppercase text-lg italic text-slate-800">⚙️ Configuração de Agenda</h3>
-            <div class="flex gap-2">
-                <button onclick="alert('✅ Alterações salvas!')" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-[10px] uppercase">Salvar 💾</button>
-                <button onclick="adicionarNovoHorario()" class="bg-green-600 text-white px-4 py-2 rounded-lg font-bold text-[10px] uppercase">+ Novo Horário</button>
-            </div>
-        </div>`;
+    // ... (restante das funções abrirPainelBloqueio e irParaBloqueio permanecem iguais)
 
-    for (let i = 0; i <= 6; i++) {
-        const itens = (typeof todosDados !== 'undefined') ? todosDados.filter(v => v.dia_semana == i) : [];
-        
-        // Verifica se o DIA INTEIRO está bloqueado na lista
-        const bloqueioDia = (window.listaBloqueios || []).find(b => b.tipo === 'dia' && new Date(b.info + "T00:00").getDay() === i);
+    window.salvarNovoBloqueio = function(tipo) {
+        const dataInic = document.getElementById('blkDataInicio').value;
+        const motivo = document.getElementById('blkMotivo').value;
+        if (!dataInic || !motivo) return alert("Preencha os campos obrigatórios!");
 
-        html += `<div class="mb-8 border-l-4 ${itens.length ? 'border-red-600' : 'border-slate-200'} pl-4">
-            <h4 class="font-black ${itens.length ? 'text-red-600' : 'text-slate-400'} uppercase text-sm mb-3">${dias[i]}</h4>`;
-        
-        if (bloqueioDia) {
-            html += `<div style="background:#fee2e2; color:#b91c1c; padding:10px; border-radius:10px; font-size:11px; font-weight:bold; margin-bottom:15px;">⚠️ DIA BLOQUEADO: ${bloqueioDia.motivo}</div>`;
+        let info = dataInic;
+        if (tipo === 'horario') {
+            const h1 = document.getElementById('blkHoraInicio').value;
+            const h2 = document.getElementById('blkHoraFim').value;
+            info = `${dataInic} (Das ${h1} às ${h2})`;
+        } else if (tipo === 'periodo') {
+            const dataFim = document.getElementById('blkDataFim').value;
+            info = `De ${dataInic} até ${dataFim}`;
         }
 
-        itens.forEach(v => {
-            // Verifica se este HORÁRIO específico está bloqueado
-            const bloqueioHora = (window.listaBloqueios || []).find(b => b.tipo === 'horario' && b.info.includes(v.horario));
-            const estaBloqueado = bloqueioDia || bloqueioHora;
+        window.listaBloqueios.push({ tipo, info, motivo, timestamp: Date.now() });
+        
+        persistirDados(); // SALVA PERMANENTEMENTE AQUI
+        
+        alert("✅ Bloqueio salvo com sucesso!");
+        irParaBloqueio('menu');
+    };
 
-            html += `
-            <div class="bg-white p-4 rounded-xl border mb-3 shadow-sm ${estaBloqueado ? 'opacity-50 grayscale' : ''}">
-                <div class="flex justify-between items-center mb-2">
-                    <span style="font-weight: 900; font-size: 1.6rem; text-shadow: 1px 0px 0px black;" class="text-black">${v.horario}</span>
-                    <span class="font-black text-sm text-slate-500 uppercase ml-2 flex-1">
-                        ${estaBloqueado ? `🚫 BLOQUEADO: ${estaBloqueado.motivo}` : '- DISPONÍVEL'}
-                    </span>
-                    <div class="flex items-center gap-2">
-                         <button onclick="removerHorario(${v.id})" class="ml-2 text-slate-300 text-xl font-bold">✕</button>
-                    </div>
-                </div>
+    window.removerBloqueio = function(index) {
+        if(confirm("Deseja desbloquear este item?")) {
+            window.listaBloqueios.splice(index, 1);
+            persistirDados(); // ATUALIZA O SALVAMENTO APÓS REMOVER
+            irParaBloqueio('desbloquear');
+        }
+    };
 
-                <div class="space-y-3" style="${estaBloqueado ? 'pointer-events: none;' : ''}">
-                    <div class="bg-slate-50 p-2 rounded-lg border-l-2 border-blue-400">
-                        <p class="font-black text-[10px] uppercase text-slate-600 mb-1">🐶 PORTE PEQUENO / MÉDIO</p>
-                        <div class="flex flex-wrap gap-4 text-[11px] font-bold">
-                            <div class="flex items-center gap-1">
-                                <span>BANHO:</span>
-                                <input type="number" ${estaBloqueado ? 'disabled' : ''} value="${v.vagas_tosa_higi || 0}" onchange="upVaga(${v.id}, 'vagas_tosa_higi', this.value)" class="w-8 border-b text-center bg-transparent">
-                            </div>
-                            <div class="flex items-center gap-1">
-                                <span>TOSA:</span>
-                                <input type="number" ${estaBloqueado ? 'disabled' : ''} value="${v.vagas_tosa || 0}" onchange="upVaga(${v.id}, 'vagas_tosa', this.value)" class="w-8 border-b text-center bg-transparent">
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Outros portes seguem a mesma lógica de disabled -->
-                </div>
-            </div>`;
-        });
-        html += `</div>`;
-    }
-    container.innerHTML = html + `</div>`;
-};
+    // ... (restante do código de injeção de botão)
+})();
