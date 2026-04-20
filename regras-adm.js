@@ -34,7 +34,7 @@
     window.addEventListener('load', injetarBotao);
     setTimeout(injetarBotao, 1000);
 
- window.renderVagas = function(container) {
+window.renderVagas = function(container) {
     const dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
     let html = `<div class="card-pet">
         <div class="flex justify-between items-center mb-6">
@@ -113,6 +113,9 @@
         });
         html += `</div>`;
     }
+    container.innerHTML = html + `</div>`;
+};
+
     container.innerHTML = html + `</div>`;
 };
    
