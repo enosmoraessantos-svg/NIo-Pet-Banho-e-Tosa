@@ -149,114 +149,88 @@ window.renderVagas = function(container) {
     container.innerHTML = html + `</div>`;
 };
 /**
- * MÓDULO BLOQUEIO - POSICIONAMENTO EXATO NO MENU LATERAL
+ * MÓDULO BLOQUEIO NILO PET - ORDEM EXATA E PERSISTÊNCIA
  */
 (function() {
-    window.bloqueiosAtivos = window.bloqueiosAtivos || [];
+    // Carrega bloqueios salvos ou inicia vazio
+    window.bloqueiosAtivos = JSON.parse(localStorage.getItem('nilo_bloqueios')) || [];
 
-    function injetarBotaoNoLugarCerto() {
-        // Evita duplicar o botão
+    function organizarMenuLateral() {
         if (document.getElementById('btnBloqueioPainel')) return;
 
-        // Pega todos os botões e links do menu lateral
-        const elementosMenu = Array.from(document.querySelectorAll('button, a, .menu-item'));
-        
-        // Localiza o botão de Gestão de Vagas pelo texto
-        const btnVagas = elementosMenu.find(el => 
-            el.innerText.toUpperCase().includes('GESTÃO DE VAGAS') || 
-            el.innerText.toUpperCase().includes('AGENDA')
-        );
+        const botoes = Array.from(document.querySelectorAll('button, a'));
+        const btnVagas = botoes.find(el => el.innerText.toUpperCase().includes('GESTÃO DE VAGAS'));
+        const btnSair = botoes.find(el => el.innerText.toUpperCase().includes('SAIR'));
 
         if (btnVagas) {
             const btnBlock = document.createElement('button');
             btnBlock.id = "btnBloqueioPainel";
             btnBlock.innerHTML = "🚫 BLOQUEAR HORÁRIO / DIA";
-            
-            // Estilo para combinar com o seu painel
-            btnBlock.style = `
-                width: 100%; 
-                padding: 12px; 
-                margin-top: 5px;
-                margin-bottom: 10px; 
-                background: #dc2626; 
-                color: white; 
-                border: none; 
-                border-radius: 8px; 
-                font-weight: 900; 
-                font-size: 11px; 
-                cursor: pointer; 
-                text-transform: uppercase; 
-                display: block;
-                text-align: center;
-            `;
+            btnBlock.style = "width: 100%; padding: 12px; margin: 5px 0; background: #dc2626; color: white; border: none; border-radius: 8px; font-weight: 900; font-size: 11px; cursor: pointer; text-transform: uppercase; display: block; text-align: center;";
             
             btnBlock.onclick = (e) => {
                 e.preventDefault();
                 window.abrirBloqueios();
             };
 
-            // INSERE LOGO APÓS O BOTÃO DE VAGAS (ficando acima do Sair)
+            // Insere exatamente entre Vagas e Sair
             btnVagas.parentNode.insertBefore(btnBlock, btnVagas.nextSibling);
         }
     }
-
-    // Executa repetidamente para garantir que o menu carregou
-    setInterval(injetarBotaoNoLugarCerto, 1500);
+    setInterval(organizarMenuLateral, 1000);
 
     window.abrirBloqueios = function() {
         const container = document.getElementById('conteudo-principal') || document.body;
         
         container.innerHTML = `
-        <div style="padding: 20px; background: #fff; font-family: sans-serif; color: #1e293b; min-height: 80vh;">
+        <div style="padding: 20px; background: #fff; font-family: sans-serif; color: #1e293b;">
             <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
                 <h2 style="font-weight: 900; text-transform: uppercase; font-style: italic; color: #dc2626; margin:0;">🚫 Gestão de Bloqueios</h2>
-                <button onclick="location.reload()" style="background: #64748b; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 11px;">⬅ Voltar ao Menu</button>
+                <button onclick="voltarParaVagas()" style="background: #64748b; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 11px;">⬅ Voltar ao Menu</button>
             </div>
 
             <div style="background: #f8fafc; padding: 20px; border-radius: 15px; border: 2px solid #e2e8f0; margin-bottom: 30px;">
-                <p style="font-weight: 900; font-size: 13px; text-transform: uppercase; color: #475569; margin-bottom: 15px;">Deseja Bloquear:</p>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div style="display: grid; grid-cols-1 md:grid-cols-2 gap-4">
                     <div style="display: flex; flex-direction: column; gap: 10px;">
-                        <label style="font-size: 10px; font-weight: 900; color: #94a3b8; text-transform: uppercase;">Data Inicial</label>
+                        <label style="font-size: 10px; font-weight: 900; color: #94a3b8;">DATA INICIAL (OU DIA ÚNICO)</label>
                         <input type="date" id="bl_d1" style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: bold;">
-                        
-                        <label style="font-size: 10px; font-weight: 900; color: #94a3b8; text-transform: uppercase;">Até que dia? (Para períodos)</label>
+                        <label style="font-size: 10px; font-weight: 900; color: #94a3b8;">ATÉ QUE DIA (PERÍODOS)</label>
                         <input type="date" id="bl_d2" style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: bold;">
                     </div>
-
                     <div style="display: flex; flex-direction: column; gap: 10px;">
                         <div style="display: flex; gap: 10px;">
-                            <div style="flex:1">
-                                <label style="font-size: 10px; font-weight: 900; color: #94a3b8;">DAS (HORA)</label>
-                                <input type="time" id="bl_h1" style="width:100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: bold;">
-                            </div>
-                            <div style="flex:1">
-                                <label style="font-size: 10px; font-weight: 900; color: #94a3b8;">ATÉ ÀS</label>
-                                <input type="time" id="bl_h2" style="width:100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: bold;">
-                            </div>
+                            <div style="flex:1"><label style="font-size: 10px; font-weight: 900; color: #94a3b8;">DAS</label><input type="time" id="bl_h1" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px;"></div>
+                            <div style="flex:1"><label style="font-size: 10px; font-weight: 900; color: #94a3b8;">ATÉ</label><input type="time" id="bl_h2" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px;"></div>
                         </div>
-                        <label style="font-size: 10px; font-weight: 900; color: #94a3b8; text-transform: uppercase;">Motivo do Bloqueio</label>
-                        <textarea id="bl_mot" placeholder="Ex: Feriado, Férias, Reforma..." style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: bold; height: 60px;"></textarea>
+                        <label style="font-size: 10px; font-weight: 900; color: #94a3b8;">MOTIVO</label>
+                        <textarea id="bl_mot" style="padding:10px; border:1px solid #ccc; border-radius:8px; height:60px; font-weight:bold;"></textarea>
                     </div>
                 </div>
-
-                <button onclick="salvarNovoBloqueioPainel()" style="width: 100%; background: #dc2626; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: 900; text-transform: uppercase; cursor: pointer; margin-top: 20px; font-size: 14px;">Confirmar Bloqueio 🔒</button>
+                <button onclick="salvarBloqueioDefinitivo()" style="width: 100%; background: #dc2626; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: 900; text-transform: uppercase; cursor: pointer; margin-top: 20px;">Confirmar Bloqueio 🔒</button>
             </div>
 
-            <h3 style="font-weight: 900; text-transform: uppercase; font-size: 12px; color: #64748b; border-bottom: 2px solid #f1f5f9; padding-bottom: 5px; margin-bottom: 15px;">Bloqueios Vigentes na Agenda</h3>
-            <div id="lista-vigente">${renderLista()}</div>
+            <h3 style="font-weight: 900; text-transform: uppercase; font-size: 12px; color: #64748b; margin-bottom: 15px;">Bloqueios Vigentes na Agenda</h3>
+            <div id="lista-vigente">${renderizarLista()}</div>
         </div>`;
     };
 
-    window.salvarNovoBloqueioPainel = function() {
+    window.voltarParaVagas = function() {
+        const container = document.getElementById('conteudo-principal');
+        if (container && typeof window.renderVagas === 'function') {
+            window.renderVagas(container); // Volta para a tela de vagas sem deslogar
+        } else {
+            location.reload(); // Fallback se a função não existir
+        }
+    };
+
+    window.salvarBloqueioDefinitivo = function() {
         const d1 = document.getElementById('bl_d1').value;
         const d2 = document.getElementById('bl_d2').value;
         const h1 = document.getElementById('bl_h1').value;
         const h2 = document.getElementById('bl_h2').value;
         const mot = document.getElementById('bl_mot').value;
 
-        if (!d1 || !mot) return alert("Preencha ao menos a data inicial e o motivo!");
+        if (!d1 || !mot) return alert("Preencha data e motivo!");
 
         let info = "";
         if (d2 && d2 !== d1) info = `🛑 PERÍODO: ${f(d1)} até ${f(d2)}`;
@@ -264,23 +238,22 @@ window.renderVagas = function(container) {
         else info = `📅 DIA INTEIRO: ${f(d1)} (Fechado)`;
 
         window.bloqueiosAtivos.unshift({ id: Date.now(), info, mot });
+        localStorage.setItem('nilo_bloqueios', JSON.stringify(window.bloqueiosAtivos));
         window.abrirBloqueios();
     };
 
-    window.excluirBloqueioItem = function(id) {
+    window.removerBloqueioDefinitivo = function(id) {
         window.bloqueiosAtivos = window.bloqueiosAtivos.filter(b => b.id !== id);
+        localStorage.setItem('nilo_bloqueios', JSON.stringify(window.bloqueiosAtivos));
         window.abrirBloqueios();
     };
 
-    function renderLista() {
-        if (!window.bloqueiosAtivos.length) return `<p style="text-align: center; color: #94a3b8; padding: 20px;">Nenhum bloqueio registrado.</p>`;
+    function renderizarLista() {
+        if (!window.bloqueiosAtivos.length) return `<p style="text-align: center; color: #94a3b8; padding: 20px;">Nenhum bloqueio.</p>`;
         return window.bloqueiosAtivos.map(b => `
-            <div style="background: white; border: 1px solid #e2e8f0; border-left: 6px solid #dc2626; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                <div>
-                    <p style="font-weight: 900; margin: 0; color: #dc2626; font-size: 15px;">${b.info}</p>
-                    <p style="font-size: 13px; margin: 3px 0 0 0; color: #1e293b;"><b>MOTIVO:</b> ${b.mot}</p>
-                </div>
-                <button onclick="excluirBloqueioItem(${b.id})" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; padding: 8px 12px; border-radius: 6px; font-weight: 900; font-size: 10px; cursor: pointer; text-transform: uppercase;">Desbloquear 🔓</button>
+            <div style="background: white; border: 1px solid #e2e8f0; border-left: 6px solid #dc2626; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                <div><p style="font-weight: 900; margin: 0; color: #dc2626;">${b.info}</p><p style="font-size: 13px; margin: 0;"><b>MOTIVO:</b> ${b.mot}</p></div>
+                <button onclick="removerBloqueioDefinitivo(${b.id})" style="background: #fef2f2; color: #dc2626; border: none; padding: 8px 12px; border-radius: 6px; font-weight: 900; font-size: 10px; cursor: pointer;">DESBLOQUEAR</button>
             </div>`).join('');
     }
 
