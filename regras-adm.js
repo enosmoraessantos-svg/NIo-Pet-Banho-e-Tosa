@@ -33,7 +33,7 @@
     setTimeout(injetarBotao, 1000);
 })();
 /**
- * MÓDULO 2: GESTÃO DE VAGAS (AGENDA) - COM HORÁRIO EM SUPER NEGRITO
+ * MÓDULO 2: GESTÃO DE VAGAS (AGENDA) - HORÁRIO COM NEGRITO MÁXIMO
  */
 
 // --- FUNÇÃO PARA O BOTÃO "+ NOVO HORÁRIO" ---
@@ -97,8 +97,8 @@ window.renderVagas = function(container) {
             html += `
             <div class="bg-white p-4 rounded-xl border mb-3 shadow-sm text-black">
                 <div class="flex justify-between items-center mb-2">
-                    <!-- HORÁRIO COM NEGRITO EXTRA FORTE -->
-                    <span class="font-[900] text-2xl text-black border-b-2 border-blue-600">${v.horario}</span>
+                    <!-- HORÁRIO EM NEGRITO MÁXIMO (FONT-BLACK) -->
+                    <span class="font-black text-2xl text-black">${v.horario}</span>
                     <span class="font-black text-sm text-slate-500 uppercase ml-2 flex-1">- CACHORRO / GATO</span>
                     
                     <div class="flex items-center gap-2">
