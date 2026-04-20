@@ -33,8 +33,43 @@
     setTimeout(injetarBotao, 1000);
 })();
 /**
- * MÓDULO 2: GESTÃO DE VAGAS (AGENDA) - VERSÃO TEXTUAL
+ * MÓDULO 2: GESTÃO DE VAGAS (AGENDA) - VERSÃO FINAL
  */
+
+// --- FUNÇÃO PARA O BOTÃO "+ NOVO HORÁRIO" FUNCIONAR ---
+window.adicionarNovoHorario = function() {
+    const hora = prompt("Digite o horário (ex: 09:00):");
+    if (!hora) return;
+    
+    const dia = prompt("Digite o número do dia (0 para Domingo, 1 para Segunda... 6 para Sábado):");
+    if (dia === null || dia === "" || dia < 0 || dia > 6) {
+        alert("Dia inválido!");
+        return;
+    }
+
+    const novoItem = {
+        id: Date.now(), // Gera um ID único
+        dia_semana: parseInt(dia),
+        horario: hora,
+        bloqueado: false,
+        vagas_pequeno_medio: 0,
+        vagas_tosa_higi: 0,
+        vagas_tosa: 0,
+        vagas_grande_curto: 0,
+        vagas_grande_peludo: 0,
+        vagas_gato: 0
+    };
+
+    if (typeof todosDados !== 'undefined') {
+        todosDados.push(novoItem);
+        // Atualiza a tela automaticamente (assumindo que o container é o id 'vagas-container')
+        const container = document.getElementById('vagas-container');
+        if (container) window.renderVagas(container);
+        alert("Horário adicionado! Não esqueça de Salvar Alterações.");
+    }
+};
+
+// --- RENDERIZAÇÃO DA INTERFACE ---
 window.renderVagas = function(container) {
     if (!container) return;
 
@@ -56,10 +91,9 @@ window.renderVagas = function(container) {
         
         itens.forEach(v => {
             html += `
-            <div class="bg-white p-4 rounded-xl border mb-3 shadow-sm text-black relative">
-                <!-- Cabeçalho do Horário -->
+            <div class="bg-white p-4 rounded-xl border mb-3 shadow-sm text-black">
                 <div class="flex justify-between items-center mb-2">
-                    <span class="font-black text-xl text-blue-700">${v.horario} - CACHORRO</span>
+                    <span class="font-black text-xl text-blue-700">${v.horario} - CACHORRO / GATO</span>
                     <div class="flex items-center gap-2">
                          <input type="checkbox" ${v.bloqueado ? 'checked' : ''} onchange="upVaga(${v.id}, 'bloqueado', this.checked)">
                          <span class="text-[9px] font-bold text-red-500 uppercase">Bloquear</span>
@@ -67,10 +101,8 @@ window.renderVagas = function(container) {
                     </div>
                 </div>
 
-                <!-- Listagem de Vagas Estilo Texto -->
                 <div class="space-y-3">
-                    
-                    <!-- Bloco Pequeno/Médio -->
+                    <!-- Porte Pequeno/Médio -->
                     <div class="bg-slate-50 p-2 rounded-lg border-l-2 border-blue-400">
                         <p class="font-black text-[10px] uppercase text-slate-600 mb-1">🐶 PORTE PEQUENO / MÉDIO</p>
                         <div class="flex flex-wrap gap-4 text-[11px] font-bold">
@@ -85,7 +117,7 @@ window.renderVagas = function(container) {
                         </div>
                     </div>
 
-                    <!-- Bloco Grande Porte -->
+                    <!-- Porte Grande -->
                     <div class="bg-slate-50 p-2 rounded-lg border-l-2 border-orange-400">
                         <p class="font-black text-[10px] uppercase text-slate-600 mb-1">🐕 PORTE GRANDE</p>
                         <div class="flex flex-wrap gap-4 text-[11px] font-bold">
@@ -100,15 +132,14 @@ window.renderVagas = function(container) {
                         </div>
                     </div>
 
-                    <!-- Bloco Gatos -->
+                    <!-- Gatos (Apenas Banho como solicitado) -->
                     <div class="bg-slate-50 p-2 rounded-lg border-l-2 border-purple-400">
                         <p class="font-black text-[10px] uppercase text-slate-600 mb-1">🐱 GATOS</p>
                         <div class="flex items-center gap-1 text-[11px] font-bold">
-                            <span>VAGAS TOTAIS:</span>
+                            <span>SOMENTE BANHO:</span>
                             <input type="number" value="${v.vagas_gato || 0}" onchange="upVaga(${v.id}, 'vagas_gato', this.value)" class="w-8 border-b text-center bg-transparent">
                         </div>
                     </div>
-
                 </div>
             </div>`;
         });
