@@ -33,7 +33,7 @@
     setTimeout(injetarBotao, 1000);
 })();
 /**
- * MÓDULO 2: GESTÃO DE VAGAS (AGENDA)
+ * MÓDULO 2: GESTÃO DE VAGAS (AGENDA) - VERSÃO TEXTUAL
  */
 window.renderVagas = function(container) {
     if (!container) return;
@@ -49,7 +49,6 @@ window.renderVagas = function(container) {
         </div>`;
 
     for (let i = 0; i <= 6; i++) {
-        // Filtra os dados globais. Certifique-se que 'todosDados' existe no seu script principal.
         const itens = (typeof todosDados !== 'undefined') ? todosDados.filter(v => v.dia_semana == i) : [];
         
         html += `<div class="mb-8 border-l-4 ${itens.length ? 'border-red-600' : 'border-slate-200'} pl-4">
@@ -57,39 +56,59 @@ window.renderVagas = function(container) {
         
         itens.forEach(v => {
             html += `
-            <div class="bg-white p-4 rounded-xl border mb-3 shadow-sm text-black">
-                <div class="flex justify-between border-b pb-2 mb-3">
-                    <span class="font-black text-lg">${v.horario}</span>
+            <div class="bg-white p-4 rounded-xl border mb-3 shadow-sm text-black relative">
+                <!-- Cabeçalho do Horário -->
+                <div class="flex justify-between items-center mb-2">
+                    <span class="font-black text-xl text-blue-700">${v.horario} - CACHORRO</span>
                     <div class="flex items-center gap-2">
-                        <input type="checkbox" ${v.bloqueado ? 'checked' : ''} onchange="upVaga(${v.id}, 'bloqueado', this.checked)">
-                        <label class="text-[9px] font-bold uppercase text-red-500">Bloquear</label>
-                        <button onclick="removerHorario(${v.id})" class="ml-2 text-slate-300">✕</button>
+                         <input type="checkbox" ${v.bloqueado ? 'checked' : ''} onchange="upVaga(${v.id}, 'bloqueado', this.checked)">
+                         <span class="text-[9px] font-bold text-red-500 uppercase">Bloquear</span>
+                         <button onclick="removerHorario(${v.id})" class="ml-2 text-slate-300">✕</button>
                     </div>
                 </div>
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <div>
-                        <p class="text-[8px] font-black uppercase text-slate-400">Porte / Espécie</p>
-                        <label class="text-[7px] font-bold block">PEQ/MED</label>
-                        <input type="number" value="${v.vagas_pequeno_medio || 0}" onchange="upVaga(${v.id}, 'vagas_pequeno_medio', this.value)" class="w-full border rounded text-center focus:bg-yellow-50">
-                        <label class="text-[7px] font-bold block">GATO</label>
-                        <input type="number" value="${v.vagas_gato || 0}" onchange="upVaga(${v.id}, 'vagas_gato', this.value)" class="w-full border rounded text-center border-blue-200 focus:bg-yellow-50">
+
+                <!-- Listagem de Vagas Estilo Texto -->
+                <div class="space-y-3">
+                    
+                    <!-- Bloco Pequeno/Médio -->
+                    <div class="bg-slate-50 p-2 rounded-lg border-l-2 border-blue-400">
+                        <p class="font-black text-[10px] uppercase text-slate-600 mb-1">🐶 PORTE PEQUENO / MÉDIO</p>
+                        <div class="flex flex-wrap gap-4 text-[11px] font-bold">
+                            <div class="flex items-center gap-1">
+                                <span>BANHO / TOSA HIGI:</span>
+                                <input type="number" value="${v.vagas_tosa_higi || 0}" onchange="upVaga(${v.id}, 'vagas_tosa_higi', this.value)" class="w-8 border-b text-center bg-transparent">
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <span>BANHO + TOSA:</span>
+                                <input type="number" value="${v.vagas_tosa || 0}" onchange="upVaga(${v.id}, 'vagas_tosa', this.value)" class="w-8 border-b text-center bg-transparent">
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <p class="text-[8px] font-black uppercase text-slate-400">Grandes</p>
-                        <label class="text-[7px] font-bold block">GRD CURTO</label>
-                        <input type="number" value="${v.vagas_grande_curto || 0}" onchange="upVaga(${v.id}, 'vagas_grande_curto', this.value)" class="w-full border rounded text-center focus:bg-yellow-50">
-                        <label class="text-[7px] font-bold block">GRD PELUDO</label>
-                        <input type="number" value="${v.vagas_grande_peludo || 0}" onchange="upVaga(${v.id}, 'vagas_grande_peludo', this.value)" class="w-full border rounded text-center focus:bg-yellow-50">
+
+                    <!-- Bloco Grande Porte -->
+                    <div class="bg-slate-50 p-2 rounded-lg border-l-2 border-orange-400">
+                        <p class="font-black text-[10px] uppercase text-slate-600 mb-1">🐕 PORTE GRANDE</p>
+                        <div class="flex flex-wrap gap-4 text-[11px] font-bold">
+                            <div class="flex items-center gap-1">
+                                <span>PELO CURTO (BANHO):</span>
+                                <input type="number" value="${v.vagas_grande_curto || 0}" onchange="upVaga(${v.id}, 'vagas_grande_curto', this.value)" class="w-8 border-b text-center bg-transparent">
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <span>PELUDO (BANHO):</span>
+                                <input type="number" value="${v.vagas_grande_peludo || 0}" onchange="upVaga(${v.id}, 'vagas_grande_peludo', this.value)" class="w-8 border-b text-center bg-transparent">
+                            </div>
+                        </div>
                     </div>
-                    <div class="border-l pl-2">
-                        <p class="text-[8px] font-black uppercase text-red-600">Serviços</p>
-                        <label class="text-[7px] font-bold block">BANHO / TOSA HIGIÊNICA</label>
-                        <input type="number" value="${v.vagas_tosa_higi || 0}" onchange="upVaga(${v.id}, 'vagas_tosa_higi', this.value)" class="w-full border rounded text-center border-red-100 mb-1 focus:bg-yellow-50">
-                        <label class="text-[7px] font-bold block">SOMENTE BANHO</label>
-                        <input type="number" value="${v.vagas_banho || 0}" onchange="upVaga(${v.id}, 'vagas_banho', this.value)" class="w-full border rounded text-center border-red-100 mb-1 focus:bg-yellow-50">
-                        <label class="text-[7px] font-bold block">BANHO + TOSA</label>
-                        <input type="number" value="${v.vagas_tosa || 0}" onchange="upVaga(${v.id}, 'vagas_tosa', this.value)" class="w-full border rounded text-center border-red-200 focus:bg-yellow-50">
+
+                    <!-- Bloco Gatos -->
+                    <div class="bg-slate-50 p-2 rounded-lg border-l-2 border-purple-400">
+                        <p class="font-black text-[10px] uppercase text-slate-600 mb-1">🐱 GATOS</p>
+                        <div class="flex items-center gap-1 text-[11px] font-bold">
+                            <span>VAGAS TOTAIS:</span>
+                            <input type="number" value="${v.vagas_gato || 0}" onchange="upVaga(${v.id}, 'vagas_gato', this.value)" class="w-8 border-b text-center bg-transparent">
+                        </div>
                     </div>
+
                 </div>
             </div>`;
         });
