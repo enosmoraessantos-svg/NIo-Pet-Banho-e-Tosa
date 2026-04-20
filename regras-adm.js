@@ -149,166 +149,157 @@ window.renderVagas = function(container) {
     container.innerHTML = html + `</div>`;
 };
 /**
- * MÓDULO: GESTÃO DE BLOQUEIOS (INTEGRADO)
+ * MÓDULO ADICIONAL: REGRAS ADM - GESTÃO DE BLOQUEIOS
  */
 (function() {
-    window.bloqueiosAtivos = JSON.parse(localStorage.getItem('nilo_bloqueios')) || [];
+    // Carrega dados existentes
+    window.bloqueiosAgenda = JSON.parse(localStorage.getItem('nilo_bloqueios_adm')) || [];
 
-    // 1. INJETOR DE BOTÃO (Dentro da área de Gestão de Vagas)
-    function injetarBotaoBloqueio() {
-        // Busca o cabeçalho dentro do card de gestão
-        const cabecalho = document.querySelector('.card-pet .flex.justify-between');
-        if (cabecalho && !document.getElementById('btnAbrirBloqueio')) {
-            const grupo = cabecalho.querySelector('.flex.gap-2') || cabecalho;
-            
+    // 1. INJETOR DO BOTÃO NO MENU DE GESTÃO
+    function injetarBotaoAdm() {
+        const menuGestao = document.querySelector('.card-pet .flex.gap-2') || document.querySelector('.flex.gap-2');
+        if (menuGestao && !document.getElementById('btnAbrirBloqueio')) {
             const btn = document.createElement('button');
             btn.id = "btnAbrirBloqueio";
+            btn.className = "bg-slate-800 text-white px-4 py-2 rounded-xl font-bold text-[11px] uppercase tracking-wider hover:bg-red-600 transition-all flex items-center gap-2 shadow-sm";
             btn.innerHTML = `
-                <span class="flex items-center gap-2">
-                    <svg xmlns="http://w3.org" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                    BLOQUEAR AGENDA
-                </span>`;
-            btn.className = "bg-slate-800 text-white px-4 py-2 rounded-lg font-bold text-[11px] uppercase tracking-wider hover:bg-red-600 transition-all shadow-sm";
-            btn.onclick = (e) => { e.preventDefault(); window.abrirTelaBloqueio(); };
-            
-            grupo.prepend(btn);
+                <svg xmlns="http://w3.org" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                BLOQUEAR HORÁRIO / DIA`;
+            btn.onclick = (e) => { e.preventDefault(); abrirTelaBloqueioAdm(); };
+            menuGestao.prepend(btn);
         }
     }
-    setInterval(injetarBotaoBloqueio, 1000);
+    setInterval(injetarBotaoAdm, 1000);
 
-    // 2. TELA DE BLOQUEIO (LAYOUT LIMPO)
-    window.abrirTelaBloqueio = function() {
+    // 2. TELA DE GESTÃO (LAYOUT DIVIDIDO)
+    window.abrirTelaBloqueioAdm = function() {
         const container = document.getElementById('conteudo-principal');
         if (!container) return;
 
         container.innerHTML = `
-        <div class="max-w-5xl mx-auto animate-in fade-in duration-300">
-            <!-- HEADER DA SEÇÃO -->
-            <div class="flex justify-between items-center mb-6">
+        <div class="max-w-6xl mx-auto p-4 animate-in fade-in duration-300">
+            <div class="flex justify-between items-center mb-8">
                 <div>
-                    <h2 class="text-2xl font-black text-slate-800 tracking-tighter">GESTÃO DE BLOQUEIOS</h2>
-                    <p class="text-slate-500 text-sm font-medium">Impeça novos agendamentos em datas específicas.</p>
+                    <h2 class="text-3xl font-black text-slate-800 tracking-tighter uppercase italic">Regras de Bloqueio</h2>
+                    <p class="text-slate-500 font-bold text-xs uppercase tracking-widest">Painel Administrativo</p>
                 </div>
-                
                 <button onclick="window.renderVagas(document.getElementById('conteudo-principal'))" 
-                    class="bg-white border-2 border-slate-200 text-slate-600 px-5 py-2 rounded-xl font-bold text-xs uppercase hover:bg-slate-50 transition-all flex items-center gap-2">
-                    ⬅ Voltar para Vagas
+                    class="bg-white border-2 border-slate-200 text-slate-600 px-6 py-2 rounded-2xl font-black text-xs uppercase hover:bg-slate-100 transition-all">
+                    ⬅ Voltar ao Menu
                 </button>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                
-                <!-- COLUNA ESQUERDA: FORMULÁRIO (4/12) -->
-                <div class="lg:col-span-4 space-y-4">
-                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-                        <h3 class="text-xs font-black text-red-600 uppercase mb-4 tracking-widest">Novo Bloqueio</h3>
+                <!-- FORMULÁRIO -->
+                <div class="lg:col-span-4 space-y-6">
+                    <div class="bg-white p-6 rounded-[32px] shadow-xl shadow-slate-200/50 border border-slate-100">
+                        <h3 class="text-xs font-black text-red-600 uppercase mb-6 tracking-widest flex items-center gap-2">
+                            <span class="w-2 h-2 bg-red-600 rounded-full"></span> Configurar Pausa
+                        </h3>
                         
                         <div class="space-y-4">
                             <div>
-                                <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Data Início</label>
-                                <input type="date" id="bl_d1" class="w-full p-3 bg-slate-50 border-none rounded-2xl font-bold text-slate-700 focus:ring-2 ring-red-500 outline-none">
+                                <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Data Início / Dia</label>
+                                <input type="date" id="adm_d1" class="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-slate-700 focus:ring-2 ring-red-500 outline-none transition-all">
                             </div>
 
                             <div>
-                                <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Data Fim (Opcional)</label>
-                                <input type="date" id="bl_d2" class="w-full p-3 bg-slate-50 border-none rounded-2xl font-bold text-slate-700 focus:ring-2 ring-red-500 outline-none">
+                                <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Até (Opcional - Período)</label>
+                                <input type="date" id="adm_d2" class="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-slate-700 focus:ring-2 ring-red-500 outline-none transition-all">
                             </div>
 
-                            <div class="grid grid-cols-2 gap-2">
+                            <div class="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Das</label>
-                                    <input type="time" id="bl_h1" class="w-full p-3 bg-slate-50 border-none rounded-2xl font-bold text-slate-700 focus:ring-2 ring-red-500 outline-none">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Hora Início</label>
+                                    <input type="time" id="adm_h1" class="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-slate-700 focus:ring-2 ring-red-500 outline-none transition-all">
                                 </div>
                                 <div>
-                                    <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Até</label>
-                                    <input type="time" id="bl_h2" class="w-full p-3 bg-slate-50 border-none rounded-2xl font-bold text-slate-700 focus:ring-2 ring-red-500 outline-none">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Hora Fim</label>
+                                    <input type="time" id="adm_h2" class="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-slate-700 focus:ring-2 ring-red-500 outline-none transition-all">
                                 </div>
                             </div>
 
                             <div>
-                                <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Motivo</label>
-                                <textarea id="bl_mot" placeholder="Ex: Feriado Municipal" class="w-full p-3 bg-slate-50 border-none rounded-2xl font-bold text-slate-700 h-20 focus:ring-2 ring-red-500 outline-none resize-none"></textarea>
+                                <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Motivo do Bloqueio</label>
+                                <textarea id="adm_mot" placeholder="EX: FERIADO OU FÉRIAS" class="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-slate-700 h-24 focus:ring-2 ring-red-500 outline-none resize-none transition-all uppercase"></textarea>
                             </div>
 
-                            <button onclick="salvarBloqueioVivido()" class="w-full bg-red-600 text-white py-4 rounded-2xl font-black text-xs uppercase shadow-lg shadow-red-200 hover:bg-red-700 transition-all mt-2">
-                                Confirmar Bloqueio
+                            <button onclick="salvarBloqueioAdm()" class="w-full bg-red-600 text-white py-5 rounded-2xl font-black text-xs uppercase shadow-lg shadow-red-200 hover:scale-[1.02] active:scale-95 transition-all">
+                                Ativar Bloqueio Agora
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- COLUNA DIREITA: LISTAGEM (8/12) -->
+                <!-- LISTAGEM -->
                 <div class="lg:col-span-8">
-                    <div class="bg-slate-50 p-1 rounded-3xl min-h-[400px]">
-                        <div id="lista-vigente" class="space-y-3 p-2">
-                            ${renderListaVivida()}
+                    <div class="bg-slate-50 rounded-[32px] p-2 min-h-[500px] border-2 border-dashed border-slate-200">
+                        <div id="lista-bloqueios-adm" class="space-y-3">
+                            ${renderListaAdm()}
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>`;
     };
 
-    window.salvarBloqueioVivido = function() {
-        const d1 = document.getElementById('bl_d1').value;
-        const d2 = document.getElementById('bl_d2').value;
-        const h1 = document.getElementById('bl_h1').value;
-        const h2 = document.getElementById('bl_h2').value;
-        const mot = document.getElementById('bl_mot').value;
+    // 3. LÓGICA DE SALVAMENTO (TRATA OS 3 CASOS)
+    window.salvarBloqueioAdm = function() {
+        const d1 = document.getElementById('adm_d1').value;
+        const d2 = document.getElementById('adm_d2').value;
+        const h1 = document.getElementById('adm_h1').value;
+        const h2 = document.getElementById('adm_h2').value;
+        const mot = document.getElementById('adm_mot').value;
 
-        if (!d1 || !mot) return alert("⚠️ Informe pelo menos a Data de Início e o Motivo!");
+        if (!d1 || !mot) return alert("Preencha a data e o motivo!");
 
-        const f = (v) => v.split('-').reverse().join('/');
-        let info = "";
-        
+        const formata = (d) => d.split('-').reverse().join('/');
+        let descricao = "";
+        let tipo = "";
+
         if (d2 && d2 !== d1) {
-            info = `PERÍODO: ${f(d1)} - ${f(d2)}`;
+            descricao = `PERÍODO: ${formata(d1)} ATÉ ${formata(d2)} (RETORNO DIA SEGUINTE)`;
+            tipo = "PERÍODO";
         } else if (h1 && h2) {
-            info = `DIA ${f(d1)}: ${h1} ÀS ${h2}`;
+            descricao = `HORÁRIO: ${formata(d1)} DAS ${h1} ÀS ${h2}`;
+            tipo = "HORÁRIO";
         } else {
-            info = `DIA INTEIRO: ${f(d1)}`;
+            descricao = `DIA INTEIRO: ${formata(d1)} (FECHADO)`;
+            tipo = "DIA";
         }
 
-        window.bloqueiosAtivos.unshift({ 
-            id: Date.now(), 
-            info: info.toUpperCase(), 
-            mot: mot.toUpperCase(),
-            dataCriacao: new Date().toLocaleDateString()
+        window.bloqueiosAgenda.unshift({
+            id: Date.now(),
+            descricao: descricao.toUpperCase(),
+            motivo: mot.toUpperCase(),
+            tipo: tipo
         });
 
-        localStorage.setItem('nilo_bloqueios', JSON.stringify(window.bloqueiosAtivos));
-        window.abrirTelaBloqueio();
+        localStorage.setItem('nilo_bloqueios_adm', JSON.stringify(window.bloqueiosAgenda));
+        abrirTelaBloqueioAdm();
     };
 
-    window.excluirBloqueioVivido = function(id) {
-        window.bloqueiosAtivos = window.bloqueiosAtivos.filter(b => b.id !== id);
-        localStorage.setItem('nilo_bloqueios', JSON.stringify(window.bloqueiosAtivos));
-        window.abrirTelaBloqueio();
+    window.excluirBloqueioAdm = function(id) {
+        window.bloqueiosAgenda = window.bloqueiosAgenda.filter(b => b.id !== id);
+        localStorage.setItem('nilo_bloqueios_adm', JSON.stringify(window.bloqueiosAgenda));
+        abrirTelaBloqueioAdm();
     };
 
-    function renderListaVivida() {
-        if (!window.bloqueiosAtivos.length) {
-            return `
-            <div class="flex flex-col items-center justify-center py-20 text-slate-300">
-                <svg xmlns="http://w3.org" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="mb-4"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                <p class="font-bold uppercase text-xs tracking-widest">Nenhum bloqueio registrado</p>
+    function renderListaAdm() {
+        if (!window.bloqueiosAgenda.length) {
+            return `<div class="flex flex-col items-center justify-center py-32 opacity-20">
+                <p class="font-black uppercase text-sm tracking-[0.3em]">Sem Bloqueios Ativos</p>
             </div>`;
         }
         
-        return window.bloqueiosAtivos.map(b => `
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex justify-between items-center animate-in slide-in-from-right-4 duration-300">
-                <div class="flex items-center gap-4">
-                    <div class="bg-red-50 text-red-600 p-3 rounded-xl">
-                        <svg xmlns="http://w3.org" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
-                    </div>
-                    <div>
-                        <p class="font-black text-slate-800 text-sm leading-tight">${b.info}</p>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase mt-0.5 tracking-tighter">MOTIVO: ${b.mot}</p>
-                    </div>
+        return window.bloqueiosAgenda.map(b => `
+            <div class="bg-white p-5 rounded-2xl flex justify-between items-center shadow-sm border-l-8 ${b.tipo === 'PERÍODO' ? 'border-l-orange-500' : 'border-l-red-600'}">
+                <div>
+                    <p class="font-black text-slate-800 text-base leading-tight">${b.descricao}</p>
+                    <p class="text-[10px] font-black text-slate-400 uppercase mt-1 tracking-widest">MOTIVO: ${b.motivo}</p>
                 </div>
-                <button onclick="excluirBloqueioVivido(${b.id})" class="text-slate-300 hover:text-red-600 p-2 transition-colors">
-                    <svg xmlns="http://w3.org" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                <button onclick="excluirBloqueioAdm(${b.id})" class="bg-slate-50 text-slate-400 hover:text-red-600 p-3 rounded-xl transition-all">
+                    <svg xmlns="http://w3.org" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                 </button>
             </div>`).join('');
     }
