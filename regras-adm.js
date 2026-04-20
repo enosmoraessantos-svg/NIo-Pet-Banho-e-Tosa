@@ -149,110 +149,120 @@ window.renderVagas = function(container) {
     container.innerHTML = html + `</div>`;
 };
 /**
- * BLOQUEIO INDEPENDENTE - PAINEL ADM AGENDAMENTOS
+ * INJETOR DE BLOQUEIO - ESTILO PADRÃO NILO PET
  */
 (function() {
-    // Carrega bloqueios salvos no navegador
+    // 1. PERSISTÊNCIA DOS DADOS (SALVA NO NAVEGADOR)
     window.bloqueiosAtivos = JSON.parse(localStorage.getItem('nilo_bloqueios')) || [];
 
-    // 1. INJETOR: Coloca o botão vermelho dentro da sua tela de Configuração de Agenda
-    function injetarBotaoBloqueio() {
+    // 2. INJETOR: COLOCA O BOTÃO COM O MESMO LAYOUT DOS OUTROS
+    function injetarBotaoBloqueioPadrao() {
+        // Localiza o cabeçalho da Gestão de Vagas
         const cabecalho = document.querySelector('.card-pet .flex.justify-between');
-        if (cabecalho && !document.getElementById('btnAbrirBloqueio')) {
+        
+        if (cabecalho && !document.getElementById('btnBloqueioNilo')) {
             const grupoBotoes = cabecalho.querySelector('.flex.gap-2');
             if (grupoBotoes) {
                 const btn = document.createElement('button');
-                btn.id = "btnAbrirBloqueio";
-                btn.innerHTML = "🚫 BLOQUEAR HORÁRIO / DIA";
+                btn.id = "btnBloqueioNilo";
+                btn.innerText = "🚫 BLOQUEAR HORÁRIO / DIA";
+                
+                // Usa exatamente as mesmas classes Tailwind do botão de Novo Horário
                 btn.className = "bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-[10px] uppercase";
-                btn.onclick = (e) => { 
-                    e.preventDefault(); 
-                    window.abrirTelaBloqueio(); 
+                
+                btn.onclick = (e) => {
+                    e.preventDefault();
+                    window.abrirPainelBloqueio();
                 };
+
+                // Insere no início do grupo de botões
                 grupoBotoes.prepend(btn);
             }
         }
     }
-    // Monitora a tela para garantir que o botão apareça se você navegar entre abas
-    setInterval(injetarBotaoBloqueio, 1000);
+    // Verifica a cada 1 segundo se a tela mudou
+    setInterval(injetarBotaoBloqueioPadrao, 1000);
 
-    // 2. TELA DE BLOQUEIO (PAINEL ADM)
-    window.abrirTelaBloqueio = function() {
+    // 3. TELA DE BLOQUEIO (MANTÉM O ESTILO DO PAINEL)
+    window.abrirPainelBloqueio = function() {
         const container = document.getElementById('conteudo-principal') || document.body;
         
         container.innerHTML = `
-        <div style="padding: 20px; background: #fff; font-family: sans-serif; color: #1e293b; min-height: 80vh;">
-            <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
-                <h2 style="font-weight: 900; text-transform: uppercase; font-style: italic; color: #dc2626; margin:0;">🚫 Bloquear Horário / Período</h2>
-                
-                <!-- BOTÃO VOLTAR QUE RESTAURA A TELA SEM DESLOGAR -->
-                <button onclick="window.renderVagas(document.getElementById('conteudo-principal'))" style="background: #64748b; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 11px;">⬅ Voltar ao Painel</button>
+        <div class="card-pet p-6 bg-white rounded-xl border shadow-sm">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="font-black uppercase text-lg italic text-red-600">🚫 Gerenciar Bloqueios</h3>
+                <button onclick="window.renderVagas(document.getElementById('conteudo-principal'))" class="bg-slate-600 text-white px-4 py-2 rounded-lg font-bold text-[10px] uppercase">⬅ Voltar para Agenda</button>
             </div>
 
-            <div style="background: #f8fafc; padding: 20px; border-radius: 15px; border: 2px solid #e2e8f0; margin-bottom: 30px;">
-                <p style="font-weight: 900; font-size: 13px; text-transform: uppercase; color: #475569; margin-bottom: 15px;">Deseja Bloquear:</p>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div style="display: flex; flex-direction: column; gap: 10px;">
-                        <label style="font-size: 10px; font-weight: 900; color: #94a3b8;">DATA INICIAL</label>
-                        <input type="date" id="bl_d1" style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: bold;">
-                        <label style="font-size: 10px; font-weight: 900; color: #94a3b8;">DATA FINAL (OPCIONAL)</label>
-                        <input type="date" id="bl_d2" style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: bold;">
+            <div class="bg-slate-50 p-4 rounded-xl border mb-6 text-black">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400 block mb-1">Data ou Período</label>
+                        <input type="date" id="data_ini" class="w-full border rounded p-2 mb-2 font-bold">
+                        <input type="date" id="data_fim" class="w-full border rounded p-2 font-bold">
+                        <p class="text-[8px] text-slate-400 mt-1 uppercase">* Segunda data apenas para períodos longos</p>
                     </div>
-                    <div style="display: flex; flex-direction: column; gap: 10px;">
-                        <div style="display: flex; gap: 10px;">
-                            <div style="flex:1"><label style="font-size: 10px; font-weight: 900; color: #94a3b8;">DAS</label>
-                            <input type="time" id="bl_h1" style="width:100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px;"></div>
-                            <div style="flex:1"><label style="font-size: 10px; font-weight: 900; color: #94a3b8;">ATÉ</label>
-                            <input type="time" id="bl_h2" style="width:100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px;"></div>
+                    <div>
+                        <div class="grid grid-cols-2 gap-2 mb-2">
+                            <div>
+                                <label class="text-[10px] font-black uppercase text-slate-400 block mb-1">Das</label>
+                                <input type="time" id="hora_ini" class="w-full border rounded p-2 font-bold">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black uppercase text-slate-400 block mb-1">Até</label>
+                                <input type="time" id="hora_fim" class="w-full border rounded p-2 font-bold">
+                            </div>
                         </div>
-                        <label style="font-size: 10px; font-weight: 900; color: #94a3b8;">MOTIVO DO BLOQUEIO</label>
-                        <textarea id="bl_mot" placeholder="Ex: Feriado, Férias, Manutenção..." style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; height: 60px; font-weight: bold; font-family: sans-serif;"></textarea>
+                        <label class="text-[10px] font-black uppercase text-slate-400 block mb-1">Motivo / Aviso</label>
+                        <textarea id="mot_block" placeholder="Ex: Feriado, Férias, Reforma..." class="w-full border rounded p-2 font-bold h-16"></textarea>
                     </div>
                 </div>
-                <button onclick="salvarBloqueioFinal()" style="width: 100%; background: #dc2626; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: 900; text-transform: uppercase; cursor: pointer; margin-top: 20px; font-size: 14px;">Confirmar Bloqueio 🔒</button>
+                <button onclick="confirmarNovoBloqueio()" class="w-full bg-red-600 text-white py-3 rounded-lg font-black uppercase mt-4 text-xs shadow-md">Confirmar Bloqueio na Agenda 🔒</button>
             </div>
 
-            <h3 style="font-weight: 900; text-transform: uppercase; font-size: 12px; color: #64748b; margin-bottom: 15px;">Bloqueios Vigentes na Agenda ADM</h3>
-            <div id="lista-vigente">${renderLista()}</div>
+            <h4 class="font-black uppercase text-sm text-slate-400 mb-4 border-b pb-2">Bloqueios Vigentes</h4>
+            <div id="lista-blocs" class="space-y-3">
+                ${renderListaBloqueios()}
+            </div>
         </div>`;
     };
 
-    window.salvarBloqueioFinal = function() {
-        const d1 = document.getElementById('bl_d1').value;
-        const d2 = document.getElementById('bl_d2').value;
-        const h1 = document.getElementById('bl_h1').value;
-        const h2 = document.getElementById('bl_h2').value;
-        const mot = document.getElementById('bl_mot').value;
+    window.confirmarNovoBloqueio = function() {
+        const d1 = document.getElementById('data_ini').value;
+        const d2 = document.getElementById('data_fim').value;
+        const h1 = document.getElementById('hora_ini').value;
+        const h2 = document.getElementById('hora_fim').value;
+        const mot = document.getElementById('mot_block').value;
 
-        if (!d1 || !mot) return alert("Por favor, preencha a data e o motivo.");
+        if (!d1 || !mot) return alert("⚠️ Informe a data e o motivo!");
 
         let info = "";
+        const f = (val) => val.split('-').reverse().join('/');
+
         if (d2 && d2 !== d1) info = `🛑 PERÍODO: ${f(d1)} até ${f(d2)}`;
         else if (h1 && h2) info = `⏰ HORÁRIO: ${f(d1)} das ${h1} às ${h2}`;
         else info = `📅 DIA INTEIRO: ${f(d1)} (Fechado)`;
 
         window.bloqueiosAtivos.unshift({ id: Date.now(), info, mot });
         localStorage.setItem('nilo_bloqueios', JSON.stringify(window.bloqueiosAtivos));
-        window.abrirTelaBloqueio();
+        window.abrirPainelBloqueio();
     };
 
-    window.excluirBloqueioItem = function(id) {
+    window.apagarBloqueio = function(id) {
         window.bloqueiosAtivos = window.bloqueiosAtivos.filter(b => b.id !== id);
         localStorage.setItem('nilo_bloqueios', JSON.stringify(window.bloqueiosAtivos));
-        window.abrirTelaBloqueio();
+        window.abrirPainelBloqueio();
     };
 
-    function renderLista() {
-        if (!window.bloqueiosAtivos.length) return `<p style="text-align: center; color: #94a3b8; padding: 20px;">Nenhum bloqueio registrado.</p>`;
+    function renderListaBloqueios() {
+        if (!window.bloqueiosAtivos.length) return `<p class="text-center text-slate-400 py-4 italic text-sm">Nenhum bloqueio registrado.</p>`;
         return window.bloqueiosAtivos.map(b => `
-            <div style="background: white; border: 1px solid #e2e8f0; border-left: 6px solid #dc2626; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+            <div class="flex justify-between items-center bg-white p-4 rounded-xl border border-l-4 border-l-red-600 shadow-sm text-black">
                 <div>
-                    <p style="font-weight: 900; margin: 0; color: #dc2626; font-size: 15px;">${b.info}</p>
-                    <p style="font-size: 13px; margin: 3px 0 0 0; color: #1e293b;"><b>MOTIVO:</b> ${b.mot}</p>
+                    <p class="font-black text-sm text-red-600 uppercase">${b.info}</p>
+                    <p class="text-xs font-bold text-slate-600 uppercase">MOTIVO: ${b.mot}</p>
                 </div>
-                <button onclick="excluirBloqueioItem(${b.id})" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; padding: 8px 12px; border-radius: 6px; font-weight: 900; font-size: 10px; cursor: pointer; text-transform: uppercase;">Excluir</button>
+                <button onclick="apagarBloqueio(${b.id})" class="text-slate-300 hover:text-red-600 font-bold text-xs uppercase bg-slate-50 px-3 py-2 rounded-lg">Excluir</button>
             </div>`).join('');
     }
-
-    function f(data) { return data.split('-').reverse().join('/'); }
 })();
