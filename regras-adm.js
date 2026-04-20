@@ -149,83 +149,84 @@ window.renderVagas = function(container) {
     container.innerHTML = html + `</div>`;
 };
 /**
- * MÓDULO DE BLOQUEIOS NILO PET - VERSÃO AVANÇADA
+ * BLOQUEIO NILO PET - VERSÃO "FORÇAR BOTÃO"
  */
 (function() {
     window.bloqueiosAtivos = window.bloqueiosAtivos || [];
 
-    // 1. INJEÇÃO DO BOTÃO ACIMA DO "SAIR"
-    function injetarBotaoBloqueio() {
-        const botoesMenu = document.querySelectorAll('button');
-        let btnSair = null;
-        
-        // Localiza o botão "Sair" pelo texto
-        botoesMenu.forEach(btn => {
-            if (btn.innerText.toUpperCase().includes('SAIR')) btnSair = btn;
-        });
+    function injetarBotaoSempre() {
+        if (document.getElementById('btnBloqueioPainel')) return;
 
-        if (btnSair && !document.getElementById('btnBloqueioPainel')) {
-            const btnBlock = document.createElement('button');
-            btnBlock.id = "btnBloqueioPainel";
-            btnBlock.innerHTML = "🚫 BLOQUEAR HORÁRIO / DIA";
-            btnBlock.style = "width: 100%; padding: 12px; margin-bottom: 10px; background: #dc2626; color: white; border: none; border-radius: 8px; font-weight: 900; font-size: 11px; cursor: pointer; text-transform: uppercase; display: block;";
-            
-            btnBlock.onclick = (e) => {
-                e.preventDefault();
-                window.abrirBloqueios();
-            };
-            
+        // Tenta achar o botão SAIR ou o Menu Lateral
+        const botoes = Array.from(document.querySelectorAll('button, a'));
+        const btnSair = botoes.find(b => b.innerText.toUpperCase().includes('SAIR'));
+        const menuLateral = document.querySelector('nav') || document.querySelector('aside') || document.querySelector('.sidebar');
+
+        const btnBlock = document.createElement('button');
+        btnBlock.id = "btnBloqueioPainel";
+        btnBlock.innerHTML = "🚫 BLOQUEAR HORÁRIO / DIA";
+        btnBlock.style = "width: 100%; padding: 12px; margin: 10px 0; background: #dc2626; color: white; border: none; border-radius: 8px; font-weight: 900; font-size: 11px; cursor: pointer; text-transform: uppercase; display: block; z-index: 9999;";
+
+        btnBlock.onclick = (e) => {
+            e.preventDefault();
+            window.abrirBloqueios();
+        };
+
+        if (btnSair) {
             btnSair.parentNode.insertBefore(btnBlock, btnSair);
+        } else if (menuLateral) {
+            menuLateral.appendChild(btnBlock);
+        } else {
+            // Se tudo falhar, coloca no topo da página para você não ficar sem
+            document.body.prepend(btnBlock);
         }
     }
-    window.addEventListener('load', injetarBotaoBloqueio);
-    setInterval(injetarBotaoBloqueio, 2000); // Garante que o botão apareça
 
-    // 2. TELA DE BLOQUEIOS
+    // Executa várias vezes para garantir que o painel carregou
+    setInterval(injetarBotaoSempre, 1000);
+
     window.abrirBloqueios = function() {
         const container = document.getElementById('conteudo-principal') || document.body;
         
         container.innerHTML = `
-        <div style="padding: 20px; background: #fff; font-family: sans-serif; color: #1e293b;">
-            <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2 style="font-weight: 900; text-transform: uppercase; font-style: italic; color: #dc2626;">🚫 Gestão de Bloqueios</h2>
+        <div style="padding: 20px; background: #fff; font-family: sans-serif; color: #1e293b; min-height: 100vh;">
+            <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
+                <h2 style="font-weight: 900; text-transform: uppercase; font-style: italic; color: #dc2626; margin:0;">🚫 Gestão de Bloqueios</h2>
                 <button onclick="location.reload()" style="background: #64748b; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 11px;">⬅ Voltar ao Menu</button>
             </div>
 
-            <!-- FORMULÁRIO -->
             <div style="background: #f8fafc; padding: 20px; border-radius: 15px; border: 2px solid #e2e8f0; margin-bottom: 30px;">
-                <p style="font-weight: 900; font-size: 12px; text-transform: uppercase; color: #475569; margin-bottom: 15px;">Deseja Bloquear:</p>
+                <p style="font-weight: 900; font-size: 13px; text-transform: uppercase; color: #475569; margin-bottom: 15px;">Deseja Bloquear:</p>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     <div style="display: flex; flex-direction: column; gap: 10px;">
-                        <label style="font-size: 10px; font-weight: 900; color: #94a3b8;">DATA INICIAL (OU DIA ÚNICO)</label>
+                        <label style="font-size: 10px; font-weight: 900; color: #94a3b8; text-transform: uppercase;">Data Inicial</label>
                         <input type="date" id="block_data_inicio" style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: bold;">
                         
-                        <label style="font-size: 10px; font-weight: 900; color: #94a3b8;">DATA FINAL (PARA PERÍODOS/FÉRIAS)</label>
+                        <label style="font-size: 10px; font-weight: 900; color: #94a3b8; text-transform: uppercase;">Até que dia? (Para Períodos)</label>
                         <input type="date" id="block_data_fim" style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: bold;">
-                        <small style="color: #94a3b8; font-size: 9px;">* Deixe em branco se for apenas um dia</small>
                     </div>
 
                     <div style="display: flex; flex-direction: column; gap: 10px;">
                         <div style="display: flex; gap: 10px;">
                             <div style="flex:1">
-                                <label style="font-size: 10px; font-weight: 900; color: #94a3b8;">HORA INÍCIO</label>
+                                <label style="font-size: 10px; font-weight: 900; color: #94a3b8;">DAS (HORA)</label>
                                 <input type="time" id="block_hora_inicio" style="width:100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: bold;">
                             </div>
                             <div style="flex:1">
-                                <label style="font-size: 10px; font-weight: 900; color: #94a3b8;">HORA FIM</label>
+                                <label style="font-size: 10px; font-weight: 900; color: #94a3b8;">ATÉ ÀS</label>
                                 <input type="time" id="block_hora_fim" style="width:100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: bold;">
                             </div>
                         </div>
-                        <label style="font-size: 10px; font-weight: 900; color: #94a3b8;">MOTIVO / AVISO</label>
-                        <textarea id="block_motivo" placeholder="Ex: Férias, voltamos dia 16/10" style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: bold; height: 60px;"></textarea>
+                        <label style="font-size: 10px; font-weight: 900; color: #94a3b8; text-transform: uppercase;">Motivo do Bloqueio</label>
+                        <textarea id="block_motivo" placeholder="Ex: Férias, Manutenção, Feriado..." style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: bold; height: 60px;"></textarea>
                     </div>
                 </div>
 
-                <button onclick="confirmarBloqueio()" style="width: 100%; background: #dc2626; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: 900; text-transform: uppercase; cursor: pointer; margin-top: 20px;">Confirmar Bloqueio 🔒</button>
+                <button onclick="confirmarBloqueio()" style="width: 100%; background: #dc2626; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: 900; text-transform: uppercase; cursor: pointer; margin-top: 20px; font-size: 14px;">Confirmar Bloqueio 🔒</button>
             </div>
 
-            <h3 style="font-weight: 900; text-transform: uppercase; font-size: 12px; color: #64748b; border-bottom: 2px solid #f1f5f9; padding-bottom: 5px; margin-bottom: 15px;">Bloqueios Vigentes</h3>
+            <h3 style="font-weight: 900; text-transform: uppercase; font-size: 12px; color: #64748b; border-bottom: 2px solid #f1f5f9; padding-bottom: 5px; margin-bottom: 15px;">Bloqueios Vigentes na Agenda</h3>
             <div id="lista-viva">${renderizarListaViva()}</div>
         </div>`;
     };
@@ -237,24 +238,14 @@ window.renderVagas = function(container) {
         const h2 = document.getElementById('block_hora_fim').value;
         const mot = document.getElementById('block_motivo').value;
 
-        if (!d1 || !mot) return alert("Preencha ao menos a data inicial e o motivo.");
+        if (!d1 || !mot) return alert("Preencha ao menos a data e o motivo!");
 
-        let textoDestaque = "";
-        if (d2 && d2 !== d1) {
-            textoDestaque = `PERÍODO: ${formatar(d1)} até ${formatar(d2)}`;
-        } else if (h1 && h2) {
-            textoDestaque = `HORÁRIO: ${formatar(d1)} das ${h1} às ${h2}`;
-        } else {
-            textoDestaque = `DIA TODO: ${formatar(d1)} (Fechado)`;
-        }
+        let desc = "";
+        if (d2 && d2 !== d1) desc = `🛑 PERÍODO: ${f(d1)} até ${f(d2)}`;
+        else if (h1 && h2) desc = `⏰ HORÁRIO: ${f(d1)} das ${h1} às ${h2}`;
+        else desc = `📅 DIA INTEIRO: ${f(d1)} (Fechado)`;
 
-        window.bloqueiosAtivos.unshift({
-            id: Date.now(),
-            display: textoDestaque,
-            motivo: mot,
-            expiracao: d2 || d1
-        });
-
+        window.bloqueiosAtivos.unshift({ id: Date.now(), display: desc, motivo: mot });
         window.abrirBloqueios();
     };
 
@@ -264,17 +255,20 @@ window.renderVagas = function(container) {
     };
 
     function renderizarListaViva() {
-        if (!window.bloqueiosAtivos.length) return `<p style="text-align: center; color: #cbd5e1; padding: 20px;">Nenhum bloqueio registrado.</p>`;
+        if (!window.bloqueiosAtivos.length) return `<p style="text-align: center; color: #94a3b8; padding: 20px; border: 2px dashed #eee; border-radius: 10px;">Nenhum bloqueio ativo.</p>`;
         return window.bloqueiosAtivos.map(b => `
-            <div style="background: white; border: 1px solid #e2e8f0; border-left: 6px solid #dc2626; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="background: white; border: 1px solid #e2e8f0; border-left: 6px solid #dc2626; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
                 <div>
-                    <p style="font-weight: 900; font-size: 15px; margin: 0; color: #1e293b;">${b.display}</p>
-                    <p style="font-size: 13px; margin: 3px 0 0 0; color: #64748b;"><b>Motivo:</b> ${b.motivo}</p>
+                    <p style="font-weight: 900; font-size: 15px; margin: 0; color: #dc2626;">${b.display}</p>
+                    <p style="font-size: 13px; margin: 3px 0 0 0; color: #1e293b;"><b>MOTIVO:</b> ${b.motivo}</p>
                 </div>
-                <button onclick="removerBloqueioViva(${b.id})" style="background: #fef2f2; color: #dc2626; border: none; padding: 8px 12px; border-radius: 6px; font-weight: 900; font-size: 10px; cursor: pointer;">DESBLOQUEAR</button>
-            </div>
-        `).join('');
+                <button onclick="removerBloqueioViva(${b.id})" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; padding: 8px 12px; border-radius: 6px; font-weight: 900; font-size: 10px; cursor: pointer; text-transform: uppercase;">Desbloquear 🔓</button>
+            </div>`).join('');
     }
+
+    function f(data) { return data.split('-').reverse().join('/'); }
+})();
+
 
     function formatar(data) { return data.split('-').reverse().join('/'); }
 })();
