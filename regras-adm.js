@@ -153,10 +153,19 @@ window.confirmarNovoBloqueio = function(tipo) {
     const mot = document.getElementById('blkMotivo').value;
     if (!d1 || !mot) return alert("Preencha a data e o motivo!");
 
-    // Função interna para converter 2026-04-23 em 23/04/2026
+    // Função para converter AAAA-MM-DD para DD/MM/AAAA
     const formatarDataBR = (dataUS) => {
-        if (!dataUS) return "";
         const [ano, mes, dia] = dataUS.split('-');
+        return `${dia}/${mes}/${ano}`;
+    };
+
+    // Função para somar +1 dia na data de retorno
+    const calcularAmanha = (dataUS) => {
+        let data = new Date(dataUS + 'T12:00:00'); // T12:00 evita erros de fuso horário
+        data.setDate(data.getDate() + 1);
+        let dia = String(data.getDate()).padStart(2, '0');
+        let mes = String(data.getMonth() + 1).padStart(2, '0');
+        let ano = data.getFullYear();
         return `${dia}/${mes}/${ano}`;
     };
 
@@ -165,18 +174,22 @@ window.confirmarNovoBloqueio = function(tipo) {
     if (tipo === 'horario') {
         const h1 = document.getElementById('blkHoraInicio').value;
         const h2 = document.getElementById('blkHoraFim').value;
-        if(!h1 || !h2) return alert("Defina o intervalo de horário!");
-        info = `${formatarDataBR(d1)} (Das ${h1} às ${h2})`;
-    } else if (tipo === 'periodo') {
+        if(!h1 || !h2) return alert("Defina o horário!");
+        info = `Dia ${formatarDataBR(d1)} (Das ${h1} às ${h2})`;
+    } 
+    else if (tipo === 'dia') {
+        info = `Dia Inteiro: ${formatarDataBR(d1)}`;
+    }
+    else if (tipo === 'periodo') {
         const d2 = document.getElementById('blkDataFim').value;
-        if(!d2) return alert("Defina a data de retorno!");
+        if(!d2) return alert("Defina a data final!");
         
-        const dataBRInicio = formatarDataBR(d1);
-        const dataBRRetorno = formatarDataBR(d2);
+        const dataInicBR = formatarDataBR(d1);
+        const dataFimBR = formatarDataBR(d2);
+        const dataRetornoBR = calcularAmanha(d2); // Pega o dia seguinte da data final
         
-        info = `De ${dataBRInicio} até ${dataBRRetorno}`;
-        // Mensagem corrigida com formato BR e clareza no retorno
-        alert(`📢 Mensagem Automática:\nEstaremos fechados de ${dataBRInicio} e retornaremos em ${dataBRRetorno}.`);
+        info = `De ${dataInicBR} até ${dataFimBR} (Retorno: ${dataRetornoBR})`;
+        alert(`📢 Mensagem Automática:\nEstaremos fechados de ${dataInicBR} a ${dataFimBR}.\nRetornaremos dia ${dataRetornoBR}.`);
     }
 
     window.listaBloqueios.push({ tipo, info, motivo: mot, timestamp: Date.now() });
