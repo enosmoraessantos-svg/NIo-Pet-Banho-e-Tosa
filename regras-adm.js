@@ -191,6 +191,33 @@ window.confirmarNovoBloqueio = function(tipo) {
         info = `De ${dataInicBR} até ${dataFimBR} (Retorno: ${dataRetornoBR})`;
         alert(`📢 Mensagem Automática:\nEstaremos fechados de ${dataInicBR} a ${dataFimBR}.\nRetornaremos dia ${dataRetornoBR}.`);
     }
+/**
+ * INJEÇÃO FORÇADA DO BOTÃO DE BLOQUEIO
+ */
+function forcarBotaoBloqueio() {
+    // 1. Procura o container de botões da agenda
+    const containerBotoes = document.querySelector('.card-pet .flex.gap-2');
+    
+    // 2. Se o container existir e o botão ainda não estiver lá
+    if (containerBotoes && !document.getElementById('btnBloqueioGeral')) {
+        const btn = document.createElement('button');
+        btn.id = "btnBloqueioGeral";
+        btn.innerHTML = "Bloqueios 🚫";
+        // Estilo idêntico aos seus botões originais para não quebrar o layout
+        btn.style = "background: #ef4444; color: white; padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 10px; text-transform: uppercase; border: none; cursor: pointer; display: flex; align-items: center; gap: 5px;";
+        
+        btn.onclick = (e) => {
+            e.preventDefault();
+            window.abrirPainelBloqueio();
+        };
+
+        // Coloca o botão como o primeiro da lista
+        containerBotoes.prepend(btn);
+    }
+}
+
+// Executa a cada 500ms para garantir que o botão nunca suma
+setInterval(forcarBotaoBloqueio, 500);
 
     window.listaBloqueios.push({ tipo, info, motivo: mot, timestamp: Date.now() });
     salvarNoNavegador();
