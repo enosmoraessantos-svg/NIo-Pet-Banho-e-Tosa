@@ -25,7 +25,7 @@
         <div class="w-full max-w-md p-8 bg-white rounded-2xl shadow-2xl text-center">
             <h1 class="text-3xl font-black text-slate-800 uppercase italic">Nilo Pet</h1>
             <input type="password" id="senhaAdm" placeholder="Senha de acesso" class="w-full p-4 border-2 rounded-xl mb-4 text-center">
-            <button onclick="logar()" class="w-full bg-red-600 text-white font-black p-4 rounded-xl">ENTRAR</button>
+            <button onclick="logar()" class="w-full bg-red-600 text-white font-black p-4 rounded-xl shadow-lg">ENTRAR</button>
         </div>
     </div>
 
@@ -45,8 +45,8 @@
             <header class="flex justify-between items-center mb-8">
                 <h2 id="tituloPagina" class="text-2xl font-black text-slate-800 uppercase italic">Agendamentos Geral</h2>
                 <div class="flex gap-2">
-                    <button onclick="novoAgendamento()" class="bg-green-600 text-white p-3 rounded-xl shadow-sm font-bold text-xs uppercase">+ Novo</button>
-                    <button onclick="carregarDados()" class="bg-white border p-3 rounded-xl shadow-sm font-bold text-xs uppercase italic">Sincronizar ↻</button>
+                    <button onclick="novoAgendamento()" class="bg-green-600 text-white p-3 rounded-xl shadow-sm font-bold text-xs uppercase">+ NOVO</button>
+                    <button onclick="carregarDados()" class="bg-white border p-3 rounded-xl shadow-sm font-bold text-xs uppercase">Sincronizar ↻</button>
                 </div>
             </header>
             <div id="containerCards" class="grid grid-cols-1 gap-4"></div>
@@ -84,20 +84,15 @@
             await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: "PATCH", headers, body: JSON.stringify({ [campo]: valor }) });
         }
 
-        async function upVaga(id, campo, valor) {
-            const v = (campo === 'bloqueado') ? valor : (parseInt(valor) || 0);
-            await fetch(`${SB_URL}/configuracoes_agenda?id=eq.${id}`, { method: "PATCH", headers, body: JSON.stringify({ [campo]: v }) });
-        }
-
         async function novoAgendamento() {
             const nome = prompt("Nome do Cliente:");
             if(!nome) return;
-            await fetch(`${SB_URL}/agendamentos`, { method: "POST", headers, body: JSON.stringify({ cliente: nome.toUpperCase(), tipo_servico: 'avulso', data: new Date().toISOString().split('T')[0] }) });
+            await fetch(`${SB_URL}/agendamentos`, { method: "POST", headers, body: JSON.stringify({ cliente: nome.toUpperCase(), data: new Date().toISOString().split('T')[0] }) });
             carregarDados();
         }
 
         async function excluirRegistro(id) {
-            if(confirm("Excluir agendamento?")) {
+            if(confirm("Excluir?")) {
                 await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: "DELETE", headers });
                 carregarDados();
             }
@@ -113,7 +108,7 @@
 
         function renderizar() {
             const container = document.getElementById('containerCards');
-            if(filtroAtual === 'vagas') return typeof renderVagas === 'function' ? renderVagas(container) : null;
+            if(filtroAtual === 'vagas' && typeof renderVagas === 'function') return renderVagas(container);
 
             const hoje = new Date().toISOString().split('T')[0];
             let filtrados = [...todosDados];
@@ -123,8 +118,6 @@
             } else if (filtroAtual === 'pacotes') {
                 filtrados = todosDados.filter(i => i.tipo_servico && i.tipo_servico !== 'avulso');
                 filtrados.sort((a, b) => (a.cliente || '').localeCompare(b.cliente || ''));
-            } else {
-                filtrados.sort((a, b) => new Date(b.data) - new Date(a.data));
             }
 
             container.innerHTML = filtrados.map(item => {
@@ -137,7 +130,7 @@
                         <div>
                             <input type="text" value="${item.cliente || ''}" onchange="updateDB('${item.id}', 'cliente', this.value)" class="input-edit font-black text-lg text-slate-800 uppercase italic">
                             <input type="text" value="${item.whatsapp || ''}" onchange="updateDB('${item.id}', 'whatsapp', this.value)" class="input-edit text-[10px] text-slate-500 font-bold" placeholder="WHATSAPP">
-                            <input type="text" value="${item.rua || ''}" onchange="updateDB('${item.id}', 'rua', this.value)" class="input-edit text-[10px] text-slate-500 font-bold uppercase" placeholder="ENDEREÇO">
+                            <input type="text" value="${item.rua || ''}" onchange="updateDB('${item.id}', 'rua', this.value)" class="input-edit text-[10px] text-slate-500 font-bold uppercase" placeholder="RUA">
                         </div>
                         <div>
                             <input type="date" value="${item.data || ''}" onchange="updateDB('${item.id}', 'data', this.value)" class="input-edit text-xs font-bold">
@@ -149,7 +142,7 @@
                             </select>
                             ${ehPacote ? `<div class="mt-2 p-2 bg-purple-50 rounded border border-purple-100">
                                 <input type="date" value="${item.vencimento_pacote || ''}" onchange="updateDB('${item.id}', 'vencimento_pacote', this.value)" class="text-[9px] w-full bg-transparent">
-                                <input type="number" value="${item.valor_real_pago || 0}" onchange="updateDB('${item.id}', 'valor_real_pago', this.value)" class="text-[9px] font-black w-full bg-transparent" placeholder="VALOR PAGO">
+                                <input type="number" value="${item.valor_real_pago || 0}" onchange="updateDB('${item.id}', 'valor_real_pago', this.value)" class="text-[9px] font-black w-full bg-transparent" placeholder="PAGO">
                             </div>` : ''}
                         </div>
                         <div class="bg-slate-50 p-2 rounded border border-slate-200">
@@ -167,7 +160,7 @@
                                 <option value="dinheiro" ${item.forma_pagamento === 'dinheiro' ? 'selected' : ''}>Dinheiro</option>
                                 <option value="qrcode" ${item.forma_pagamento === 'qrcode' ? 'selected' : ''}>QR Code PIX</option>
                             </select>
-                            <button onclick="excluirRegistro('${item.id}')" class="w-full mt-2 text-red-500 text-[8px] font-bold">EXCLUIR</button>
+                            <button onclick="excluirRegistro('${item.id}')" class="w-full mt-2 text-red-500 text-[8px] font-bold uppercase">Excluir</button>
                         </div>
                     </div>
                 </div>`).join('');
