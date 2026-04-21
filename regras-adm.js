@@ -307,77 +307,99 @@ window.renderVagas = function(container) {
     }
     setInterval(injetarBotao, 1000);
 })();
+// 1. ADICIONE ESTA FUNÇÃO PARA O BOTÃO DE ADICIONAR (CRUD)
+async function novoAgendamento() {
+    const nome = prompt("Nome do Cliente:");
+    if (!nome) return;
+    const novo = { 
+        cliente: nome.toUpperCase(), 
+        data: new Date().toISOString().split('T')[0], 
+        tipo_servico: 'avulso' 
+    };
+    await fetch(`${SB_URL}/agendamentos`, { method: "POST", headers, body: JSON.stringify(novo) });
+    carregarDados();
+}
+
+// 2. SUBSTITUA A SUA FUNÇÃO RENDERIZAR POR ESTA
 function renderizar() {
     const container = document.getElementById('containerCards');
     if(filtroAtual === 'vagas') return renderVagas(container);
 
+    // Botão de Adicionar no topo da lista
+    let htmlBase = `<button onclick="novoAgendamento()" class="w-full mb-4 bg-green-600 text-white font-black p-3 rounded-xl shadow-lg uppercase text-xs">+ Adicionar Novo Agendamento</button>`;
+
     const hoje = new Date().toISOString().split('T')[0];
     let filtrados = [...todosDados];
 
-    // Regras de Filtro dos Botões
+    // Regras dos Filtros
     if(filtroAtual === 'dia') {
         filtrados = todosDados.filter(i => i.data === hoje);
     } else if (filtroAtual === 'pacotes') {
-        // Na aba pacotes: apenas pacotes, agrupados por cliente
+        // Mostra apenas pacotes e agrupa por cliente
         filtrados = todosDados.filter(i => i.tipo_servico && i.tipo_servico !== 'avulso');
         filtrados.sort((a, b) => a.cliente.localeCompare(b.cliente));
+    } else {
+        // Geral: Ordena por data (mais recentes primeiro)
+        filtrados.sort((a, b) => new Date(b.data) - new Date(a.data));
     }
 
-    container.innerHTML = filtrados.map(item => {
-        // Cálculos para os campos editáveis
+    container.innerHTML = htmlBase + filtrados.map(item => {
         const vServico = parseFloat(item.valor_servico) || 0;
         const vTaxa = parseFloat(item.taxa_leva_tras) || 0;
         const vTotal = vServico + vTaxa;
-        const vComDesconto = item.total_com_desconto || 0;
+        const ehPacote = item.tipo_servico && item.tipo_servico !== 'avulso';
 
         return `
-        <div class="card-pet shadow-sm border-l-4 ${item.tipo_servico !== 'avulso' ? 'border-purple-500' : 'border-red-600'}">
+        <div class="card-pet shadow-md border-l-4 ${ehPacote ? 'border-purple-600' : 'border-red-600'} bg-white mb-4 p-4 relative">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 
-                <!-- Informações Gerais (Tudo editável) -->
-                <div>
-                    <input type="text" value="${item.cliente || ''}" onchange="updateDB('${item.id}', 'cliente', this.value)" class="input-edit font-black text-lg text-slate-800 uppercase italic">
-                    <input type="text" value="${item.whatsapp || ''}" onchange="updateDB('${item.id}', 'whatsapp', this.value)" class="input-edit text-[10px] font-bold text-slate-500 uppercase" placeholder="WHATSAPP">
-                    <input type="text" value="${item.rua || ''}" onchange="updateDB('${item.id}', 'rua', this.value)" class="input-edit text-[10px] font-bold text-slate-500 uppercase" placeholder="ENDEREÇO">
-                    <input type="text" value="${item.pet_nome || ''}" onchange="updateDB('${item.id}', 'pet_nome', this.value)" class="input-edit text-xs font-bold text-red-600" placeholder="NOME DO PET">
+                <!-- Coluna 1: Informações do Cliente (Tudo Editável) -->
+                <div class="space-y-2">
+                    <label class="text-[8px] font-black text-slate-400 uppercase">Dados do Cliente</label>
+                    <input type="text" value="${item.cliente || ''}" onchange="updateDB('${item.id}', 'cliente', this.value)" class="input-edit font-black text-slate-800 uppercase italic w-full">
+                    <input type="text" value="${item.whatsapp || ''}" onchange="updateDB('${item.id}', 'whatsapp', this.value)" class="input-edit text-[10px] font-bold text-blue-600 w-full" placeholder="WHATSAPP">
+                    <input type="text" value="${item.rua || ''}" onchange="updateDB('${item.id}', 'rua', this.value)" class="input-edit text-[10px] font-bold uppercase w-full" placeholder="ENDEREÇO/RUA">
+                    <input type="text" value="${item.pet_nome || ''}" onchange="updateDB('${item.id}', 'pet_nome', this.value)" class="input-edit text-xs font-black text-red-600 w-full" placeholder="NOME DO PET">
                 </div>
 
-                <!-- Configuração do Serviço / Pacote -->
-                <div>
-                    <input type="date" value="${item.data || ''}" onchange="updateDB('${item.id}', 'data', this.value)" class="input-edit text-xs font-bold">
-                    <select onchange="updateDB('${item.id}', 'tipo_servico', this.value)" class="input-edit text-[10px] font-black uppercase italic mt-1">
+                <!-- Coluna 2: Serviço e Detalhes do Pacote -->
+                <div class="space-y-2">
+                    <label class="text-[8px] font-black text-slate-400 uppercase">Serviço</label>
+                    <input type="date" value="${item.data || ''}" onchange="updateDB('${item.id}', 'data', this.value)" class="input-edit text-xs font-bold w-full">
+                    <select onchange="updateDB('${item.id}', 'tipo_servico', this.value)" class="input-edit text-[10px] font-black uppercase italic w-full">
                         <option value="avulso" ${item.tipo_servico === 'avulso' ? 'selected' : ''}>Avulso</option>
                         <option value="pacote_basico" ${item.tipo_servico === 'pacote_basico' ? 'selected' : ''}>Pacote Básico</option>
                         <option value="pacote_tosa" ${item.tipo_servico === 'pacote_tosa' ? 'selected' : ''}>Básico com Tosa</option>
                         <option value="pacote_premium" ${item.tipo_servico === 'pacote_premium' ? 'selected' : ''}>Pacote Premium</option>
                     </select>
 
-                    ${item.tipo_servico !== 'avulso' ? `
-                        <div class="mt-2 p-2 bg-purple-50 rounded">
-                            <label class="text-[7px] font-black uppercase">Vencimento / Valor Pago</label>
-                            <input type="date" value="${item.vencimento_pacote || ''}" onchange="updateDB('${item.id}', 'vencimento_pacote', this.value)" class="bg-transparent text-[10px] w-full border-b">
-                            <input type="number" value="${item.valor_real_pago || 0}" onchange="updateDB('${item.id}', 'valor_real_pago', this.value)" class="bg-transparent text-[10px] font-black w-full mt-1" placeholder="R$ PAGO">
+                    ${ehPacote ? `
+                        <div class="bg-purple-50 p-2 rounded-lg border border-purple-200 mt-2">
+                            <label class="text-[7px] font-black text-purple-700 uppercase">Gestão de Pacote</label>
+                            <input type="date" value="${item.vencimento_pacote || ''}" onchange="updateDB('${item.id}', 'vencimento_pacote', this.value)" class="bg-transparent text-[10px] w-full border-b border-purple-200 mb-1">
+                            <input type="number" placeholder="VALOR PACOTE" value="${item.valor_pacote || 0}" onchange="updateDB('${item.id}', 'valor_pacote', this.value)" class="bg-transparent text-[10px] w-full border-b border-purple-200 mb-1">
+                            <input type="number" placeholder="VALOR REAL PAGO" value="${item.valor_real_pago || 0}" onchange="updateDB('${item.id}', 'valor_real_pago', this.value)" class="bg-transparent text-[10px] font-black w-full text-purple-800">
                         </div>
                     ` : ''}
                 </div>
 
-                <!-- Financeiro ADM -->
-                <div class="bg-slate-100 p-2 rounded relative">
-                    <div class="grid grid-cols-2 gap-x-2 text-[9px] font-black uppercase">
+                <!-- Coluna 3: Financeiro ADM (Campos Solicitados) -->
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <div class="grid grid-cols-2 gap-2 text-[9px] font-black uppercase">
                         <span>Valor Serv:</span>
-                        <input type="number" value="${vServico}" onchange="updateDB('${item.id}', 'valor_servico', this.value)" class="bg-white px-1 rounded">
+                        <input type="number" value="${vServico}" onchange="updateDB('${item.id}', 'valor_servico', this.value)" class="bg-white border rounded px-1 text-right">
                         
                         <span>Leva/Trás:</span>
-                        <input type="number" value="${vTaxa}" onchange="updateDB('${item.id}', 'taxa_leva_tras', this.value)" class="bg-white px-1 rounded">
+                        <input type="number" value="${vTaxa}" onchange="updateDB('${item.id}', 'taxa_leva_tras', this.value)" class="bg-white border rounded px-1 text-right text-orange-600">
                         
-                        <span class="text-red-600 mt-1">Total:</span>
-                        <span class="mt-1">R$ ${vTotal.toFixed(2)}</span>
+                        <span class="text-red-600 text-xs mt-1">Total:</span>
+                        <span class="text-xs mt-1 text-right">R$ ${vTotal.toFixed(2)}</span>
 
-                        <span class="text-blue-600">Com Desconto:</span>
-                        <input type="number" value="${vComDesconto}" onchange="updateDB('${item.id}', 'total_com_desconto', this.value)" class="bg-white px-1 rounded">
+                        <span class="text-blue-600">C/ Desconto:</span>
+                        <input type="number" value="${item.total_com_desconto || 0}" onchange="updateDB('${item.id}', 'total_com_desconto', this.value)" class="bg-white border rounded px-1 text-right">
                     </div>
 
-                    <select onchange="updateDB('${item.id}', 'forma_pagamento', this.value)" class="input-edit text-[9px] font-black uppercase mt-2 border-t pt-2">
+                    <select onchange="updateDB('${item.id}', 'forma_pagamento', this.value)" class="w-full text-[9px] font-black uppercase mt-3 p-1 border rounded bg-white">
                         <option value="">Forma de Pagamento</option>
                         <option value="pix" ${item.forma_pagamento === 'pix' ? 'selected' : ''}>PIX</option>
                         <option value="credito" ${item.forma_pagamento === 'credito' ? 'selected' : ''}>Cartão de Crédito</option>
@@ -386,16 +408,15 @@ function renderizar() {
                         <option value="qrcode" ${item.forma_pagamento === 'qrcode' ? 'selected' : ''}>QR Code PIX</option>
                     </select>
 
-                    <button onclick="excluirRegistro('${item.id}')" class="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 text-[8px] flex items-center justify-center shadow-lg">X</button>
+                    <button onclick="excluirRegistro('${item.id}')" class="w-full mt-3 bg-red-100 text-red-600 text-[8px] font-black p-1 rounded uppercase hover:bg-red-200 transition">Excluir Registro</button>
                 </div>
-
             </div>
         </div>`).join('');
 }
 
-// Função de apoio para excluir (caso não tenha)
+// 3. ADICIONE ESTA FUNÇÃO PARA EXCLUIR
 async function excluirRegistro(id) {
-    if(confirm('Excluir este agendamento?')) {
+    if(confirm("Tem certeza que deseja apagar este registro permanentemente?")) {
         await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: "DELETE", headers });
         carregarDados();
     }
