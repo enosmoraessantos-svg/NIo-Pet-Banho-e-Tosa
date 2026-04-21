@@ -308,100 +308,68 @@ window.renderVagas = function(container) {
     setInterval(injetarBotao, 1000);
 })();
 /**
- * MÓDULO 4: GESTÃO DE AGENDAMENTOS E PACOTES (ADM)
+ * INTEGRAÇÃO DAS FERRAMENTAS NOS BOTÕES EXISTENTES
  */
 (function() {
-    // 1. DATA STORAGE
+    // 1. DATABASE UNIFICADO
     window.dbAgendamentos = JSON.parse(localStorage.getItem('nilo_agendamentos')) || [];
 
     const salvarDB = () => {
         localStorage.setItem('nilo_agendamentos', JSON.stringify(window.dbAgendamentos));
-        // Dispara evento para atualizar outras abas se estiverem abertas
-        window.dispatchEvent(new Event('storage'));
     };
 
-    // 2. FUNÇÃO PARA ADICIONAR/EDITAR
-    window.salvarAgendamento = function(id = null) {
-        const form = document.querySelector('#formAgendamento');
-        const dados = {
-            id: id || Date.now(),
-            cliente: form.cliente.value,
-            pet: form.pet.value,
-            servico: form.servico.value, // "avulso" ou "pacote_basico", etc.
-            data: form.data.value,
-            horario: form.horario.value,
-            leva_tras: parseFloat(form.leva_tras.value || 0),
-            valor_servico: parseFloat(form.valor_servico.value || 0),
-            desconto: parseFloat(form.desconto.value || 0),
-            forma_pagamento: form.forma_pagamento.value,
-            vencimento_pacote: form.vencimento_pacote ? form.vencimento_pacote.value : null,
-            isPacote: form.servico.value.includes('pacote')
-        };
-
-        dados.total = (dados.valor_servico + dados.leva_tras) - dados.desconto;
-
-        if (id) {
-            const index = window.dbAgendamentos.findIndex(a => a.id === id);
-            window.dbAgendamentos[index] = dados;
-        } else {
-            window.dbAgendamentos.push(dados);
-        }
-
-        salvarDB();
-        alert("Dados salvos!");
-        window.renderAgendamentos(window.abaAtual);
-    };
-
-    // 3. RENDERIZAÇÃO DAS TELAS
-    window.renderAgendamentos = function(aba) {
-        window.abaAtual = aba;
+    // 2. LÓGICA DE RENDERIZAÇÃO (Acoplada aos seus botões)
+    window.renderPainelAgendamento = function(tipo) {
         const container = document.querySelector('.card-pet')?.parentNode;
         if (!container) return;
 
-        // Ordenação por data e horário
+        // Ordenação por data/hora
         window.dbAgendamentos.sort((a, b) => (a.data + a.horario).localeCompare(b.data + b.horario));
 
         let filtrados = window.dbAgendamentos;
-        if (aba === 'dia') {
+        if (tipo === 'dia') {
             const hoje = new Date().toISOString().split('T')[0];
             filtrados = window.dbAgendamentos.filter(a => a.data === hoje);
-        } else if (aba === 'pacotes') {
-            filtrados = window.dbAgendamentos.filter(a => a.isPacote);
+        } else if (tipo === 'pacotes') {
+            filtrados = window.dbAgendamentos.filter(a => a.servico.includes('pacote'));
         }
 
         let html = `
-            <div class="bg-white p-6 rounded-2xl shadow-lg">
-                <div class="flex justify-between mb-6">
-                    <h2 class="font-black uppercase italic text-slate-800">📋 ${aba.toUpperCase()}</h2>
-                    <button onclick="abrirModalAgendamento()" class="bg-green-500 text-white px-4 py-2 rounded-lg font-bold text-[10px] uppercase">+ NOVO AGENDAMENTO</button>
+            <div class="bg-white p-4 rounded-2xl border shadow-sm">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="font-black text-slate-800 uppercase italic">📋 Gestão: ${tipo}</h2>
+                    <button onclick="abrirFormAgendamento()" class="bg-blue-600 text-white px-3 py-2 rounded-lg font-bold text-[10px]">+ ADICIONAR NOVO</button>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs">
-                        <thead class="bg-slate-100 uppercase font-black text-slate-600">
-                            <tr>
-                                <th class="p-3">Data/Hora</th>
-                                <th class="p-3">Cliente/Pet</th>
-                                <th class="p-3">Serviço</th>
-                                <th class="p-3">Financeiro ADM</th>
-                                <th class="p-3">Pagamento</th>
-                                <th class="p-3">Ações</th>
+                    <table class="w-full text-[11px] border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-600 uppercase">
+                                <th class="p-2 border">Data/Hora</th>
+                                <th class="p-2 border">Cliente/Pet</th>
+                                <th class="p-2 border">Serviço/Venc.</th>
+                                <th class="p-2 border">Financeiro ADM</th>
+                                <th class="p-2 border">Pagamento</th>
+                                <th class="p-2 border">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
                             ${filtrados.map(a => `
-                                <tr class="border-b hover:bg-slate-50">
-                                    <td class="p-3"><b>${a.data}</b><br>${a.horario}</td>
-                                    <td class="p-3"><b>${a.cliente}</b><br>🐾 ${a.pet}</td>
-                                    <td class="p-3 uppercase text-[10px] font-bold">${a.servico.replace('_', ' ')} ${a.vencimento_pacote ? `<br>📅 Venc: ${a.vencimento_pacote}` : ''}</td>
-                                    <td class="p-3">
-                                        Serv: R$ ${a.valor_servico.toFixed(2)}<br>
-                                        Leva/Traz: R$ ${a.leva_tras.toFixed(2)}<br>
-                                        <b class="text-blue-600">Total: R$ ${a.total.toFixed(2)}</b>
+                                <tr class="border-b">
+                                    <td class="p-2"><b>${a.data}</b><br>${a.horario}</td>
+                                    <td class="p-2"><b>${a.cliente}</b><br>🐾 ${a.pet}</td>
+                                    <td class="p-2">
+                                        <span class="font-bold uppercase">${a.servico}</span>
+                                        ${a.vencimento ? `<br><span class="text-red-500">Venc: ${a.vencimento}</span>` : ''}
                                     </td>
-                                    <td class="p-3 uppercase font-bold text-green-600">${a.forma_pagamento}</td>
-                                    <td class="p-3">
-                                        <button onclick="abrirModalAgendamento(${a.id})" class="text-blue-500 mr-2">✏️</button>
-                                        <button onclick="excluirAgendamento(${a.id})" class="text-red-500">🗑️</button>
+                                    <td class="p-2 bg-slate-50">
+                                        Serv: R$ ${a.valor_servico}<br>
+                                        Leva/Tras: R$ ${a.taxa_entrega}<br>
+                                        <b class="text-blue-700">Total: R$ ${a.total}</b>
+                                    </td>
+                                    <td class="p-2 font-bold text-green-600 uppercase">${a.forma_pagamento}</td>
+                                    <td class="p-2">
+                                        <button onclick="abrirFormAgendamento(${a.id})" class="mr-1">✏️</button>
+                                        <button onclick="excluirItem(${a.id})" class="text-red-500">🗑️</button>
                                     </td>
                                 </tr>
                             `).join('')}
@@ -413,76 +381,111 @@ window.renderVagas = function(container) {
         container.innerHTML = html;
     };
 
-    window.abrirModalAgendamento = function(id = null) {
-        const a = id ? window.dbAgendamentos.find(x => x.id === id) : {};
-        const modalHtml = `
-            <div id="modalAdd" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4">
-                <form id="formAgendamento" class="bg-white p-6 rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-                    <h3 class="font-black mb-4 uppercase">${id ? 'Editar' : 'Novo'} Registro</h3>
-                    
-                    <div class="grid grid-cols-2 gap-3 mb-4">
-                        <input name="cliente" value="${a.cliente || ''}" placeholder="Nome do Cliente" class="border p-2 rounded text-sm font-bold w-full" required>
-                        <input name="pet" value="${a.pet || ''}" placeholder="Nome do Pet" class="border p-2 rounded text-sm font-bold w-full" required>
+    // 3. FORMULÁRIO COM CAMPOS ADM (Tudo editável)
+    window.abrirFormAgendamento = function(id = null) {
+        const item = id ? window.dbAgendamentos.find(x => x.id === id) : {};
+        
+        const modal = document.createElement('div');
+        modal.style = "position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px;";
+        modal.innerHTML = `
+            <div class="bg-white p-6 rounded-2xl w-full max-w-md shadow-2xl overflow-y-auto" style="max-height: 90vh;">
+                <h3 class="font-black uppercase mb-4 text-slate-800">Editar Agendamento / Pacote</h3>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <input id="f_cliente" placeholder="Cliente" value="${item.cliente || ''}" class="border p-2 rounded font-bold">
+                    <input id="f_pet" placeholder="Nome do Pet" value="${item.pet || ''}" class="border p-2 rounded font-bold">
+                </div>
+                <select id="f_servico" class="w-full border p-2 mb-3 font-bold uppercase">
+                    <option value="avulso" ${item.servico === 'avulso' ? 'selected' : ''}>AVULSO</option>
+                    <option value="pacote_basico" ${item.servico === 'pacote_basico' ? 'selected' : ''}>PACOTE BÁSICO</option>
+                    <option value="pacote_tosa" ${item.servico === 'pacote_tosa' ? 'selected' : ''}>PACOTE COM TOSA</option>
+                    <option value="pacote_premium" ${item.servico === 'pacote_premium' ? 'selected' : ''}>PACOTE PREMIUM</option>
+                </select>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <input type="date" id="f_data" value="${item.data || ''}" class="border p-2 rounded">
+                    <input type="time" id="f_horario" value="${item.horario || ''}" class="border p-2 rounded">
+                </div>
+                <div class="bg-blue-50 p-3 rounded-lg mb-3">
+                    <p class="text-[10px] font-black uppercase mb-2">Financeiro ADM</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" id="f_valor" placeholder="Valor Serviço" value="${item.valor_servico || ''}" class="border p-2 rounded">
+                        <input type="number" id="f_taxa" placeholder="Taxa Leva/Tras" value="${item.taxa_entrega || ''}" class="border p-2 rounded">
+                        <input type="number" id="f_desc" placeholder="Desconto" value="${item.desconto || ''}" class="border p-2 rounded">
+                        <input type="date" id="f_venc" title="Vencimento Pacote" value="${item.vencimento || ''}" class="border p-2 rounded">
                     </div>
-
-                    <select name="servico" class="w-full border p-2 rounded mb-4 text-sm font-bold" onchange="toggleCamposPacote(this.value)">
-                        <option value="avulso" ${a.servico === 'avulso' ? 'selected' : ''}>AVULSO</option>
-                        <option value="pacote_basico" ${a.servico === 'pacote_basico' ? 'selected' : ''}>PACOTE BÁSICO</option>
-                        <option value="pacote_tosa" ${a.servico === 'pacote_tosa' ? 'selected' : ''}>PACOTE COM TOSA</option>
-                        <option value="pacote_premium" ${a.servico === 'pacote_premium' ? 'selected' : ''}>PACOTE PREMIUM</option>
-                    </select>
-
-                    <div id="camposPacote" class="${a.isPacote ? '' : 'hidden'} mb-4">
-                        <label class="text-[10px] font-black">VENCIMENTO PACOTE:</label>
-                        <input type="date" name="vencimento_pacote" value="${a.vencimento_pacote || ''}" class="w-full border p-2 rounded text-sm">
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3 mb-4">
-                        <input type="date" name="data" value="${a.data || ''}" class="border p-2 rounded text-sm w-full" required>
-                        <input type="time" name="horario" value="${a.horario || ''}" class="border p-2 rounded text-sm w-full" required>
-                    </div>
-
-                    <div class="bg-slate-50 p-4 rounded-xl border-2 border-dashed mb-4">
-                        <p class="text-[10px] font-black text-slate-500 mb-2 uppercase">Área Administrativa</p>
-                        <div class="grid grid-cols-2 gap-2 mb-2">
-                            <label class="text-[10px]">VALOR SERVIÇO:</label>
-                            <input type="number" name="valor_servico" value="${a.valor_servico || 0}" step="0.01" class="border rounded px-1">
-                            
-                            <label class="text-[10px]">TAXA LEVA/TRAZ:</label>
-                            <input type="number" name="leva_tras" value="${a.leva_tras || 0}" step="0.01" class="border rounded px-1">
-                            
-                            <label class="text-[10px]">DESCONTO:</label>
-                            <input type="number" name="desconto" value="${a.desconto || 0}" step="0.01" class="border rounded px-1">
-                        </div>
-                    </div>
-
-                    <select name="forma_pagamento" class="w-full border p-2 rounded mb-4 text-sm font-bold bg-green-50">
-                        <option value="pix" ${a.forma_pagamento === 'pix' ? 'selected' : ''}>PIX</option>
-                        <option value="qrcode_pix" ${a.forma_pagamento === 'qrcode_pix' ? 'selected' : ''}>QR CODE PIX</option>
-                        <option value="cartao_credito" ${a.forma_pagamento === 'cartao_credito' ? 'selected' : ''}>CARTÃO CRÉDITO</option>
-                        <option value="cartao_debito" ${a.forma_pagamento === 'cartao_debito' ? 'selected' : ''}>CARTÃO DÉBITO</option>
-                        <option value="dinheiro" ${a.forma_pagamento === 'dinheiro' ? 'selected' : ''}>DINHEIRO</option>
-                    </select>
-
-                    <div class="flex gap-2">
-                        <button type="button" onclick="document.getElementById('modalAdd').remove()" class="flex-1 bg-slate-200 p-3 rounded-lg font-bold text-xs">CANCELAR</button>
-                        <button type="button" onclick="salvarAgendamento(${id})" class="flex-1 bg-blue-600 text-white p-3 rounded-lg font-bold text-xs">SALVAR AGORA</button>
-                    </div>
-                </form>
+                </div>
+                <select id="f_pag" class="w-full border p-2 mb-4 font-bold bg-green-50">
+                    <option value="pix">PIX</option>
+                    <option value="qrcode_pix">QRCODE PIX</option>
+                    <option value="cartao_credito">CARTÃO CRÉDITO</option>
+                    <option value="cartao_debito">CARTÃO DÉBITO</option>
+                    <option value="dinheiro">DINHEIRO</option>
+                </select>
+                <div class="flex gap-2">
+                    <button id="btnFechar" class="flex-1 bg-slate-200 p-3 rounded-xl font-bold">CANCELAR</button>
+                    <button id="btnSalvar" class="flex-1 bg-green-600 text-white p-3 rounded-xl font-bold">SALVAR</button>
+                </div>
             </div>
         `;
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
-    };
 
-    window.toggleCamposPacote = function(val) {
-        document.getElementById('camposPacote').classList.toggle('hidden', !val.includes('pacote'));
-    };
+        document.body.appendChild(modal);
 
-    window.excluirAgendamento = function(id) {
-        if (confirm("Deseja excluir permanentemente?")) {
-            window.dbAgendamentos = window.dbAgendamentos.filter(a => a.id !== id);
+        document.getElementById('btnFechar').onclick = () => modal.remove();
+        document.getElementById('btnSalvar').onclick = () => {
+            const v_serv = parseFloat(document.getElementById('f_valor').value || 0);
+            const v_taxa = parseFloat(document.getElementById('f_taxa').value || 0);
+            const v_desc = parseFloat(document.getElementById('f_desc').value || 0);
+            
+            const novoDado = {
+                id: id || Date.now(),
+                cliente: document.getElementById('f_cliente').value,
+                pet: document.getElementById('f_pet').value,
+                servico: document.getElementById('f_servico').value,
+                data: document.getElementById('f_data').value,
+                horario: document.getElementById('f_horario').value,
+                valor_servico: v_serv,
+                taxa_entrega: v_taxa,
+                desconto: v_desc,
+                total: (v_serv + v_taxa) - v_desc,
+                vencimento: document.getElementById('f_venc').value,
+                forma_pagamento: document.getElementById('f_pag').value
+            };
+
+            if (id) {
+                const idx = window.dbAgendamentos.findIndex(x => x.id === id);
+                window.dbAgendamentos[idx] = novoDado;
+            } else {
+                window.dbAgendamentos.push(novoDado);
+            }
+
             salvarDB();
-            window.renderAgendamentos(window.abaAtual);
+            modal.remove();
+            window.renderPainelAgendamento('geral');
+        };
+    };
+
+    window.excluirItem = (id) => {
+        if(confirm("Excluir?")) {
+            window.dbAgendamentos = window.dbAgendamentos.filter(x => x.id !== id);
+            salvarDB();
+            window.renderPainelAgendamento('geral');
         }
     };
+
+    // 4. ATRIBUIÇÃO AOS BOTÕES EXISTENTES (Mapping)
+    function conectarBotoes() {
+        const btnGeral = document.querySelector('button:contains("Agendamentos Geral")') || document.querySelector('#btnGeral'); 
+        const btnDia = document.querySelector('button:contains("Agendamentos do Dia")') || document.querySelector('#btnDia');
+        const btnPacotes = document.querySelector('button:contains("Controle de Pacotes")') || document.querySelector('#btnPacote');
+
+        if(btnGeral) btnGeral.onclick = () => window.renderPainelAgendamento('geral');
+        if(btnDia) btnDia.onclick = () => window.renderPainelAgendamento('dia');
+        if(btnPacotes) btnPacotes.onclick = () => window.renderPainelAgendamento('pacotes');
+    }
+
+    // jQuery-like selector helper para encontrar pelo texto se não houver ID
+    if (!window.jQuery) {
+        window.addEventListener('load', conectarBotoes);
+    }
+    setInterval(conectarBotoes, 1000);
+
 })();
