@@ -311,119 +311,102 @@ window.renderVagas = function(container) {
     const renderOriginal = window.renderizar;
 
     window.renderizar = function() {
-        // PRESERVA SEU BOTÃO DE VAGAS ORIGINAL
+        // Se for Vagas, usa seu código original e sai da regra
         if (window.filtroAtual === 'vagas') return renderOriginal();
 
         const container = document.getElementById('containerCards');
-        let filtrados = [...window.todosDados];
+        
+        // Garantia de que todosDados é um array
+        let lista = Array.isArray(window.todosDados) ? [...window.todosDados] : [];
 
-        // 1. LÓGICA DE FILTROS E AGRUPAMENTO PARA PACOTES
+        // FILTROS
         if (window.filtroAtual === 'dia') {
             const hoje = new Date().toISOString().split('T')[0];
-            filtrados = filtrados.filter(i => i.agenda_data === hoje || JSON.stringify(i).includes(hoje));
+            lista = lista.filter(i => (i.agenda_data === hoje) || JSON.stringify(i).includes(hoje));
         } else if (window.filtroAtual === 'pacotes') {
-            // Filtra apenas quem tem plano e agrupa por cliente para ver "quantidade"
-            filtrados = filtrados.filter(i => i.plano && i.plano.includes('pacote'));
+            lista = lista.filter(i => i.plano && i.plano.includes('pacote'));
         }
 
-        // Ordenação Geral por Data/Hora
-        filtrados.sort((a, b) => (a.agenda_data + a.agenda_hora).localeCompare(b.agenda_data + b.agenda_hora));
+        // Se a lista estiver vazia após o filtro
+        if (lista.length === 0) {
+            container.innerHTML = `<div class="p-10 text-center font-bold text-slate-400 border-2 border-dashed rounded-xl uppercase">Nenhum agendamento encontrado para este filtro.</div>`;
+            return;
+        }
 
-        // 2. CONSTRUÇÃO DA INTERFACE ADM TIPO "PLANILHA" EDITÁVEL
         container.innerHTML = `
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-slate-200">
-                <div class="bg-slate-800 p-4 flex justify-between items-center">
-                    <h3 class="text-white font-black uppercase italic text-sm">Painel de Controle: ${window.filtroAtual}</h3>
-                    <button onclick="window.novoAgendamentoAdm()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-black text-[10px] uppercase transition">+ Adicionar Registro</button>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-[11px] border-collapse">
-                        <thead class="bg-slate-100 text-slate-600 uppercase font-black border-b-2 border-slate-200">
-                            <tr>
-                                <th class="p-3">📅 Data/Hora</th>
-                                <th class="p-3">🐾 Cliente & Pet</th>
-                                <th class="p-3">📦 Serviço/Pacote</th>
-                                <th class="p-3 bg-blue-50">💰 Financeiro ADM</th>
-                                <th class="p-3">💳 Pagamento</th>
-                                <th class="p-3 text-center">⚙️</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            ${filtrados.map(item => {
-                                const vServ = parseFloat(item.valor_servico || 0);
-                                const vTaxa = parseFloat(item.taxa_leva_tras || 0);
-                                const total = vServ + vTaxa;
-                                return `
-                                <tr class="hover:bg-blue-50/50 transition">
-                                    <td class="p-3">
-                                        <input type="date" value="${item.agenda_data || ''}" onchange="updateDB('${item.id}', 'agenda_data', this.value)" class="font-bold block bg-transparent outline-none mb-1">
-                                        <input type="time" value="${item.agenda_hora || ''}" onchange="updateDB('${item.id}', 'agenda_hora', this.value)" class="text-slate-400 font-bold bg-transparent outline-none">
-                                    </td>
-                                    <td class="p-3">
-                                        <input type="text" value="${item.cliente || ''}" onchange="updateDB('${item.id}', 'cliente', this.value)" class="font-black uppercase text-slate-800 w-full bg-transparent outline-none mb-1" placeholder="Cliente">
-                                        <input type="text" value="${item.pet_nome || ''}" onchange="updateDB('${item.id}', 'pet_nome', this.value)" class="font-bold text-blue-500 w-full bg-transparent outline-none italic" placeholder="Nome do Pet">
-                                    </td>
-                                    <td class="p-3">
-                                        <select onchange="updateDB('${item.id}', 'plano', this.value)" class="font-black uppercase w-full bg-transparent outline-none mb-1 cursor-pointer">
-                                            <option value="avulso" ${item.plano === 'avulso' ? 'selected' : ''}>AVULSO</option>
-                                            <option value="pacote_basico" ${item.plano === 'pacote_basico' ? 'selected' : ''}>PACOTE BÁSICO</option>
-                                            <option value="pacote_tosa" ${item.plano === 'pacote_tosa' ? 'selected' : ''}>PACOTE C/ TOSA</option>
-                                            <option value="pacote_premium" ${item.plano === 'pacote_premium' ? 'selected' : ''}>PACOTE PREMIUM</option>
-                                        </select>
-                                        <div class="flex items-center gap-1 text-[9px] font-black text-purple-600">
-                                            <span>VENC:</span>
-                                            <input type="date" value="${item.vencimento_pacote || ''}" onchange="updateDB('${item.id}', 'vencimento_pacote', this.value)" class="bg-transparent outline-none">
-                                        </div>
-                                    </td>
-                                    <td class="p-3 bg-blue-50/50">
-                                        <div class="space-y-1">
-                                            <div class="flex justify-between"><span>Valor:</span> <input type="number" value="${vServ}" onchange="updateDB('${item.id}', 'valor_servico', this.value)" class="w-14 text-right font-bold bg-transparent border-b border-blue-200"></div>
-                                            <div class="flex justify-between"><span>Taxa L/T:</span> <input type="number" value="${vTaxa}" onchange="updateDB('${item.id}', 'taxa_leva_tras', this.value)" class="w-14 text-right font-bold bg-transparent border-b border-blue-200"></div>
-                                            <div class="flex justify-between text-blue-700 font-black pt-1"><span>TOTAL:</span> <span>R$ ${total.toFixed(2)}</span></div>
-                                            <div class="flex justify-between text-red-500 font-black"><span>COM DESC:</span> <input type="number" value="${item.total_com_desconto || 0}" onchange="updateDB('${item.id}', 'total_com_desconto', this.value)" class="w-14 text-right bg-transparent border-b border-red-200"></div>
-                                        </div>
-                                    </td>
-                                    <td class="p-3">
-                                        <select onchange="updateDB('${item.id}', 'forma_pagamento', this.value)" class="font-black text-green-600 uppercase bg-transparent outline-none w-full cursor-pointer">
-                                            <option value="pix" ${item.forma_pagamento === 'pix' ? 'selected' : ''}>PIX</option>
-                                            <option value="qrcode_pix" ${item.forma_pagamento === 'qrcode_pix' ? 'selected' : ''}>QR CODE PIX</option>
-                                            <option value="cartao_credito" ${item.forma_pagamento === 'cartao_credito' ? 'selected' : ''}>CRÉDITO</option>
-                                            <option value="cartao_debito" ${item.forma_pagamento === 'cartao_debito' ? 'selected' : ''}>DÉBITO</option>
-                                            <option value="dinheiro" ${item.forma_pagamento === 'dinheiro' ? 'selected' : ''}>DINHEIRO</option>
-                                        </select>
-                                    </td>
-                                    <td class="p-3 text-center">
-                                        <button onclick="window.excluirRegistroAdm('${item.id}')" class="bg-red-100 hover:bg-red-500 text-red-600 hover:text-white w-8 h-8 rounded-full transition flex items-center justify-center mx-auto">✕</button>
-                                    </td>
-                                </tr>`;
-                            }).join('')}
-                        </tbody>
-                    </table>
-                </div>
+            <div class="bg-white rounded-xl shadow-lg border overflow-x-auto">
+                <table class="w-full text-[11px] text-left border-collapse min-w-[900px]">
+                    <thead class="bg-slate-800 text-white uppercase italic">
+                        <tr>
+                            <th class="p-3">Data/Hora</th>
+                            <th class="p-3">Cliente / Pet</th>
+                            <th class="p-3">Serviço / Pacote</th>
+                            <th class="p-3 bg-slate-700">Financeiro ADM</th>
+                            <th class="p-3">Pagamento</th>
+                            <th class="p-3 text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200">
+                        ${lista.map(item => {
+                            // Cálculos seguros (evita erro se a coluna for nula)
+                            const vServ = parseFloat(item.valor_servico || 0);
+                            const vTaxa = parseFloat(item.taxa_leva_tras || 0);
+                            const total = vServ + vTaxa;
+                            const vDesc = parseFloat(item.total_com_desconto || 0);
+
+                            return `
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-3 border-r">
+                                    <input type="date" value="${item.agenda_data || ''}" onchange="updateDB('${item.id}', 'agenda_data', this.value)" class="font-bold block outline-none">
+                                    <input type="time" value="${item.agenda_hora || ''}" onchange="updateDB('${item.id}', 'agenda_hora', this.value)" class="text-slate-400 outline-none">
+                                </td>
+                                <td class="p-3 border-r">
+                                    <input type="text" value="${item.cliente || ''}" onchange="updateDB('${item.id}', 'cliente', this.value)" class="font-black uppercase w-full outline-none mb-1">
+                                    <input type="text" placeholder="Nome do Pet" value="${item.pet_nome || ''}" onchange="updateDB('${item.id}', 'pet_nome', this.value)" class="text-blue-500 font-bold w-full uppercase outline-none text-[9px]">
+                                </td>
+                                <td class="p-3 border-r">
+                                    <select onchange="updateDB('${item.id}', 'plano', this.value)" class="font-bold uppercase w-full bg-transparent outline-none mb-1">
+                                        <option value="avulso" ${item.plano === 'avulso' ? 'selected' : ''}>Avulso</option>
+                                        <option value="pacote_basico" ${item.plano === 'pacote_basico' ? 'selected' : ''}>P. Básico</option>
+                                        <option value="pacote_tosa" ${item.plano === 'pacote_tosa' ? 'selected' : ''}>P. Tosa</option>
+                                        <option value="pacote_premium" ${item.plano === 'pacote_premium' ? 'selected' : ''}>P. Premium</option>
+                                    </select>
+                                    <div class="text-[9px] font-black text-purple-600">VENC: <input type="date" value="${item.vencimento_pacote || ''}" onchange="updateDB('${item.id}', 'vencimento_pacote', this.value)" class="bg-transparent outline-none"></div>
+                                </td>
+                                <td class="p-3 border-r bg-slate-50">
+                                    <div class="flex flex-col gap-1">
+                                        <div class="flex justify-between"><span>Serv:</span> <input type="number" value="${vServ}" onchange="updateDB('${item.id}', 'valor_servico', this.value)" class="w-12 text-right bg-transparent border-b"></div>
+                                        <div class="flex justify-between"><span>L/T:</span> <input type="number" value="${vTaxa}" onchange="updateDB('${item.id}', 'taxa_leva_tras', this.value)" class="w-12 text-right bg-transparent border-b"></div>
+                                        <div class="font-black text-blue-700 text-right">R$ ${total.toFixed(2)}</div>
+                                        <div class="flex justify-between text-red-500 text-[10px] font-bold"><span>C/DESC:</span> <input type="number" value="${vDesc}" onchange="updateDB('${item.id}', 'total_com_desconto', this.value)" class="w-12 text-right bg-transparent border-b"></div>
+                                    </div>
+                                </td>
+                                <td class="p-3 border-r">
+                                    <select onchange="updateDB('${item.id}', 'forma_pagamento', this.value)" class="font-bold text-green-700 uppercase bg-transparent outline-none text-[9px]">
+                                        <option value="pix" ${item.forma_pagamento === 'pix' ? 'selected' : ''}>PIX</option>
+                                        <option value="qrcode_pix" ${item.forma_pagamento === 'qrcode_pix' ? 'selected' : ''}>QR CODE</option>
+                                        <option value="cartao_credito" ${item.forma_pagamento === 'cartao_credito' ? 'selected' : ''}>CRÉDITO</option>
+                                        <option value="cartao_debito" ${item.forma_pagamento === 'cartao_debito' ? 'selected' : ''}>DÉBITO</option>
+                                        <option value="dinheiro" ${item.forma_pagamento === 'dinheiro' ? 'selected' : ''}>DINHEIRO</option>
+                                    </select>
+                                </td>
+                                <td class="p-3 text-center">
+                                    <button onclick="excluirAdm('${item.id}')" class="text-red-400 hover:text-red-600">✕</button>
+                                </td>
+                            </tr>`;
+                        }).join('')}
+                    </tbody>
+                </table>
             </div>
+            <button onclick="addNovoAdm()" class="w-full mt-4 bg-blue-600 text-white font-black p-3 rounded-xl uppercase text-[10px] shadow-lg"> + Novo Agendamento </button>
         `;
     };
 
-    // 3. FUNÇÕES DE SUPORTE
-    window.novoAgendamentoAdm = async function() {
-        const nome = prompt("Nome do Cliente:");
-        if (!nome) return;
-        const novo = { 
-            cliente: nome, 
-            pet_nome: "Nome do Pet", 
-            plano: "avulso", 
-            agenda_data: new Date().toISOString().split('T')[0],
-            forma_pagamento: 'pix',
-            valor_servico: 0,
-            taxa_leva_tras: 0
-        };
-        await fetch(`${SB_URL}/agendamentos`, { method: "POST", headers: { ...headers, "Prefer": "return=minimal" }, body: JSON.stringify(novo) });
-        carregarDados();
-    };
-
-    window.excluirRegistroAdm = async function(id) {
-        if (!confirm("Excluir este agendamento permanentemente?")) return;
-        await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: "DELETE", headers });
+    window.excluirAdm = async (id) => { if(confirm("Excluir?")) { await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: "DELETE", headers }); carregarDados(); }};
+    
+    window.addNovoAdm = async () => {
+        const n = prompt("Cliente:"); if(!n) return;
+        await fetch(`${SB_URL}/agendamentos`, { method: "POST", headers: { ...headers, "Prefer": "return=minimal" }, body: JSON.stringify({ cliente: n, plano: 'avulso', agenda_data: new Date().toISOString().split('T')[0] }) });
         carregarDados();
     };
 
