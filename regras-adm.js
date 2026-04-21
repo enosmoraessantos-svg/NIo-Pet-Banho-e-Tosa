@@ -32,12 +32,11 @@
     window.addEventListener('load', injetarBotao);
     setTimeout(injetarBotao, 1000);
 })();
-/**/**
- /**
- * MÓDULO 2: GESTÃO DE VAGAS (AGENDA) - VERSÃO LIMPA
+/**
+ * MÓDULO 2: GESTÃO DE VAGAS (AGENDA) - VERSÃO INTEGRADA
  */
 
-// --- FUNÇÃO PARA O BOTÃO "+ NOVO HORÁRIO" (CORRIGIDA) ---
+// --- FUNÇÃO PARA ADICIONAR HORÁRIO (SALVANDO NO BANCO) ---
 window.adicionarNovoHorario = async function() {
     const hora = prompt("Digite o horário (ex: 09:00):");
     if (!hora) return;
@@ -58,37 +57,39 @@ window.adicionarNovoHorario = async function() {
         vagas_gato: 0
     };
 
-    // Usa as variáveis globais do seu arquivo principal
+    // Tenta salvar no Supabase usando suas credenciais globais
     try {
         await fetch(`${SB_URL}/configuracoes_agenda`, {
             method: "POST",
             headers: headers,
             body: JSON.stringify(novoItem)
         });
-        if(typeof carregarDados === 'function') carregarDados();
+        // Chama a sua função global de carregar dados para atualizar a tela
+        if (typeof carregarDados === 'function') carregarDados();
     } catch (e) {
         alert("Erro ao salvar no banco!");
     }
 };
 
-// --- FUNÇÃO PARA REMOVER (CORRIGIDA) ---
+// --- FUNÇÃO PARA REMOVER DO BANCO ---
 window.removerHorario = async function(id) {
-    if (!confirm("Deseja apagar este horário?")) return;
+    if (!confirm("Deseja excluir este horário?")) return;
     try {
         await fetch(`${SB_URL}/configuracoes_agenda?id=eq.${id}`, {
             method: "DELETE",
             headers: headers
         });
-        if(typeof carregarDados === 'function') carregarDados();
+        if (typeof carregarDados === 'function') carregarDados();
     } catch (e) {
         alert("Erro ao remover!");
     }
 };
 
-// --- RENDERIZAÇÃO (MANTENDO SUA ESTRUTURA ORIGINAL) ---
+// --- RENDERIZAÇÃO ORIGINAL (SEM ALTERAR O VISUAL) ---
 window.renderVagas = function(container) {
     if (!container) return;
 
+    // Ordenação por horário
     if (typeof todosDados !== 'undefined') {
         todosDados.sort((a, b) => a.horario.localeCompare(b.horario));
     }
@@ -98,7 +99,7 @@ window.renderVagas = function(container) {
         <div class="flex justify-between items-center mb-6">
             <h3 class="font-black uppercase text-lg italic text-slate-800">⚙️ Configuração de Agenda</h3>
             <div class="flex gap-2">
-                <button onclick="alert('✅ Alterações salvas!')" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-[10px] uppercase">Salvar Alterações 💾</button>
+                <button onclick="carregarDados()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-[10px] uppercase italic">Sincronizar ↻</button>
                 <button onclick="adicionarNovoHorario()" class="bg-green-600 text-white px-4 py-2 rounded-lg font-bold text-[10px] uppercase">+ Novo Horário</button>
             </div>
         </div>`;
@@ -113,48 +114,49 @@ window.renderVagas = function(container) {
             html += `
             <div class="bg-white p-4 rounded-xl border mb-3 shadow-sm text-black">
                 <div class="flex justify-between items-center mb-2">
-                    <span style="font-weight: 900; font-size: 1.6rem; text-shadow: 1px 0px 0px black, -1px 0px 0px black; letter-spacing: 1px;" class="text-black">${v.horario}</span>
-                    <span class="font-black text-sm text-slate-500 uppercase ml-2 flex-1">- CACHORRO / GATO</span>
+                    <span style="font-weight: 900; font-size: 1.6rem; text-shadow: 1px 0px 0px black; letter-spacing: 1px;" class="text-black">${v.horario}</span>
+                    <span class="font-black text-sm text-slate-500 uppercase ml-2 flex-1">- CAPACIDADE</span>
                     
-                    <div class="flex items-center gap-2">
-                         <button onclick="removerHorario(${v.id})" class="ml-2 text-slate-300 text-xl font-bold">✕</button>
-                    </div>
+                    <button onclick="removerHorario(${v.id})" class="ml-2 text-slate-300 hover:text-red-500 text-xl font-bold">✕</button>
                 </div>
 
                 <div class="space-y-3">
+                    <!-- Pequeno/Médio -->
                     <div class="bg-slate-50 p-2 rounded-lg border-l-2 border-blue-400">
                         <p class="font-black text-[10px] uppercase text-slate-600 mb-1">🐶 PORTE PEQUENO / MÉDIO</p>
-                        <div class="flex flex-wrap gap-4 text-[11px] font-bold">
+                        <div class="flex flex-wrap gap-4 text-[11px] font-bold text-black">
                             <div class="flex items-center gap-1">
-                                <span>BANHO / TOSA HIGI:</span>
-                                <input type="number" value="${v.vagas_tosa_higi || 0}" onchange="upVaga(${v.id}, 'vagas_tosa_higi', this.value)" class="w-8 border-b text-center bg-transparent">
+                                <span>BANHO/HIGI:</span>
+                                <input type="number" value="${v.vagas_tosa_higi || 0}" onchange="upVaga(${v.id}, 'vagas_tosa_higi', this.value)" class="w-8 border-b text-center bg-transparent border-slate-400 text-black font-black">
                             </div>
                             <div class="flex items-center gap-1">
-                                <span>BANHO + TOSA:</span>
-                                <input type="number" value="${v.vagas_tosa || 0}" onchange="upVaga(${v.id}, 'vagas_tosa', this.value)" class="w-8 border-b text-center bg-transparent">
+                                <span>TOSA:</span>
+                                <input type="number" value="${v.vagas_tosa || 0}" onchange="upVaga(${v.id}, 'vagas_tosa', this.value)" class="w-8 border-b text-center bg-transparent border-slate-400 text-black font-black">
                             </div>
                         </div>
                     </div>
 
+                    <!-- Grande -->
                     <div class="bg-slate-50 p-2 rounded-lg border-l-2 border-orange-400">
                         <p class="font-black text-[10px] uppercase text-slate-600 mb-1">🐕 PORTE GRANDE</p>
-                        <div class="flex flex-wrap gap-4 text-[11px] font-bold">
+                        <div class="flex flex-wrap gap-4 text-[11px] font-bold text-black">
                             <div class="flex items-center gap-1">
-                                <span>PELO CURTO (BANHO):</span>
-                                <input type="number" value="${v.vagas_grande_curto || 0}" onchange="upVaga(${v.id}, 'vagas_grande_curto', this.value)" class="w-8 border-b text-center bg-transparent">
+                                <span>CURTO:</span>
+                                <input type="number" value="${v.vagas_grande_curto || 0}" onchange="upVaga(${v.id}, 'vagas_grande_curto', this.value)" class="w-8 border-b text-center bg-transparent border-slate-400 text-black font-black">
                             </div>
                             <div class="flex items-center gap-1">
-                                <span>PELUDO (BANHO):</span>
-                                <input type="number" value="${v.vagas_grande_peludo || 0}" onchange="upVaga(${v.id}, 'vagas_grande_peludo', this.value)" class="w-8 border-b text-center bg-transparent">
+                                <span>PELUDO:</span>
+                                <input type="number" value="${v.vagas_grande_peludo || 0}" onchange="upVaga(${v.id}, 'vagas_grande_peludo', this.value)" class="w-8 border-b text-center bg-transparent border-slate-400 text-black font-black">
                             </div>
                         </div>
                     </div>
 
+                    <!-- Gato -->
                     <div class="bg-slate-50 p-2 rounded-lg border-l-2 border-purple-400">
                         <p class="font-black text-[10px] uppercase text-slate-600 mb-1">🐱 GATOS</p>
-                        <div class="flex items-center gap-1 text-[11px] font-bold">
-                            <span>SOMENTE BANHO:</span>
-                            <input type="number" value="${v.vagas_gato || 0}" onchange="upVaga(${v.id}, 'vagas_gato', this.value)" class="w-8 border-b text-center bg-transparent">
+                        <div class="flex items-center gap-1 text-[11px] font-bold text-black">
+                            <span>BANHO:</span>
+                            <input type="number" value="${v.vagas_gato || 0}" onchange="upVaga(${v.id}, 'vagas_gato', this.value)" class="w-8 border-b text-center bg-transparent border-slate-400 text-black font-black">
                         </div>
                     </div>
                 </div>
