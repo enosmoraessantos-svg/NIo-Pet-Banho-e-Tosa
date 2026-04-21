@@ -33,11 +33,12 @@
     setTimeout(injetarBotao, 1000);
 })();
 /**
+/**
  * MÓDULO 2: GESTÃO DE VAGAS (AGENDA) - VERSÃO LIMPA COM HORÁRIO EM DESTAQUE
  */
 
-// --- FUNÇÃO PARA O BOTÃO "+ NOVO HORÁRIO" ---
-window.adicionarNovoHorario = function() {
+// --- FUNÇÃO PARA O BOTÃO "+ NOVO HORÁRIO" (CORRIGIDA PARA SALVAR NO BANCO) ---
+window.adicionarNovoHorario = async function() {
     const hora = prompt("Digite o horário (ex: 09:00):");
     if (!hora) return;
     
@@ -48,10 +49,8 @@ window.adicionarNovoHorario = function() {
     }
 
     const novoItem = {
-        id: Date.now(),
         dia_semana: parseInt(dia),
         horario: hora,
-        vagas_pequeno_medio: 0,
         vagas_tosa_higi: 0,
         vagas_tosa: 0,
         vagas_grande_curto: 0,
@@ -59,19 +58,36 @@ window.adicionarNovoHorario = function() {
         vagas_gato: 0
     };
 
-    if (typeof todosDados !== 'undefined') {
-        todosDados.push(novoItem);
-        const containerAtivo = document.querySelector('.card-pet')?.parentNode;
-        if (containerAtivo) window.renderVagas(containerAtivo);
-        alert("Horário adicionado e organizado!");
+    try {
+        await fetch(`${SB_URL}/configuracoes_agenda`, {
+            method: "POST",
+            headers: headers,
+            body: JSON.stringify(novoItem)
+        });
+        carregarDados(); // Recarrega do banco para garantir que o dado está lá
+    } catch (e) {
+        alert("Erro ao salvar horário!");
     }
 };
 
-// --- RENDERIZAÇÃO ---
+// --- FUNÇÃO PARA REMOVER (CORRIGIDA PARA DELETAR DO BANCO) ---
+window.removerHorario = async function(id) {
+    if (!confirm("Deseja apagar este horário?")) return;
+    try {
+        await fetch(`${SB_URL}/configuracoes_agenda?id=eq.${id}`, {
+            method: "DELETE",
+            headers: headers
+        });
+        carregarDados();
+    } catch (e) {
+        alert("Erro ao remover!");
+    }
+};
+
+// --- RENDERIZAÇÃO (MANTIDA IGUAL, APENAS COM A ORDENAÇÃO) ---
 window.renderVagas = function(container) {
     if (!container) return;
 
-    // ORDENA OS DADOS POR HORÁRIO
     if (typeof todosDados !== 'undefined') {
         todosDados.sort((a, b) => a.horario.localeCompare(b.horario));
     }
@@ -96,7 +112,6 @@ window.renderVagas = function(container) {
             html += `
             <div class="bg-white p-4 rounded-xl border mb-3 shadow-sm text-black">
                 <div class="flex justify-between items-center mb-2">
-                    <!-- HORÁRIO COM NEGRITO FORÇADO VIA TEXT-SHADOW -->
                     <span style="font-weight: 900; font-size: 1.6rem; text-shadow: 1px 0px 0px black, -1px 0px 0px black; letter-spacing: 1px;" class="text-black">${v.horario}</span>
                     <span class="font-black text-sm text-slate-500 uppercase ml-2 flex-1">- CACHORRO / GATO</span>
                     
