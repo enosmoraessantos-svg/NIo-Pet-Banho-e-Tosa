@@ -307,153 +307,103 @@ window.renderVagas = function(container) {
     }
     setInterval(injetarBotao, 1000);
 })();
-// --- COPIE A PARTIR DAQUI ---
-
-let todosDados = [];
-let filtroAtual = 'geral';
-
-// Função principal que você solicitou com todos os campos e filtros
 function renderizar() {
     const container = document.getElementById('containerCards');
-    if (filtroAtual === 'vagas') return renderVagas(container);
+    if(filtroAtual === 'vagas') return renderVagas(container);
 
     const hoje = new Date().toISOString().split('T')[0];
     let filtrados = [...todosDados];
 
-    // Lógica de Filtros
-    if (filtroAtual === 'dia') {
+    // 1. Lógica dos Filtros (Mantendo o que você já tinha e adicionando as novas regras)
+    if(filtroAtual === 'dia') {
         filtrados = todosDados.filter(i => i.data === hoje);
     } else if (filtroAtual === 'pacotes') {
-        // Na aba de pacotes, mostra apenas quem não é "avulso"
-        filtrados = todosDados.filter(i => i.tipo_servico && i.tipo_servico !== 'avulso');
-    }
-
-    // Ordenação: Recentes primeiro
-    filtrados.sort((a, b) => new Date(b.data) - new Date(a.data));
-
-    if (filtrados.length === 0) {
-        container.innerHTML = `<div class="p-10 text-center text-slate-400 font-bold">Nenhum registro encontrado.</div>`;
-        return;
+        // Filtra apenas pacotes e agrupa visualmente (ordenando por cliente)
+        filtrados = todosDados.filter(i => i.tipo_servico && i.tipo_servico.includes('pacote'));
+        filtrados.sort((a, b) => a.cliente.localeCompare(b.cliente));
+    } else {
+        // Geral: Ordena por data mais recente
+        filtrados.sort((a, b) => new Date(b.data) - new Date(a.data));
     }
 
     container.innerHTML = filtrados.map(item => {
+        // Cálculos Financeiros
         const vServico = parseFloat(item.valor_servico) || 0;
         const vTaxa = parseFloat(item.taxa_leva_tras) || 0;
-        const vDesconto = parseFloat(item.desconto) || 0;
-        const vTotal = (vServico + vTaxa) - vDesconto;
-        const ehPacote = item.tipo_servico && item.tipo_servico.includes('pacote');
+        const vDesconto = parseFloat(item.total_com_desconto) || 0;
+        const vTotal = vServico + vTaxa;
 
         return `
-        <div class="card-pet shadow-sm border-l-4 ${ehPacote ? 'border-purple-500' : 'border-red-500'} mb-4">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-2">
+        <div class="card-pet shadow-sm border-l-4 ${item.tipo_servico?.includes('pacote') ? 'border-purple-500' : 'border-red-500'}">
+            <div class="flex flex-wrap gap-4 items-start">
                 
-                <!-- Info Cliente -->
-                <div class="space-y-1">
-                    <label class="text-[8px] font-black uppercase text-slate-400">Cliente / Pet</label>
-                    <input type="text" value="${item.cliente || ''}" onchange="updateDB('${item.id}', 'cliente', this.value)" class="input-edit font-bold text-slate-800 uppercase italic">
-                    <input type="text" value="${item.pet_nome || ''}" placeholder="Nome do Pet" onchange="updateDB('${item.id}', 'pet_nome', this.value)" class="input-edit text-xs">
-                    <input type="text" value="${item.whatsapp || ''}" onchange="updateDB('${item.id}', 'whatsapp', this.value)" class="input-edit text-[10px] text-blue-600">
-                    <input type="text" value="${item.rua || ''}" placeholder="Endereço" onchange="updateDB('${item.id}', 'rua', this.value)" class="input-edit text-[10px] uppercase">
+                <!-- Informações do Cliente (Editáveis) -->
+                <div class="flex-grow min-w-[200px]">
+                    <input type="text" value="${item.cliente || ''}" onchange="updateDB('${item.id}', 'cliente', this.value)" class="input-edit font-black text-lg text-slate-800 uppercase italic">
+                    <div class="grid grid-cols-2 gap-2 mt-1">
+                        <input type="text" value="${item.whatsapp || ''}" onchange="updateDB('${item.id}', 'whatsapp', this.value)" class="input-edit text-[10px] font-bold text-blue-600" placeholder="WHATSAPP">
+                        <input type="text" value="${item.rua || ''}" onchange="updateDB('${item.id}', 'rua', this.value)" class="input-edit text-[10px] font-bold uppercase" placeholder="ENDEREÇO">
+                    </div>
                 </div>
 
-                <!-- Serviço e Datas -->
-                <div class="space-y-1">
-                    <label class="text-[8px] font-black uppercase text-slate-400">Serviço / Agendamento</label>
-                    <input type="date" value="${item.data || ''}" onchange="updateDB('${item.id}', 'data', this.value)" class="input-edit text-xs font-bold">
-                    <select onchange="updateDB('${item.id}', 'tipo_servico', this.value)" class="input-edit text-xs font-bold uppercase">
-                        <option value="avulso" ${item.tipo_servico === 'avulso' ? 'selected' : ''}>Banho Avulso</option>
+                <!-- Campos de Serviço e Pacote -->
+                <div class="min-w-[150px]">
+                    <input type="date" value="${item.data || ''}" onchange="updateDB('${item.id}', 'data', this.value)" class="input-edit text-xs font-bold mb-1">
+                    <select onchange="updateDB('${item.id}', 'tipo_servico', this.value)" class="input-edit text-[10px] font-black uppercase italic">
+                        <option value="avulso" ${item.tipo_servico === 'avulso' ? 'selected' : ''}>Avulso</option>
                         <option value="pacote_basico" ${item.tipo_servico === 'pacote_basico' ? 'selected' : ''}>Pacote Básico</option>
-                        <option value="pacote_tosa" ${item.tipo_servico === 'pacote_tosa' ? 'selected' : ''}>Pacote com Tosa</option>
+                        <option value="pacote_tosa" ${item.tipo_servico === 'pacote_tosa' ? 'selected' : ''}>Basico com Tosa</option>
                         <option value="pacote_premium" ${item.tipo_servico === 'pacote_premium' ? 'selected' : ''}>Pacote Premium</option>
                     </select>
                     
-                    ${ehPacote ? `
-                    <div class="bg-purple-50 p-1 rounded mt-1 border border-purple-100">
-                        <label class="text-[7px] font-bold text-purple-600 uppercase">Vencimento Pacote</label>
-                        <input type="date" value="${item.vencimento_pacote || ''}" onchange="updateDB('${item.id}', 'vencimento_pacote', this.value)" class="bg-transparent text-[10px] w-full">
-                        <label class="text-[7px] font-bold text-purple-600 uppercase mt-1">Valor do Pacote</label>
-                        <input type="number" value="${item.valor_real_pago || 0}" onchange="updateDB('${item.id}', 'valor_real_pago', this.value)" class="bg-transparent text-[10px] font-bold w-full">
-                    </div>` : ''}
+                    ${item.tipo_servico?.includes('pacote') ? `
+                        <div class="mt-2 p-2 bg-purple-50 rounded border border-purple-100">
+                            <label class="text-[7px] font-bold text-purple-600 block">VENCIMENTO / VALOR PAGO</label>
+                            <input type="date" value="${item.vencimento_pacote || ''}" onchange="updateDB('${item.id}', 'vencimento_pacote', this.value)" class="bg-transparent text-[10px] w-full">
+                            <input type="number" value="${item.valor_real_pago || 0}" onchange="updateDB('${item.id}', 'valor_real_pago', this.value)" class="bg-transparent text-[10px] font-bold w-full mt-1" placeholder="Valor Pago">
+                        </div>
+                    ` : ''}
                 </div>
 
-                <!-- Financeiro ADM -->
-                <div class="space-y-1 bg-slate-50 p-2 rounded">
-                    <div class="flex justify-between items-center">
-                        <label class="text-[8px] font-bold">VALOR SERV.</label>
-                        <input type="number" value="${vServico}" onchange="updateDB('${item.id}', 'valor_servico', this.value)" class="w-16 text-right text-xs font-bold bg-transparent">
+                <!-- Financeiro ADM (Só aparece Taxa e Valor ao preencher) -->
+                <div class="bg-slate-50 p-2 rounded min-w-[180px]">
+                    <div class="grid grid-cols-2 gap-1 text-[9px] font-bold">
+                        <span>TAXA LEVA/TRÁS:</span>
+                        <input type="number" value="${item.taxa_leva_tras || 0}" onchange="updateDB('${item.id}', 'taxa_leva_tras', this.value)" class="bg-white border rounded px-1">
+                        
+                        <span>VALOR SERV:</span>
+                        <input type="number" value="${item.valor_servico || 0}" onchange="updateDB('${item.id}', 'valor_servico', this.value)" class="bg-white border rounded px-1">
+                        
+                        <span class="text-red-600 mt-1">TOTAL:</span>
+                        <span class="mt-1">R$ ${vTotal.toFixed(2)}</span>
+
+                        <span class="text-green-600">COM DESCONTO:</span>
+                        <input type="number" value="${vDesconto}" onchange="updateDB('${item.id}', 'total_com_desconto', this.value)" class="bg-white border rounded px-1">
                     </div>
-                    <div class="flex justify-between items-center">
-                        <label class="text-[8px] font-bold">LEVA/TRÁS</label>
-                        <input type="number" value="${vTaxa}" onchange="updateDB('${item.id}', 'taxa_leva_tras', this.value)" class="w-16 text-right text-xs font-bold bg-transparent text-orange-600">
-                    </div>
-                    <div class="flex justify-between items-center border-t pt-1">
-                        <label class="text-[8px] font-black text-red-600">TOTAL</label>
-                        <span class="text-xs font-black text-red-600">R$ ${vTotal.toFixed(2)}</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <label class="text-[8px] font-bold">DESC.</label>
-                        <input type="number" value="${vDesconto}" onchange="updateDB('${item.id}', 'desconto', this.value)" class="w-16 text-right text-xs font-bold bg-transparent text-green-600">
-                    </div>
+
+                    <select onchange="updateDB('${item.id}', 'forma_pagamento', this.value)" class="input-edit text-[9px] font-bold uppercase mt-2">
+                        <option value="">FORMA DE PAGAMENTO</option>
+                        <option value="pix" ${item.forma_pagamento === 'pix' ? 'selected' : ''}>PIX</option>
+                        <option value="credito" ${item.forma_pagamento === 'credito' ? 'selected' : ''}>Cartão de Crédito</option>
+                        <option value="debito" ${item.forma_pagamento === 'debito' ? 'selected' : ''}>Cartão de Débito</option>
+                        <option value="dinheiro" ${item.forma_pagamento === 'dinheiro' ? 'selected' : ''}>Dinheiro</option>
+                        <option value="qrcode" ${item.forma_pagamento === 'qrcode' ? 'selected' : ''}>QR Code PIX</option>
+                    </select>
                 </div>
 
-                <!-- Pagamento e Ações -->
-                <div class="flex flex-col justify-between">
-                    <div>
-                        <label class="text-[8px] font-black uppercase text-slate-400">Pagamento</label>
-                        <select onchange="updateDB('${item.id}', 'forma_pagamento', this.value)" class="input-edit text-[10px] font-bold uppercase">
-                            <option value="">Selecione</option>
-                            <option value="pix" ${item.forma_pagamento === 'pix' ? 'selected' : ''}>PIX</option>
-                            <option value="credito" ${item.forma_pagamento === 'credito' ? 'selected' : ''}>Cartão Crédito</option>
-                            <option value="debito" ${item.forma_pagamento === 'debito' ? 'selected' : ''}>Cartão Débito</option>
-                            <option value="dinheiro" ${item.forma_pagamento === 'dinheiro' ? 'selected' : ''}>Dinheiro</option>
-                            <option value="qrcode" ${item.forma_pagamento === 'qrcode' ? 'selected' : ''}>QR Code PIX</option>
-                        </select>
-                    </div>
-                    <div class="flex gap-2 mt-4">
-                        <button onclick="excluirItem('${item.id}')" class="flex-1 bg-red-100 text-red-600 text-[9px] font-bold p-1 rounded hover:bg-red-200">EXCLUIR</button>
-                        <button onclick="carregarDados()" class="flex-1 bg-slate-100 text-slate-600 text-[9px] font-bold p-1 rounded italic">SALVO ✓</button>
-                    </div>
+                <!-- Botões de Ação -->
+                <div class="flex flex-col gap-1">
+                    <button onclick="excluirItem('${item.id}')" class="text-[8px] bg-red-500 text-white font-bold p-1 rounded px-2">EXCLUIR</button>
+                    <button onclick="carregarDados()" class="text-[8px] bg-slate-200 text-slate-700 font-bold p-1 rounded px-2 italic">SALVAR</button>
                 </div>
-
             </div>
         </div>`).join('');
 }
 
-// Funções de CRUD (Adicionar e Excluir)
-async function novoAgendamento() {
-    const nome = prompt("Nome do Cliente:");
-    if(!nome) return;
-    const novo = { 
-        cliente: nome.toUpperCase(), 
-        data: new Date().toISOString().split('T')[0], 
-        tipo_servico: 'avulso' 
-    };
-    await fetch(`${SB_URL}/agendamentos`, { method: "POST", headers, body: JSON.stringify(novo) });
-    carregarDados();
-}
-
+// Funções de CRUD adicionais (Coloque no final do seu script)
 async function excluirItem(id) {
-    if(confirm("Deseja realmente apagar este registro?")) {
+    if(confirm("Deseja apagar este agendamento?")) {
         await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: "DELETE", headers });
         carregarDados();
     }
 }
-
-// Função de atualização automática
-async function updateDB(id, campo, valor) {
-    try {
-        await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { 
-            method: "PATCH", 
-            headers, 
-            body: JSON.stringify({ [campo]: valor }) 
-        });
-        // Atualiza a lista local sem recarregar tudo para não perder o foco
-        const index = todosDados.findIndex(i => i.id == id);
-        if(index !== -1) {
-            todosDados[index][campo] = valor;
-            renderizar();
-        }
-    } catch (e) { alert("Erro ao salvar!"); }
-}
-
-// --- FIM DO CÓDIGO ---
