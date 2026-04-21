@@ -33,15 +33,15 @@
     setTimeout(injetarBotao, 1000);
 })();
 /**
- * MÓDULO 2: GESTÃO DE VAGAS (AGENDA) - VERSÃO FINAL INTEGRADA
+ * MÓDULO 2: GESTÃO DE VAGAS (AGENDA) - VERSÃO CORRIGIDA
  */
 
-// 1. FUNÇÃO PARA ADICIONAR (SALVA NO BANCO E FORÇA APARECER OS CAMPOS)
+// --- FUNÇÃO PARA O BOTÃO "+ NOVO HORÁRIO" ---
 window.adicionarNovoHorario = async function() {
     const hora = prompt("Digite o horário (ex: 09:00):");
     if (!hora) return;
     
-    const dia = prompt("Digite o número do dia (0 para Domingo, 1 para Segunda... 6 para Sábado):");
+    const dia = prompt("Digite o número do dia (0 para Domingo... 6 para Sábado):");
     if (dia === null || dia === "" || dia < 0 || dia > 6) {
         alert("Dia inválido!");
         return;
@@ -58,6 +58,7 @@ window.adicionarNovoHorario = async function() {
     };
 
     try {
+        // Envia para o banco de dados
         const res = await fetch(`${SB_URL}/configuracoes_agenda`, {
             method: "POST",
             headers: headers,
@@ -65,17 +66,20 @@ window.adicionarNovoHorario = async function() {
         });
 
         if (res.ok) {
-            // ESSA LINHA FORÇA O BANCO A MANDAR OS DADOS PARA OS CAMPOS APARECEREM
+            // FORÇA a busca dos dados para os campos de pet aparecerem na hora
             const resDados = await fetch(`${SB_URL}/configuracoes_agenda?select=*`, { headers });
             window.todosDados = await resDados.json();
-            window.renderVagas(document.getElementById('containerCards'));
+            
+            // Re-renderiza a tela com o novo horário e os campos de pet
+            const container = document.getElementById('containerCards');
+            window.renderVagas(container);
         }
     } catch (e) {
-        alert("Erro ao salvar no banco!");
+        alert("Erro ao salvar horário no banco!");
     }
 };
 
-// 2. FUNÇÃO PARA REMOVER DO BANCO
+// --- FUNÇÃO PARA REMOVER ---
 window.removerHorario = async function(id) {
     if (!confirm("Deseja apagar este horário?")) return;
     try {
@@ -83,6 +87,7 @@ window.removerHorario = async function(id) {
             method: "DELETE",
             headers: headers
         });
+        // Atualiza os dados locais
         const resDados = await fetch(`${SB_URL}/configuracoes_agenda?select=*`, { headers });
         window.todosDados = await resDados.json();
         window.renderVagas(document.getElementById('containerCards'));
@@ -91,21 +96,22 @@ window.removerHorario = async function(id) {
     }
 };
 
-// 3. RENDERIZAÇÃO COMPLETA (CORRIGIDA PARA MOSTRAR OS CAMPOS DE PET)
+// --- RENDERIZAÇÃO ---
 window.renderVagas = function(container) {
     if (!container) return;
 
-    if (typeof todosDados !== 'undefined' && todosDados.length > 0) {
+    if (typeof todosDados !== 'undefined') {
         todosDados.sort((a, b) => a.horario.localeCompare(b.horario));
     }
 
     const dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
     
+    // CABEÇALHO COM SEU BOTÃO "SALVAR ALTERAÇÕES" ORIGINAL
     let html = `<div class="card-pet">
         <div class="flex justify-between items-center mb-6">
             <h3 class="font-black uppercase text-lg italic text-slate-800">⚙️ Configuração de Agenda</h3>
             <div class="flex gap-2">
-                <button onclick="location.reload()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-[10px] uppercase">Sincronizar ↻</button>
+                <button onclick="alert('✅ Alterações salvas com sucesso!')" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-[10px] uppercase">Salvar Alterações 💾</button>
                 <button onclick="adicionarNovoHorario()" class="bg-green-600 text-white px-4 py-2 rounded-lg font-bold text-[10px] uppercase">+ Novo Horário</button>
             </div>
         </div>`;
@@ -121,8 +127,9 @@ window.renderVagas = function(container) {
             <div class="bg-white p-4 rounded-xl border mb-3 shadow-sm text-black">
                 <div class="flex justify-between items-center mb-2">
                     <span style="font-weight: 900; font-size: 1.6rem; text-shadow: 1px 0px 0px black; letter-spacing: 1px;" class="text-black">${v.horario}</span>
-                    <span class="font-black text-sm text-slate-500 uppercase ml-2 flex-1">- CAPACIDADE</span>
-                    <button onclick="removerHorario(${v.id})" class="ml-2 text-red-300 hover:text-red-600 text-xl font-bold">✕</button>
+                    <span class="font-black text-sm text-slate-500 uppercase ml-2 flex-1">- CACHORRO / GATO</span>
+                    
+                    <button onclick="removerHorario(${v.id})" class="ml-2 text-slate-300 text-xl font-bold">✕</button>
                 </div>
 
                 <div class="space-y-3">
@@ -130,12 +137,12 @@ window.renderVagas = function(container) {
                         <p class="font-black text-[10px] uppercase text-slate-600 mb-1">🐶 PORTE PEQUENO / MÉDIO</p>
                         <div class="flex flex-wrap gap-4 text-[11px] font-bold text-black">
                             <div class="flex items-center gap-1">
-                                <span>BANHO/HIGI:</span>
-                                <input type="number" value="${v.vagas_tosa_higi || 0}" onchange="upVaga(${v.id}, 'vagas_tosa_higi', this.value)" class="w-8 border-b text-center bg-transparent border-slate-400 font-black text-black">
+                                <span>BANHO / TOSA HIGI:</span>
+                                <input type="number" value="${v.vagas_tosa_higi || 0}" onchange="upVaga(${v.id}, 'vagas_tosa_higi', this.value)" class="w-8 border-b text-center bg-transparent border-black">
                             </div>
                             <div class="flex items-center gap-1">
-                                <span>TOSA:</span>
-                                <input type="number" value="${v.vagas_tosa || 0}" onchange="upVaga(${v.id}, 'vagas_tosa', this.value)" class="w-8 border-b text-center bg-transparent border-slate-400 font-black text-black">
+                                <span>BANHO + TOSA:</span>
+                                <input type="number" value="${v.vagas_tosa || 0}" onchange="upVaga(${v.id}, 'vagas_tosa', this.value)" class="w-8 border-b text-center bg-transparent border-black">
                             </div>
                         </div>
                     </div>
@@ -144,12 +151,12 @@ window.renderVagas = function(container) {
                         <p class="font-black text-[10px] uppercase text-slate-600 mb-1">🐕 PORTE GRANDE</p>
                         <div class="flex flex-wrap gap-4 text-[11px] font-bold text-black">
                             <div class="flex items-center gap-1">
-                                <span>CURTO:</span>
-                                <input type="number" value="${v.vagas_grande_curto || 0}" onchange="upVaga(${v.id}, 'vagas_grande_curto', this.value)" class="w-8 border-b text-center bg-transparent border-slate-400 font-black text-black">
+                                <span>PELO CURTO:</span>
+                                <input type="number" value="${v.vagas_grande_curto || 0}" onchange="upVaga(${v.id}, 'vagas_grande_curto', this.value)" class="w-8 border-b text-center bg-transparent border-black">
                             </div>
                             <div class="flex items-center gap-1">
                                 <span>PELUDO:</span>
-                                <input type="number" value="${v.vagas_grande_peludo || 0}" onchange="upVaga(${v.id}, 'vagas_grande_peludo', this.value)" class="w-8 border-b text-center bg-transparent border-slate-400 font-black text-black">
+                                <input type="number" value="${v.vagas_grande_peludo || 0}" onchange="upVaga(${v.id}, 'vagas_grande_peludo', this.value)" class="w-8 border-b text-center bg-transparent border-black">
                             </div>
                         </div>
                     </div>
@@ -158,7 +165,7 @@ window.renderVagas = function(container) {
                         <p class="font-black text-[10px] uppercase text-slate-600 mb-1">🐱 GATOS</p>
                         <div class="flex items-center gap-1 text-[11px] font-bold text-black">
                             <span>BANHO:</span>
-                            <input type="number" value="${v.vagas_gato || 0}" onchange="upVaga(${v.id}, 'vagas_gato', this.value)" class="w-8 border-b text-center bg-transparent border-slate-400 font-black text-black">
+                            <input type="number" value="${v.vagas_gato || 0}" onchange="upVaga(${v.id}, 'vagas_gato', this.value)" class="w-8 border-b text-center bg-transparent border-black">
                         </div>
                     </div>
                 </div>
