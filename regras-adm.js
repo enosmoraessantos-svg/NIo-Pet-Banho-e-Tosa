@@ -307,137 +307,139 @@ window.renderVagas = function(container) {
     }
     setInterval(injetarBotao, 1000);
 })();
+/**
+ * REGRAS ADM - VERSÃO FINAL (COMPATÍVEL COM JSONB)
+ */
 (function() {
     const renderOriginal = window.renderizar;
 
     window.renderizar = function() {
-        // Se for Vagas, mantém sua função original sem mexer em nada
+        // Se for Vagas, mantém o visual original de cartões
         if (window.filtroAtual === 'vagas') return renderOriginal();
 
         const container = document.getElementById('containerCards');
         const hoje = new Date().toISOString().split('T')[0];
         
+        // Tabela Administrativa para Geral, Dia e Pacotes
         let html = `
             <div class="bg-white rounded-xl shadow-lg border overflow-hidden">
                 <table class="w-full text-[11px] text-left border-collapse">
                     <thead class="bg-slate-800 text-white uppercase font-bold italic">
                         <tr>
                             <th class="p-3">📅 Data/Hora</th>
-                            <th class="p-3">🐾 Cliente/Pet</th>
+                            <th class="p-3">🐾 Cliente & Pet</th>
                             <th class="p-3">📦 Plano/Pacote</th>
-                            <th class="p-3 bg-slate-700">💰 Financeiro ADM</th>
+                            <th class="p-3 bg-slate-700 text-yellow-400">💰 Financeiro ADM</th>
                             <th class="p-3">💳 Pagamento</th>
                             <th class="p-3 text-center">⚙️</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200">`;
 
-        window.todosDados.forEach(item => {
-            // Como seus dados estão no campo 'pets' (JSONB), vamos percorrer cada pet
-            const petsArr = Array.isArray(item.pets) ? item.pets : [];
+        window.todosDados.forEach(row => {
+            const petsArr = Array.isArray(row.pets) ? row.pets : [];
             
             petsArr.forEach((pet, index) => {
-                const agenda = pet.agenda && pet.agenda[0] ? pet.agenda[0] : {};
+                // Navega na estrutura JSON do seu Supabase
+                const agenda = (pet.agenda && pet.agenda[0]) ? pet.agenda[0] : (pet.agenda || {});
                 const dataAgendada = agenda.data || '';
-                const isPacote = pet.plano && pet.plano !== 'avulso';
+                const isPacote = pet.plano && pet.plano.includes('pacote');
 
-                // FILTROS DOS BOTÕES
+                // Filtros de exibição
                 if (window.filtroAtual === 'dia' && dataAgendada !== hoje) return;
                 if (window.filtroAtual === 'pacotes' && !isPacote) return;
 
-                // Lógica de valores (Financeiro ADM)
+                // Cálculos Financeiros (Campos ADM criados virtualmente no JSON)
                 const vServ = parseFloat(pet.valor_servico || 0);
-                const vTaxa = parseFloat(pet.taxa_entrega || 0);
+                const vTaxa = parseFloat(pet.taxa_leva_tras || 0);
                 const total = vServ + vTaxa;
                 const vDesc = parseFloat(pet.total_com_desconto || 0);
 
                 html += `
                 <tr class="hover:bg-slate-50 transition">
                     <td class="p-3 border-r">
-                        <input type="date" value="${dataAgendada}" onchange="salvarMudancaJSON('${item.id}', ${index}, 'agenda_data', this.value)" class="font-bold block outline-none bg-transparent">
-                        <span class="text-[9px] text-slate-400">${agenda.horario || '--:--'}</span>
+                        <input type="date" value="${dataAgendada}" onchange="upJSON('${row.id}', ${index}, 'data', this.value)" class="font-bold block bg-transparent outline-none mb-1">
+                        <input type="time" value="${agenda.horario || ''}" onchange="upJSON('${row.id}', ${index}, 'horario', this.value)" class="text-slate-400 font-bold bg-transparent outline-none">
                     </td>
                     <td class="p-3 border-r">
-                        <div class="font-black uppercase text-slate-800">${item.cliente || 'Sem Nome'}</div>
-                        <input type="text" value="${pet.nome || ''}" onchange="salvarMudancaJSON('${item.id}', ${index}, 'nome', this.value)" class="text-blue-500 font-bold w-full bg-transparent outline-none italic" placeholder="Nome do Pet">
+                        <div class="font-black uppercase text-slate-800">${row.cliente || '---'}</div>
+                        <input type="text" value="${pet.nome || ''}" onchange="upJSON('${row.id}', ${index}, 'nome', this.value)" class="text-blue-500 font-bold w-full bg-transparent outline-none italic uppercase" placeholder="Nome do Pet">
                     </td>
                     <td class="p-3 border-r">
-                        <select onchange="salvarMudancaJSON('${item.id}', ${index}, 'plano', this.value)" class="font-bold uppercase w-full bg-transparent outline-none mb-1">
-                            <option value="avulso" ${pet.plano === 'avulso' ? 'selected' : ''}>Avulso</option>
-                            <option value="pacote_basico" ${pet.plano === 'pacote_basico' ? 'selected' : ''}>P. Básico</option>
-                            <option value="pacote_tosa" ${pet.plano === 'pacote_tosa' ? 'selected' : ''}>P. Tosa</option>
-                            <option value="pacote_premium" ${pet.plano === 'pacote_premium' ? 'selected' : ''}>P. Premium</option>
+                        <select onchange="upJSON('${row.id}', ${index}, 'plano', this.value)" class="font-black uppercase w-full bg-transparent outline-none mb-1 cursor-pointer">
+                            <option value="avulso" ${pet.plano === 'avulso' ? 'selected' : ''}>AVULSO</option>
+                            <option value="pacote_basico" ${pet.plano === 'pacote_basico' ? 'selected' : ''}>P. BÁSICO</option>
+                            <option value="pacote_tosa" ${pet.plano === 'pacote_tosa' ? 'selected' : ''}>P. TOSA</option>
+                            <option value="pacote_premium" ${pet.plano === 'pacote_premium' ? 'selected' : ''}>P. PREMIUM</option>
                         </select>
-                        <div class="text-[9px] font-black text-purple-600">VENC: 
-                            <input type="date" value="${pet.vencimento || ''}" onchange="salvarMudancaJSON('${item.id}', ${index}, 'vencimento', this.value)" class="bg-transparent outline-none font-bold">
+                        <div class="text-[9px] font-black text-purple-600 flex items-center gap-1">
+                            VENC: <input type="date" value="${pet.vencimento || ''}" onchange="upJSON('${row.id}', ${index}, 'vencimento', this.value)" class="bg-transparent outline-none font-bold">
                         </div>
                     </td>
                     <td class="p-3 border-r bg-slate-50">
                         <div class="space-y-1">
-                            <div class="flex justify-between"><span>Vlr:</span> <input type="number" value="${vServ}" onchange="salvarMudancaJSON('${item.id}', ${index}, 'valor_servico', this.value)" class="w-12 text-right border-b bg-transparent"></div>
-                            <div class="flex justify-between"><span>L/T:</span> <input type="number" value="${vTaxa}" onchange="salvarMudancaJSON('${item.id}', ${index}, 'taxa_entrega', this.value)" class="w-12 text-right border-b bg-transparent"></div>
-                            <div class="text-right font-black text-blue-700">R$ ${total.toFixed(2)}</div>
-                            <div class="flex justify-between text-red-500 font-bold"><span>DESC:</span> <input type="number" value="${vDesc}" onchange="salvarMudancaJSON('${item.id}', ${index}, 'total_com_desconto', this.value)" class="w-12 text-right border-b bg-transparent"></div>
+                            <div class="flex justify-between"><span>Serviço:</span> <input type="number" value="${vServ}" onchange="upJSON('${row.id}', ${index}, 'valor_servico', this.value)" class="w-12 text-right border-b bg-transparent font-bold"></div>
+                            <div class="flex justify-between"><span>Leva/Traz:</span> <input type="number" value="${vTaxa}" onchange="upJSON('${row.id}', ${index}, 'taxa_leva_tras', this.value)" class="w-12 text-right border-b bg-transparent font-bold"></div>
+                            <div class="text-right font-black text-blue-700">Total: R$ ${total.toFixed(2)}</div>
+                            <div class="flex justify-between text-red-500 font-black"><span>DESC:</span> <input type="number" value="${vDesc}" onchange="upJSON('${row.id}', ${index}, 'total_com_desconto', this.value)" class="w-12 text-right border-b bg-transparent"></div>
                         </div>
                     </td>
                     <td class="p-3 border-r">
-                        <select onchange="salvarMudancaJSON('${item.id}', ${index}, 'pagamento', this.value)" class="font-bold text-green-700 uppercase bg-transparent outline-none w-full text-[10px]">
+                        <select onchange="upJSON('${row.id}', ${index}, 'pagamento', this.value)" class="font-black text-green-700 uppercase bg-transparent outline-none w-full cursor-pointer text-[10px]">
                             <option value="pix" ${pet.pagamento === 'pix' ? 'selected' : ''}>PIX</option>
-                            <option value="qrcode" ${pet.pagamento === 'qrcode' ? 'selected' : ''}>QR CODE</option>
-                            <option value="cartao" ${pet.pagamento === 'cartao' ? 'selected' : ''}>CARTÃO</option>
+                            <option value="qrcode_pix" ${pet.pagamento === 'qrcode_pix' ? 'selected' : ''}>QR CODE PIX</option>
+                            <option value="cartao_credito" ${pet.pagamento === 'cartao_credito' ? 'selected' : ''}>CRÉDITO</option>
+                            <option value="cartao_debito" ${pet.pagamento === 'cartao_debito' ? 'selected' : ''}>DÉBITO</option>
                             <option value="dinheiro" ${pet.pagamento === 'dinheiro' ? 'selected' : ''}>DINHEIRO</option>
                         </select>
                     </td>
                     <td class="p-3 text-center">
-                        <button onclick="excluirPet('${item.id}', ${index})" class="text-red-400 hover:text-red-600">✕</button>
+                        <button onclick="deletePetRow('${row.id}', ${index})" class="text-red-400 hover:text-red-600 transition">✕</button>
                     </td>
                 </tr>`;
             });
         });
 
         container.innerHTML = html + `</tbody></table></div>
-        <button onclick="adicionarNovoAdm()" class="w-full mt-4 bg-blue-600 text-white font-black p-3 rounded-xl uppercase text-[10px]"> + Adicionar Novo Agendamento </button>`;
+        <button onclick="window.addAgendamentoAdm()" class="w-full mt-4 bg-blue-600 text-white font-black p-4 rounded-xl uppercase text-xs shadow-md">+ Novo Agendamento (Avulso ou Pacote)</button>`;
     };
 
-    // FUNÇÃO ESPECIAL PARA SALVAR DENTRO DO JSONB DO SUPABASE
-    window.salvarMudancaJSON = async function(id, petIndex, campo, valor) {
-        const itemOriginal = window.todosDados.find(i => i.id == id);
-        if (!itemOriginal) return;
+    // FUNÇÃO QUE SALVA DENTRO DO JSONB DO SEU SUPABASE
+    window.upJSON = async function(id, petIndex, campo, valor) {
+        const item = window.todosDados.find(i => i.id == id);
+        if (!item) return;
 
-        // Atualiza a cópia local do JSON
-        if (campo === 'agenda_data') itemOriginal.pets[petIndex].agenda[0].data = valor;
-        else itemOriginal.pets[petIndex][campo] = valor;
+        // Trata campos de agenda separadamente
+        if (campo === 'data' || campo === 'horario') {
+            if (!item.pets[petIndex].agenda[0]) item.pets[petIndex].agenda = [{}];
+            item.pets[petIndex].agenda[0][campo] = valor;
+        } else {
+            item.pets[petIndex][campo] = valor;
+        }
 
-        // Manda de volta para o Supabase no campo 'pets'
         await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, {
             method: "PATCH",
             headers,
-            body: JSON.stringify({ pets: itemOriginal.pets })
+            body: JSON.stringify({ pets: item.pets })
         });
         carregarDados();
     };
 
-    window.excluirPet = async function(id, index) {
-        if (!confirm("Remover este pet do agendamento?")) return;
+    window.addAgendamentoAdm = async function() {
+        const n = prompt("Nome do Cliente:");
+        if (!n) return;
+        const body = { cliente: n, pets: [{ nome: "Pet", plano: "avulso", agenda: [{ data: new Date().toISOString().split('T')[0], horario: "09:00" }] }] };
+        await fetch(`${SB_URL}/agendamentos`, { method: "POST", headers, body: JSON.stringify(body) });
+        carregarDados();
+    };
+
+    window.deletePetRow = async function(id, index) {
+        if (!confirm("Excluir este pet?")) return;
         const item = window.todosDados.find(i => i.id == id);
         item.pets.splice(index, 1);
-        
         const method = item.pets.length === 0 ? "DELETE" : "PATCH";
         const body = item.pets.length === 0 ? null : JSON.stringify({ pets: item.pets });
-
         await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method, headers, body });
         carregarDados();
     };
-
-    window.adicionarNovoAdm = async function() {
-        const nome = prompt("Nome do Cliente:");
-        if (!nome) return;
-        const novo = { 
-            cliente: nome, 
-            pets: [{ nome: "Pet", plano: "avulso", agenda: [{ data: new Date().toISOString().split('T')[0], horario: "09:00" }] }] 
-        };
-        await fetch(`${SB_URL}/agendamentos`, { method: "POST", headers, body: JSON.stringify(novo) });
-        carregarDados();
-    };
-
 })();
