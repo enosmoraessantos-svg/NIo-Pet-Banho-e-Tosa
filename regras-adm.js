@@ -307,139 +307,94 @@ window.renderVagas = function(container) {
     }
     setInterval(injetarBotao, 1000);
 })();
-/**
- * REGRAS ADM - VERSÃO FINAL (COMPATÍVEL COM JSONB)
- */
+// REGRAS ADICIONAIS NILO PET
 (function() {
+    // Salva sua função original de cards
     const renderOriginal = window.renderizar;
 
     window.renderizar = function() {
-        // Se for Vagas, mantém o visual original de cartões
+        // Se for Vagas, não mexe em nada! Usa seu código original.
         if (window.filtroAtual === 'vagas') return renderOriginal();
 
         const container = document.getElementById('containerCards');
         const hoje = new Date().toISOString().split('T')[0];
         
-        // Tabela Administrativa para Geral, Dia e Pacotes
-        let html = `
-            <div class="bg-white rounded-xl shadow-lg border overflow-hidden">
-                <table class="w-full text-[11px] text-left border-collapse">
-                    <thead class="bg-slate-800 text-white uppercase font-bold italic">
-                        <tr>
-                            <th class="p-3">📅 Data/Hora</th>
-                            <th class="p-3">🐾 Cliente & Pet</th>
-                            <th class="p-3">📦 Plano/Pacote</th>
-                            <th class="p-3 bg-slate-700 text-yellow-400">💰 Financeiro ADM</th>
-                            <th class="p-3">💳 Pagamento</th>
-                            <th class="p-3 text-center">⚙️</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-200">`;
+        let html = `<div class="bg-white rounded-xl shadow-lg border overflow-hidden">
+            <table class="w-full text-[10px] text-left">
+                <thead class="bg-slate-800 text-white uppercase font-bold">
+                    <tr>
+                        <th class="p-2">Data/Hora</th>
+                        <th class="p-2">Cliente/Pet</th>
+                        <th class="p-2">Plano/Venc.</th>
+                        <th class="p-2 bg-slate-700">Financeiro ADM</th>
+                        <th class="p-2">Pagamento</th>
+                        <th class="p-2">Ações</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">`;
 
-        window.todosDados.forEach(row => {
-            const petsArr = Array.isArray(row.pets) ? row.pets : [];
+        window.todosDados.forEach(item => {
+            const petsArr = Array.isArray(item.pets) ? item.pets : [];
             
             petsArr.forEach((pet, index) => {
-                // Navega na estrutura JSON do seu Supabase
-                const agenda = (pet.agenda && pet.agenda[0]) ? pet.agenda[0] : (pet.agenda || {});
-                const dataAgendada = agenda.data || '';
-                const isPacote = pet.plano && pet.plano.includes('pacote');
+                const dataAg = pet.agenda?.[0]?.data || '';
+                
+                // Filtros
+                if (window.filtroAtual === 'dia' && dataAg !== hoje) return;
+                if (window.filtroAtual === 'pacotes' && pet.plano === 'avulso') return;
 
-                // Filtros de exibição
-                if (window.filtroAtual === 'dia' && dataAgendada !== hoje) return;
-                if (window.filtroAtual === 'pacotes' && !isPacote) return;
-
-                // Cálculos Financeiros (Campos ADM criados virtualmente no JSON)
                 const vServ = parseFloat(pet.valor_servico || 0);
                 const vTaxa = parseFloat(pet.taxa_leva_tras || 0);
                 const total = vServ + vTaxa;
-                const vDesc = parseFloat(pet.total_com_desconto || 0);
 
                 html += `
-                <tr class="hover:bg-slate-50 transition">
-                    <td class="p-3 border-r">
-                        <input type="date" value="${dataAgendada}" onchange="upJSON('${row.id}', ${index}, 'data', this.value)" class="font-bold block bg-transparent outline-none mb-1">
-                        <input type="time" value="${agenda.horario || ''}" onchange="upJSON('${row.id}', ${index}, 'horario', this.value)" class="text-slate-400 font-bold bg-transparent outline-none">
+                <tr>
+                    <td class="p-2">
+                        <input type="date" value="${dataAg}" onchange="upJSON('${item.id}', ${index}, 'data', this.value)" class="font-bold block">
                     </td>
-                    <td class="p-3 border-r">
-                        <div class="font-black uppercase text-slate-800">${row.cliente || '---'}</div>
-                        <input type="text" value="${pet.nome || ''}" onchange="upJSON('${row.id}', ${index}, 'nome', this.value)" class="text-blue-500 font-bold w-full bg-transparent outline-none italic uppercase" placeholder="Nome do Pet">
+                    <td class="p-2">
+                        <b class="uppercase">${item.cliente}</b><br>
+                        <input type="text" value="${pet.nome || ''}" onchange="upJSON('${item.id}', ${index}, 'nome', this.value)" class="text-blue-600 font-bold w-full uppercase">
                     </td>
-                    <td class="p-3 border-r">
-                        <select onchange="upJSON('${row.id}', ${index}, 'plano', this.value)" class="font-black uppercase w-full bg-transparent outline-none mb-1 cursor-pointer">
-                            <option value="avulso" ${pet.plano === 'avulso' ? 'selected' : ''}>AVULSO</option>
-                            <option value="pacote_basico" ${pet.plano === 'pacote_basico' ? 'selected' : ''}>P. BÁSICO</option>
-                            <option value="pacote_tosa" ${pet.plano === 'pacote_tosa' ? 'selected' : ''}>P. TOSA</option>
-                            <option value="pacote_premium" ${pet.plano === 'pacote_premium' ? 'selected' : ''}>P. PREMIUM</option>
+                    <td class="p-2">
+                        <select onchange="upJSON('${item.id}', ${index}, 'plano', this.value)" class="uppercase font-bold">
+                            <option value="avulso" ${pet.plano === 'avulso' ? 'selected' : ''}>Avulso</option>
+                            <option value="pacote_basico" ${pet.plano === 'pacote_basico' ? 'selected' : ''}>P. Básico</option>
+                            <option value="pacote_tosa" ${pet.plano === 'pacote_tosa' ? 'selected' : ''}>P. Tosa</option>
                         </select>
-                        <div class="text-[9px] font-black text-purple-600 flex items-center gap-1">
-                            VENC: <input type="date" value="${pet.vencimento || ''}" onchange="upJSON('${row.id}', ${index}, 'vencimento', this.value)" class="bg-transparent outline-none font-bold">
-                        </div>
+                        <input type="date" value="${pet.vencimento || ''}" onchange="upJSON('${item.id}', ${index}, 'vencimento', this.value)" class="block text-[9px]">
                     </td>
-                    <td class="p-3 border-r bg-slate-50">
-                        <div class="space-y-1">
-                            <div class="flex justify-between"><span>Serviço:</span> <input type="number" value="${vServ}" onchange="upJSON('${row.id}', ${index}, 'valor_servico', this.value)" class="w-12 text-right border-b bg-transparent font-bold"></div>
-                            <div class="flex justify-between"><span>Leva/Traz:</span> <input type="number" value="${vTaxa}" onchange="upJSON('${row.id}', ${index}, 'taxa_leva_tras', this.value)" class="w-12 text-right border-b bg-transparent font-bold"></div>
-                            <div class="text-right font-black text-blue-700">Total: R$ ${total.toFixed(2)}</div>
-                            <div class="flex justify-between text-red-500 font-black"><span>DESC:</span> <input type="number" value="${vDesc}" onchange="upJSON('${row.id}', ${index}, 'total_com_desconto', this.value)" class="w-12 text-right border-b bg-transparent"></div>
-                        </div>
+                    <td class="p-2 bg-slate-50">
+                        Serv: <input type="number" value="${vServ}" onchange="upJSON('${item.id}', ${index}, 'valor_servico', this.value)" class="w-10 border-b">
+                        Taxa: <input type="number" value="${vTaxa}" onchange="upJSON('${item.id}', ${index}, 'taxa_leva_tras', this.value)" class="w-10 border-b">
+                        <br><b>Total: R$ ${total.toFixed(2)}</b>
                     </td>
-                    <td class="p-3 border-r">
-                        <select onchange="upJSON('${row.id}', ${index}, 'pagamento', this.value)" class="font-black text-green-700 uppercase bg-transparent outline-none w-full cursor-pointer text-[10px]">
-                            <option value="pix" ${pet.pagamento === 'pix' ? 'selected' : ''}>PIX</option>
-                            <option value="qrcode_pix" ${pet.pagamento === 'qrcode_pix' ? 'selected' : ''}>QR CODE PIX</option>
-                            <option value="cartao_credito" ${pet.pagamento === 'cartao_credito' ? 'selected' : ''}>CRÉDITO</option>
-                            <option value="cartao_debito" ${pet.pagamento === 'cartao_debito' ? 'selected' : ''}>DÉBITO</option>
-                            <option value="dinheiro" ${pet.pagamento === 'dinheiro' ? 'selected' : ''}>DINHEIRO</option>
+                    <td class="p-2">
+                        <select onchange="upJSON('${item.id}', ${index}, 'pagamento', this.value)" class="uppercase font-bold text-green-600">
+                            <option value="pix" ${pet.pagamento === 'pix' ? 'selected' : ''}>Pix</option>
+                            <option value="cartao" ${pet.pagamento === 'cartao' ? 'selected' : ''}>Cartão</option>
+                            <option value="dinheiro" ${pet.pagamento === 'dinheiro' ? 'selected' : ''}>Dinheiro</option>
                         </select>
                     </td>
-                    <td class="p-3 text-center">
-                        <button onclick="deletePetRow('${row.id}', ${index})" class="text-red-400 hover:text-red-600 transition">✕</button>
+                    <td class="p-2">
+                        <button onclick="excluirPet('${item.id}', ${index})">🗑️</button>
                     </td>
                 </tr>`;
             });
         });
 
-        container.innerHTML = html + `</tbody></table></div>
-        <button onclick="window.addAgendamentoAdm()" class="w-full mt-4 bg-blue-600 text-white font-black p-4 rounded-xl uppercase text-xs shadow-md">+ Novo Agendamento (Avulso ou Pacote)</button>`;
+        container.innerHTML = html + `</tbody></table></div>`;
     };
 
-    // FUNÇÃO QUE SALVA DENTRO DO JSONB DO SEU SUPABASE
-    window.upJSON = async function(id, petIndex, campo, valor) {
+    // Função para salvar no JSONB sem quebrar o banco
+    window.upJSON = async function(id, idx, campo, valor) {
         const item = window.todosDados.find(i => i.id == id);
-        if (!item) return;
-
-        // Trata campos de agenda separadamente
-        if (campo === 'data' || campo === 'horario') {
-            if (!item.pets[petIndex].agenda[0]) item.pets[petIndex].agenda = [{}];
-            item.pets[petIndex].agenda[0][campo] = valor;
-        } else {
-            item.pets[petIndex][campo] = valor;
-        }
+        if (campo === 'data') item.pets[idx].agenda[0].data = valor;
+        else item.pets[idx][campo] = valor;
 
         await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, {
-            method: "PATCH",
-            headers,
-            body: JSON.stringify({ pets: item.pets })
+            method: "PATCH", headers, body: JSON.stringify({ pets: item.pets })
         });
-        carregarDados();
-    };
-
-    window.addAgendamentoAdm = async function() {
-        const n = prompt("Nome do Cliente:");
-        if (!n) return;
-        const body = { cliente: n, pets: [{ nome: "Pet", plano: "avulso", agenda: [{ data: new Date().toISOString().split('T')[0], horario: "09:00" }] }] };
-        await fetch(`${SB_URL}/agendamentos`, { method: "POST", headers, body: JSON.stringify(body) });
-        carregarDados();
-    };
-
-    window.deletePetRow = async function(id, index) {
-        if (!confirm("Excluir este pet?")) return;
-        const item = window.todosDados.find(i => i.id == id);
-        item.pets.splice(index, 1);
-        const method = item.pets.length === 0 ? "DELETE" : "PATCH";
-        const body = item.pets.length === 0 ? null : JSON.stringify({ pets: item.pets });
-        await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method, headers, body });
         carregarDados();
     };
 })();
