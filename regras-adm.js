@@ -311,102 +311,132 @@ window.renderVagas = function(container) {
     const renderOriginal = window.renderizar;
 
     window.renderizar = function() {
-        // Se for Vagas, usa seu código original e sai da regra
+        // Se for Vagas, mantém sua função original sem mexer em nada
         if (window.filtroAtual === 'vagas') return renderOriginal();
 
         const container = document.getElementById('containerCards');
+        const hoje = new Date().toISOString().split('T')[0];
         
-        // Garantia de que todosDados é um array
-        let lista = Array.isArray(window.todosDados) ? [...window.todosDados] : [];
-
-        // FILTROS
-        if (window.filtroAtual === 'dia') {
-            const hoje = new Date().toISOString().split('T')[0];
-            lista = lista.filter(i => (i.agenda_data === hoje) || JSON.stringify(i).includes(hoje));
-        } else if (window.filtroAtual === 'pacotes') {
-            lista = lista.filter(i => i.plano && i.plano.includes('pacote'));
-        }
-
-        // Se a lista estiver vazia após o filtro
-        if (lista.length === 0) {
-            container.innerHTML = `<div class="p-10 text-center font-bold text-slate-400 border-2 border-dashed rounded-xl uppercase">Nenhum agendamento encontrado para este filtro.</div>`;
-            return;
-        }
-
-        container.innerHTML = `
-            <div class="bg-white rounded-xl shadow-lg border overflow-x-auto">
-                <table class="w-full text-[11px] text-left border-collapse min-w-[900px]">
-                    <thead class="bg-slate-800 text-white uppercase italic">
+        let html = `
+            <div class="bg-white rounded-xl shadow-lg border overflow-hidden">
+                <table class="w-full text-[11px] text-left border-collapse">
+                    <thead class="bg-slate-800 text-white uppercase font-bold italic">
                         <tr>
-                            <th class="p-3">Data/Hora</th>
-                            <th class="p-3">Cliente / Pet</th>
-                            <th class="p-3">Serviço / Pacote</th>
-                            <th class="p-3 bg-slate-700">Financeiro ADM</th>
-                            <th class="p-3">Pagamento</th>
-                            <th class="p-3 text-center">Ações</th>
+                            <th class="p-3">📅 Data/Hora</th>
+                            <th class="p-3">🐾 Cliente/Pet</th>
+                            <th class="p-3">📦 Plano/Pacote</th>
+                            <th class="p-3 bg-slate-700">💰 Financeiro ADM</th>
+                            <th class="p-3">💳 Pagamento</th>
+                            <th class="p-3 text-center">⚙️</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-200">
-                        ${lista.map(item => {
-                            // Cálculos seguros (evita erro se a coluna for nula)
-                            const vServ = parseFloat(item.valor_servico || 0);
-                            const vTaxa = parseFloat(item.taxa_leva_tras || 0);
-                            const total = vServ + vTaxa;
-                            const vDesc = parseFloat(item.total_com_desconto || 0);
+                    <tbody class="divide-y divide-slate-200">`;
 
-                            return `
-                            <tr class="hover:bg-slate-50">
-                                <td class="p-3 border-r">
-                                    <input type="date" value="${item.agenda_data || ''}" onchange="updateDB('${item.id}', 'agenda_data', this.value)" class="font-bold block outline-none">
-                                    <input type="time" value="${item.agenda_hora || ''}" onchange="updateDB('${item.id}', 'agenda_hora', this.value)" class="text-slate-400 outline-none">
-                                </td>
-                                <td class="p-3 border-r">
-                                    <input type="text" value="${item.cliente || ''}" onchange="updateDB('${item.id}', 'cliente', this.value)" class="font-black uppercase w-full outline-none mb-1">
-                                    <input type="text" placeholder="Nome do Pet" value="${item.pet_nome || ''}" onchange="updateDB('${item.id}', 'pet_nome', this.value)" class="text-blue-500 font-bold w-full uppercase outline-none text-[9px]">
-                                </td>
-                                <td class="p-3 border-r">
-                                    <select onchange="updateDB('${item.id}', 'plano', this.value)" class="font-bold uppercase w-full bg-transparent outline-none mb-1">
-                                        <option value="avulso" ${item.plano === 'avulso' ? 'selected' : ''}>Avulso</option>
-                                        <option value="pacote_basico" ${item.plano === 'pacote_basico' ? 'selected' : ''}>P. Básico</option>
-                                        <option value="pacote_tosa" ${item.plano === 'pacote_tosa' ? 'selected' : ''}>P. Tosa</option>
-                                        <option value="pacote_premium" ${item.plano === 'pacote_premium' ? 'selected' : ''}>P. Premium</option>
-                                    </select>
-                                    <div class="text-[9px] font-black text-purple-600">VENC: <input type="date" value="${item.vencimento_pacote || ''}" onchange="updateDB('${item.id}', 'vencimento_pacote', this.value)" class="bg-transparent outline-none"></div>
-                                </td>
-                                <td class="p-3 border-r bg-slate-50">
-                                    <div class="flex flex-col gap-1">
-                                        <div class="flex justify-between"><span>Serv:</span> <input type="number" value="${vServ}" onchange="updateDB('${item.id}', 'valor_servico', this.value)" class="w-12 text-right bg-transparent border-b"></div>
-                                        <div class="flex justify-between"><span>L/T:</span> <input type="number" value="${vTaxa}" onchange="updateDB('${item.id}', 'taxa_leva_tras', this.value)" class="w-12 text-right bg-transparent border-b"></div>
-                                        <div class="font-black text-blue-700 text-right">R$ ${total.toFixed(2)}</div>
-                                        <div class="flex justify-between text-red-500 text-[10px] font-bold"><span>C/DESC:</span> <input type="number" value="${vDesc}" onchange="updateDB('${item.id}', 'total_com_desconto', this.value)" class="w-12 text-right bg-transparent border-b"></div>
-                                    </div>
-                                </td>
-                                <td class="p-3 border-r">
-                                    <select onchange="updateDB('${item.id}', 'forma_pagamento', this.value)" class="font-bold text-green-700 uppercase bg-transparent outline-none text-[9px]">
-                                        <option value="pix" ${item.forma_pagamento === 'pix' ? 'selected' : ''}>PIX</option>
-                                        <option value="qrcode_pix" ${item.forma_pagamento === 'qrcode_pix' ? 'selected' : ''}>QR CODE</option>
-                                        <option value="cartao_credito" ${item.forma_pagamento === 'cartao_credito' ? 'selected' : ''}>CRÉDITO</option>
-                                        <option value="cartao_debito" ${item.forma_pagamento === 'cartao_debito' ? 'selected' : ''}>DÉBITO</option>
-                                        <option value="dinheiro" ${item.forma_pagamento === 'dinheiro' ? 'selected' : ''}>DINHEIRO</option>
-                                    </select>
-                                </td>
-                                <td class="p-3 text-center">
-                                    <button onclick="excluirAdm('${item.id}')" class="text-red-400 hover:text-red-600">✕</button>
-                                </td>
-                            </tr>`;
-                        }).join('')}
-                    </tbody>
-                </table>
-            </div>
-            <button onclick="addNovoAdm()" class="w-full mt-4 bg-blue-600 text-white font-black p-3 rounded-xl uppercase text-[10px] shadow-lg"> + Novo Agendamento </button>
-        `;
+        window.todosDados.forEach(item => {
+            // Como seus dados estão no campo 'pets' (JSONB), vamos percorrer cada pet
+            const petsArr = Array.isArray(item.pets) ? item.pets : [];
+            
+            petsArr.forEach((pet, index) => {
+                const agenda = pet.agenda && pet.agenda[0] ? pet.agenda[0] : {};
+                const dataAgendada = agenda.data || '';
+                const isPacote = pet.plano && pet.plano !== 'avulso';
+
+                // FILTROS DOS BOTÕES
+                if (window.filtroAtual === 'dia' && dataAgendada !== hoje) return;
+                if (window.filtroAtual === 'pacotes' && !isPacote) return;
+
+                // Lógica de valores (Financeiro ADM)
+                const vServ = parseFloat(pet.valor_servico || 0);
+                const vTaxa = parseFloat(pet.taxa_entrega || 0);
+                const total = vServ + vTaxa;
+                const vDesc = parseFloat(pet.total_com_desconto || 0);
+
+                html += `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="p-3 border-r">
+                        <input type="date" value="${dataAgendada}" onchange="salvarMudancaJSON('${item.id}', ${index}, 'agenda_data', this.value)" class="font-bold block outline-none bg-transparent">
+                        <span class="text-[9px] text-slate-400">${agenda.horario || '--:--'}</span>
+                    </td>
+                    <td class="p-3 border-r">
+                        <div class="font-black uppercase text-slate-800">${item.cliente || 'Sem Nome'}</div>
+                        <input type="text" value="${pet.nome || ''}" onchange="salvarMudancaJSON('${item.id}', ${index}, 'nome', this.value)" class="text-blue-500 font-bold w-full bg-transparent outline-none italic" placeholder="Nome do Pet">
+                    </td>
+                    <td class="p-3 border-r">
+                        <select onchange="salvarMudancaJSON('${item.id}', ${index}, 'plano', this.value)" class="font-bold uppercase w-full bg-transparent outline-none mb-1">
+                            <option value="avulso" ${pet.plano === 'avulso' ? 'selected' : ''}>Avulso</option>
+                            <option value="pacote_basico" ${pet.plano === 'pacote_basico' ? 'selected' : ''}>P. Básico</option>
+                            <option value="pacote_tosa" ${pet.plano === 'pacote_tosa' ? 'selected' : ''}>P. Tosa</option>
+                            <option value="pacote_premium" ${pet.plano === 'pacote_premium' ? 'selected' : ''}>P. Premium</option>
+                        </select>
+                        <div class="text-[9px] font-black text-purple-600">VENC: 
+                            <input type="date" value="${pet.vencimento || ''}" onchange="salvarMudancaJSON('${item.id}', ${index}, 'vencimento', this.value)" class="bg-transparent outline-none font-bold">
+                        </div>
+                    </td>
+                    <td class="p-3 border-r bg-slate-50">
+                        <div class="space-y-1">
+                            <div class="flex justify-between"><span>Vlr:</span> <input type="number" value="${vServ}" onchange="salvarMudancaJSON('${item.id}', ${index}, 'valor_servico', this.value)" class="w-12 text-right border-b bg-transparent"></div>
+                            <div class="flex justify-between"><span>L/T:</span> <input type="number" value="${vTaxa}" onchange="salvarMudancaJSON('${item.id}', ${index}, 'taxa_entrega', this.value)" class="w-12 text-right border-b bg-transparent"></div>
+                            <div class="text-right font-black text-blue-700">R$ ${total.toFixed(2)}</div>
+                            <div class="flex justify-between text-red-500 font-bold"><span>DESC:</span> <input type="number" value="${vDesc}" onchange="salvarMudancaJSON('${item.id}', ${index}, 'total_com_desconto', this.value)" class="w-12 text-right border-b bg-transparent"></div>
+                        </div>
+                    </td>
+                    <td class="p-3 border-r">
+                        <select onchange="salvarMudancaJSON('${item.id}', ${index}, 'pagamento', this.value)" class="font-bold text-green-700 uppercase bg-transparent outline-none w-full text-[10px]">
+                            <option value="pix" ${pet.pagamento === 'pix' ? 'selected' : ''}>PIX</option>
+                            <option value="qrcode" ${pet.pagamento === 'qrcode' ? 'selected' : ''}>QR CODE</option>
+                            <option value="cartao" ${pet.pagamento === 'cartao' ? 'selected' : ''}>CARTÃO</option>
+                            <option value="dinheiro" ${pet.pagamento === 'dinheiro' ? 'selected' : ''}>DINHEIRO</option>
+                        </select>
+                    </td>
+                    <td class="p-3 text-center">
+                        <button onclick="excluirPet('${item.id}', ${index})" class="text-red-400 hover:text-red-600">✕</button>
+                    </td>
+                </tr>`;
+            });
+        });
+
+        container.innerHTML = html + `</tbody></table></div>
+        <button onclick="adicionarNovoAdm()" class="w-full mt-4 bg-blue-600 text-white font-black p-3 rounded-xl uppercase text-[10px]"> + Adicionar Novo Agendamento </button>`;
     };
 
-    window.excluirAdm = async (id) => { if(confirm("Excluir?")) { await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: "DELETE", headers }); carregarDados(); }};
-    
-    window.addNovoAdm = async () => {
-        const n = prompt("Cliente:"); if(!n) return;
-        await fetch(`${SB_URL}/agendamentos`, { method: "POST", headers: { ...headers, "Prefer": "return=minimal" }, body: JSON.stringify({ cliente: n, plano: 'avulso', agenda_data: new Date().toISOString().split('T')[0] }) });
+    // FUNÇÃO ESPECIAL PARA SALVAR DENTRO DO JSONB DO SUPABASE
+    window.salvarMudancaJSON = async function(id, petIndex, campo, valor) {
+        const itemOriginal = window.todosDados.find(i => i.id == id);
+        if (!itemOriginal) return;
+
+        // Atualiza a cópia local do JSON
+        if (campo === 'agenda_data') itemOriginal.pets[petIndex].agenda[0].data = valor;
+        else itemOriginal.pets[petIndex][campo] = valor;
+
+        // Manda de volta para o Supabase no campo 'pets'
+        await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, {
+            method: "PATCH",
+            headers,
+            body: JSON.stringify({ pets: itemOriginal.pets })
+        });
+        carregarDados();
+    };
+
+    window.excluirPet = async function(id, index) {
+        if (!confirm("Remover este pet do agendamento?")) return;
+        const item = window.todosDados.find(i => i.id == id);
+        item.pets.splice(index, 1);
+        
+        const method = item.pets.length === 0 ? "DELETE" : "PATCH";
+        const body = item.pets.length === 0 ? null : JSON.stringify({ pets: item.pets });
+
+        await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method, headers, body });
+        carregarDados();
+    };
+
+    window.adicionarNovoAdm = async function() {
+        const nome = prompt("Nome do Cliente:");
+        if (!nome) return;
+        const novo = { 
+            cliente: nome, 
+            pets: [{ nome: "Pet", plano: "avulso", agenda: [{ data: new Date().toISOString().split('T')[0], horario: "09:00" }] }] 
+        };
+        await fetch(`${SB_URL}/agendamentos`, { method: "POST", headers, body: JSON.stringify(novo) });
         carregarDados();
     };
 
