@@ -308,43 +308,44 @@ window.renderVagas = function(container) {
     setInterval(injetarBotao, 1000);
 })();
 /**
- * REGRAS ADICIONAIS NILO PET - GESTÃO FINANCEIRA E PACOTES
+ * VERSÃO CORRIGIDA - REGRAS ADM
  */
 (function() {
-    // 1. SOBRESCREVER A RENDERIZAÇÃO PRINCIPAL PARA INCLUIR FERRAMENTAS ADM
-    const originalRenderizar = window.renderizar;
-
     window.renderizar = function() {
         const container = document.getElementById('containerCards');
         const titulo = document.getElementById('tituloPagina');
         
-        // Se for Gestão de Vagas, mantém o padrão do sistema
         if (window.filtroAtual === 'vagas') {
             titulo.innerText = "Gestão de Vagas";
             return window.renderVagas(container);
         }
 
-        // Filtros de Título
         titulo.innerText = window.filtroAtual === 'dia' ? "Agendamentos do Dia" : 
                           window.filtroAtual === 'pacotes' ? "Controle de Pacotes" : "Agendamentos Geral";
 
         const hoje = new Date().toISOString().split('T')[0];
-        let filtrados = [...window.todosDados];
+        let filtrados = Array.isArray(window.todosDados) ? [...window.todosDados] : [];
 
-        // Lógica de Filtro
+        // Filtros Seguros (Verificam se a propriedade existe antes de filtrar)
         if (window.filtroAtual === 'dia') {
-            filtrados = filtrados.filter(i => i.agenda_data === hoje || (i.pets && JSON.stringify(i.pets).includes(hoje)));
+            filtrados = filtrados.filter(i => {
+                const dataSimples = i.agenda_data === hoje;
+                const dataNoObjeto = i.pets && JSON.stringify(i.pets).includes(hoje);
+                return dataSimples || dataNoObjeto;
+            });
         } else if (window.filtroAtual === 'pacotes') {
-            filtrados = filtrados.filter(i => i.plano && i.plano.includes('pacote'));
+            filtrados = filtrados.filter(i => i.plano && i.plano !== 'avulso');
         }
 
-        // Ordenação por Data/Hora (Simulada pelo primeiro pet agendado)
-        filtrados.sort((a, b) => (a.agenda_data || "").localeCompare(b.agenda_data || ""));
+        // Se não houver dados, mostra aviso amigável em vez de erro
+        if (filtrados.length === 0) {
+            container.innerHTML = `<div class="p-10 text-center text-slate-400 font-bold uppercase border-2 border-dashed rounded-xl">Nenhum registro encontrado.</div>`;
+            return;
+        }
 
-        // Renderização da Tabela Administrativa
         container.innerHTML = `
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden border">
-                <table class="w-full text-left text-[11px]">
+            <div class="bg-white rounded-xl shadow-sm overflow-x-auto border">
+                <table class="w-full text-left text-[11px] min-w-[800px]">
                     <thead class="bg-slate-800 text-white uppercase font-bold">
                         <tr>
                             <th class="p-3">Data/Hora</th>
@@ -359,97 +360,52 @@ window.renderVagas = function(container) {
                         ${filtrados.map(item => renderRowAdm(item)).join('')}
                     </tbody>
                 </table>
-            </div>
-            <button onclick="abrirModalNovo()" class="mt-4 w-full bg-green-600 text-white font-black p-3 rounded-xl uppercase text-xs shadow-lg hover:bg-green-700 transition">
-                + Adicionar Novo Agendamento Avulso ou Pacote
-            </button>
-        `;
+            </div>`;
     };
 
-    // 2. TEMPLATE DE LINHA DA TABELA (CAMPOS EDITÁVEIS)
     function renderRowAdm(item) {
-        // Cálculos Financeiros
+        // Valores padrão caso a coluna não exista no Supabase ainda
         const v_servico = parseFloat(item.valor_servico || 0);
         const v_taxa = parseFloat(item.taxa_leva_tras || 0);
         const v_desc = parseFloat(item.total_com_desconto || 0);
         const total = (v_servico + v_taxa);
-        const totalFinal = v_desc > 0 ? v_desc : total;
-
-        const isPacote = item.plano && item.plano.includes('pacote');
 
         return `
             <tr class="hover:bg-slate-50 transition">
                 <td class="p-3 border-r">
-                    <input type="date" value="${item.agenda_data || ''}" onchange="updateDB('${item.id}', 'agenda_data', this.value)" class="font-bold block mb-1">
-                    <input type="time" value="${item.agenda_hora || ''}" onchange="updateDB('${item.id}', 'agenda_hora', this.value)" class="text-slate-500">
+                    <input type="date" value="${item.agenda_data || ''}" onchange="updateDB('${item.id}', 'agenda_data', this.value)" class="font-bold block">
+                    <input type="time" value="${item.agenda_hora || ''}" onchange="updateDB('${item.id}', 'agenda_hora', this.value)" class="text-slate-400 text-[9px]">
                 </td>
                 <td class="p-3 border-r">
-                    <input type="text" value="${item.cliente || ''}" onchange="updateDB('${item.id}', 'cliente', this.value)" class="font-black uppercase text-slate-800 w-full mb-1">
-                    <input type="text" placeholder="Nome do Pet" value="${item.pet_nome || ''}" onchange="updateDB('${item.id}', 'pet_nome', this.value)" class="text-[10px] text-blue-600 font-bold w-full uppercase">
+                    <input type="text" value="${item.cliente || ''}" onchange="updateDB('${item.id}', 'cliente', this.value)" class="font-black uppercase w-full">
+                    <input type="text" placeholder="Pet" value="${item.pet_nome || ''}" onchange="updateDB('${item.id}', 'pet_nome', this.value)" class="text-[9px] text-blue-500 font-bold w-full uppercase">
                 </td>
-                <td class="p-3 border-r ${isPacote ? 'bg-purple-50' : ''}">
-                    <select onchange="updateDB('${item.id}', 'plano', this.value)" class="font-bold uppercase w-full mb-1 bg-transparent">
+                <td class="p-3 border-r">
+                    <select onchange="updateDB('${item.id}', 'plano', this.value)" class="font-bold uppercase w-full mb-1">
                         <option value="avulso" ${item.plano === 'avulso' ? 'selected' : ''}>Avulso</option>
-                        <option value="pacote_basico" ${item.plano === 'pacote_basico' ? 'selected' : ''}>Pacote Básico</option>
-                        <option value="pacote_tosa" ${item.plano === 'pacote_tosa' ? 'selected' : ''}>Pacote c/ Tosa</option>
-                        <option value="pacote_premium" ${item.plano === 'pacote_premium' ? 'selected' : ''}>Pacote Premium</option>
+                        <option value="pacote_basico" ${item.plano === 'pacote_basico' ? 'selected' : ''}>P. Básico</option>
+                        <option value="pacote_tosa" ${item.plano === 'pacote_tosa' ? 'selected' : ''}>P. Tosa</option>
+                        <option value="pacote_premium" ${item.plano === 'pacote_premium' ? 'selected' : ''}>P. Premium</option>
                     </select>
-                    ${isPacote ? `<div class="text-[9px] font-black text-purple-600">VENC: <input type="date" value="${item.vencimento_pacote || ''}" onchange="updateDB('${item.id}', 'vencimento_pacote', this.value)" class="bg-transparent"></div>` : ''}
+                    <input type="date" value="${item.vencimento_pacote || ''}" onchange="updateDB('${item.id}', 'vencimento_pacote', this.value)" class="text-[9px] w-full">
                 </td>
                 <td class="p-3 border-r bg-slate-50">
                     <div class="flex flex-col gap-1">
-                        <div class="flex justify-between"><span>Serv:</span> <input type="number" value="${v_servico}" onchange="updateDB('${item.id}', 'valor_servico', this.value)" class="w-12 text-right font-bold"></div>
-                        <div class="flex justify-between"><span>Leva/Traz:</span> <input type="number" value="${v_taxa}" onchange="updateDB('${item.id}', 'taxa_leva_tras', this.value)" class="w-12 text-right font-bold"></div>
-                        <div class="border-t pt-1 flex justify-between text-blue-700 font-black">
-                            <span>TOTAL:</span> <span>R$ ${total.toFixed(2)}</span>
-                        </div>
-                        <div class="flex justify-between text-red-600"><span>C/ DESC:</span> <input type="number" value="${v_desc}" onchange="updateDB('${item.id}', 'total_com_desconto', this.value)" class="w-12 text-right font-bold"></div>
+                        <div class="flex justify-between items-center"><span>R$</span> <input type="number" value="${v_servico}" onchange="updateDB('${item.id}', 'valor_servico', this.value)" class="w-12 text-right border-b"></div>
+                        <div class="flex justify-between items-center text-[9px] text-slate-400"><span>L/T</span> <input type="number" value="${v_taxa}" onchange="updateDB('${item.id}', 'taxa_leva_tras', this.value)" class="w-12 text-right"></div>
+                        <div class="border-t font-black text-blue-600 text-right">R$ ${total.toFixed(2)}</div>
                     </div>
                 </td>
                 <td class="p-3 border-r">
-                    <select onchange="updateDB('${item.id}', 'forma_pagamento', this.value)" class="font-bold text-green-700 uppercase bg-transparent w-full">
+                    <select onchange="updateDB('${item.id}', 'forma_pagamento', this.value)" class="font-bold text-green-600 uppercase text-[10px]">
                         <option value="pix" ${item.forma_pagamento === 'pix' ? 'selected' : ''}>PIX</option>
-                        <option value="cartao_credito" ${item.forma_pagamento === 'cartao_credito' ? 'selected' : ''}>Crédito</option>
-                        <option value="cartao_debito" ${item.forma_pagamento === 'cartao_debito' ? 'selected' : ''}>Débito</option>
+                        <option value="cartao" ${item.forma_pagamento === 'cartao' ? 'selected' : ''}>Cartão</option>
                         <option value="dinheiro" ${item.forma_pagamento === 'dinheiro' ? 'selected' : ''}>Dinheiro</option>
-                        <option value="qrcode_pix" ${item.forma_pagamento === 'qrcode_pix' ? 'selected' : ''}>QR Code</option>
                     </select>
                 </td>
                 <td class="p-3 text-center">
-                    <button onclick="excluirRegistro('${item.id}')" class="text-slate-300 hover:text-red-600 transition text-lg">🗑️</button>
+                    <button onclick="excluirRegistro('${item.id}')">🗑️</button>
                 </td>
-            </tr>
-        `;
+            </tr>`;
     }
-
-    // 3. FUNÇÕES DE AÇÃO
-    window.excluirRegistro = async function(id) {
-        if(confirm("Deseja excluir este agendamento permanentemente?")) {
-            await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: "DELETE", headers });
-            carregarDados();
-        }
-    };
-
-    window.abrirModalNovo = async function() {
-        const nome = prompt("Nome do Cliente:");
-        if(!nome) return;
-        
-        const novo = {
-            cliente: nome,
-            pet_nome: "Nome do Pet",
-            plano: "avulso",
-            agenda_data: new Date().toISOString().split('T')[0],
-            forma_pagamento: "pix",
-            valor_servico: 0,
-            taxa_leva_tras: 0
-        };
-
-        await fetch(`${SB_URL}/agendamentos`, { 
-            method: "POST", 
-            headers: { ...headers, "Prefer": "return=representation" }, 
-            body: JSON.stringify(novo) 
-        });
-        carregarDados();
-    };
-
 })();
