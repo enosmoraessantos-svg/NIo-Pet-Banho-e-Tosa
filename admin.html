@@ -25,7 +25,7 @@
         <div class="w-full max-w-md p-8 bg-white rounded-2xl shadow-2xl text-center">
             <h1 class="text-3xl font-black text-slate-800 uppercase italic">Nilo Pet</h1>
             <input type="password" id="senhaAdm" placeholder="Senha de acesso" class="w-full p-4 border-2 rounded-xl mb-4 text-center">
-            <button onclick="logar()" class="w-full bg-red-600 text-white font-black p-4 rounded-xl shadow-lg">ENTRAR</button>
+            <button onclick="logar()" class="w-full bg-red-600 text-white font-black p-4 rounded-xl">ENTRAR</button>
         </div>
     </div>
 
@@ -45,8 +45,8 @@
             <header class="flex justify-between items-center mb-8">
                 <h2 id="tituloPagina" class="text-2xl font-black text-slate-800 uppercase italic">Agendamentos Geral</h2>
                 <div class="flex gap-2">
-                    <button onclick="adicionarNovo()" class="bg-green-600 text-white p-3 rounded-xl shadow-sm font-bold text-xs uppercase">+ Novo</button>
-                    <button onclick="carregarDados()" class="bg-white border p-3 rounded-xl shadow-sm font-bold text-xs uppercase italic">Sincronizar ↻</button>
+                    <button onclick="novoAgendamento()" class="bg-green-600 text-white p-3 rounded-xl shadow-sm font-bold text-xs uppercase">+ Novo</button>
+                    <button onclick="carregarDados()" class="bg-white border p-3 rounded-xl shadow-sm font-bold text-xs uppercase">Sincronizar ↻</button>
                 </div>
             </header>
             <div id="containerCards" class="grid grid-cols-1 gap-4"></div>
@@ -54,7 +54,7 @@
     </div>
 
     <script>
-        const SB_URL = "https://yczhjyxisqrvfxxgipop.supabase.co/rest/v1";
+        const SB_URL = "https://supabase.co";
         const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
         const headers = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json", "Prefer": "return=minimal" };
         
@@ -80,9 +80,43 @@
             } catch (e) { alert("Erro ao carregar banco!"); }
         }
 
+        async function updateDB(id, campo, valor) {
+            await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: "PATCH", headers, body: JSON.stringify({ [campo]: valor }) });
+        }
+
+        async function upVaga(id, campo, valor) {
+            const v = (campo === 'bloqueado') ? valor : (parseInt(valor) || 0);
+            await fetch(`${SB_URL}/configuracoes_agenda?id=eq.${id}`, { method: "PATCH", headers, body: JSON.stringify({ [campo]: v }) });
+        }
+
+        async function novoAgendamento() {
+            const nome = prompt("Nome do Cliente:");
+            if(!nome) return;
+            await fetch(`${SB_URL}/agendamentos`, { method: "POST", headers, body: JSON.stringify({ cliente: nome.toUpperCase(), tipo_servico: 'avulso', data: new Date().toISOString().split('T')[0] }) });
+            carregarDados();
+        }
+
+        async function excluirRegistro(id) {
+            if(confirm("Excluir agendamento?")) {
+                await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: "DELETE", headers });
+                carregarDados();
+            }
+        }
+
+        function mudarFiltro(tipo, el) {
+            filtroAtual = tipo;
+            document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('tituloPagina').innerText = el.innerText;
+            carregarDados();
+        }
+
         function renderizar() {
             const container = document.getElementById('containerCards');
-            if(filtroAtual === 'vagas') return renderVagas(container);
+            if(filtroAtual === 'vagas') {
+                if(typeof renderVagas === 'function') return renderVagas(container);
+                else return;
+            }
 
             const hoje = new Date().toISOString().split('T')[0];
             let filtrados = [...todosDados];
@@ -116,61 +150,40 @@
                                 <option value="pacote_tosa" ${item.tipo_servico === 'pacote_tosa' ? 'selected' : ''}>Básico c/ Tosa</option>
                                 <option value="pacote_premium" ${item.tipo_servico === 'pacote_premium' ? 'selected' : ''}>Pacote Premium</option>
                             </select>
-                            ${ehPacote ? `<div class="mt-2 p-2 bg-purple-50 rounded border border-purple-100">
-                                <input type="date" value="${item.vencimento_pacote || ''}" onchange="updateDB('${item.id}', 'vencimento_pacote', this.value)" class="text-[9px] w-full bg-transparent">
-                                <input type="number" value="${item.valor_real_pago || 0}" onchange="updateDB('${item.id}', 'valor_real_pago', this.value)" class="text-[9px] font-black w-full bg-transparent" placeholder="PAGO">
-                            </div>` : ''}
+                            ${ehPacote ? `
+                                <div class="mt-2 p-2 bg-purple-50 rounded border border-purple-100">
+                                    <input type="date" value="${item.vencimento_pacote || ''}" onchange="updateDB('${item.id}', 'vencimento_pacote', this.value)" class="text-[9px] w-full bg-transparent">
+                                    <input type="number" value="${item.valor_real_pago || 0}" onchange="updateDB('${item.id}', 'valor_real_pago', this.value)" class="text-[9px] font-black w-full bg-transparent" placeholder="VALOR PAGO">
+                                </div>` : ''}
                         </div>
                         <div class="bg-slate-50 p-2 rounded border border-slate-200">
                             <div class="grid grid-cols-2 gap-1 text-[9px] font-black uppercase">
-                                <span>Valor Serv:</span> <input type="number" value="${item.valor_servico || 0}" onchange="updateDB('${item.id}', 'valor_servico', this.value)" class="bg-white border rounded">
-                                <span>Leva/Trás:</span> <input type="number" value="${item.taxa_leva_tras || 0}" onchange="updateDB('${item.id}', 'taxa_leva_tras', this.value)" class="bg-white border rounded text-orange-600">
-                                <span class="text-red-600 mt-1">Total:</span> <span class="mt-1">R$ ${total.toFixed(2)}</span>
-                                <span class="text-blue-600">Desconto:</span> <input type="number" value="${item.total_com_desconto || 0}" onchange="updateDB('${item.id}', 'total_com_desconto', this.value)" class="bg-white border rounded">
+                                <span>Valor Serv:</span> <input type="number" value="${item.valor_servico || 0}" onchange="updateDB('${item.id}', 'valor_servico', this.value)" class="bg-white border rounded px-1">
+                                <span>Leva/Trás:</span> <input type="number" value="${item.taxa_leva_tras || 0}" onchange="updateDB('${item.id}', 'taxa_leva_tras', this.value)" class="bg-white border rounded px-1 text-orange-600">
+                                <span class="text-red-600 mt-1 font-black">Total: R$ ${total.toFixed(2)}</span>
+                                <span>Desc:</span> <input type="number" value="${item.total_com_desconto || 0}" onchange="updateDB('${item.id}', 'total_com_desconto', this.value)" class="bg-white border rounded px-1">
                             </div>
-                            <select onchange="updateDB('${item.id}', 'forma_pagamento', this.value)" class="w-full text-[9px] font-black mt-2 p-1 border rounded bg-white font-bold">
+                            <select onchange="updateDB('${item.id}', 'forma_pagamento', this.value)" class="w-full text-[9px] font-black mt-2 p-1 border rounded bg-white">
                                 <option value="">Pagamento...</option>
                                 <option value="pix" ${item.forma_pagamento === 'pix' ? 'selected' : ''}>PIX</option>
-                                <option value="credito" ${item.forma_pagamento === 'credito' ? 'selected' : ''}>Crédito</option>
-                                <option value="debito" ${item.forma_pagamento === 'debito' ? 'selected' : ''}>Débito</option>
+                                <option value="credito" ${item.forma_pagamento === 'credito' ? 'selected' : ''}>Cartão Crédito</option>
+                                <option value="debito" ${item.forma_pagamento === 'debito' ? 'selected' : ''}>Cartão Débito</option>
                                 <option value="dinheiro" ${item.forma_pagamento === 'dinheiro' ? 'selected' : ''}>Dinheiro</option>
-                                <option value="qrcode" ${item.forma_pagamento === 'qrcode' ? 'selected' : ''}>QR Code</option>
+                                <option value="qrcode" ${item.forma_pagamento === 'qrcode' ? 'selected' : ''}>QR Code PIX</option>
                             </select>
                             <button onclick="excluirRegistro('${item.id}')" class="w-full mt-2 text-red-500 text-[8px] font-bold uppercase">Excluir</button>
                         </div>
                     </div>
                 </div>`).join('');
         }
+    </script>
+    
+    <script src="regras-adm.js"></script>
 
-        async function updateDB(id, campo, valor) {
-            await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: "PATCH", headers, body: JSON.stringify({ [campo]: valor }) });
-        }
-
-        async function adicionarNovo() {
-            const nome = prompt("Nome do Cliente:");
-            if(!nome) return;
-            await fetch(`${SB_URL}/agendamentos`, { method: "POST", headers, body: JSON.stringify({ cliente: nome.toUpperCase(), tipo_servico: 'avulso', data: new Date().toISOString().split('T')[0] }) });
-            carregarDados();
-        }
-
-        async function excluirRegistro(id) {
-            if(confirm("Excluir registro?")) {
-                await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: "DELETE", headers });
-                carregarDados();
-            }
-        }
-
-        function mudarFiltro(tipo, el) {
-            filtroAtual = tipo;
-            document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
-            el.classList.add('active');
-            carregarDados();
-        }
-
-        // --- FUNÇÕES DE VAGAS ---
+    <script>
         function renderVagas(container) {
             const dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-            container.innerHTML = `<div class="card-pet"><h3 class="font-bold mb-4 uppercase text-sm italic">Gestão de Vagas / Recessos</h3>` + 
+            container.innerHTML = `<div class="card-pet"><h3 class="font-bold mb-4 uppercase text-sm italic text-slate-800">⚙️ Gestão de Vagas / Recessos</h3>` + 
             todosDados.map(v => `
                 <div class="flex items-center justify-between border-b py-3">
                     <span class="text-[11px] font-bold uppercase w-28">${dias[v.dia_semana]} - ${v.horario}</span>
@@ -186,19 +199,13 @@
                     </div>
                 </div>`).join('') + 
             `<div class="mt-6 p-4 bg-slate-50 rounded-xl border border-dashed border-slate-300">
-                <label class="text-[10px] font-black uppercase text-red-600 block mb-2">Bloqueio Manual de Recesso (Calendário)</label>
+                <label class="text-[10px] font-black uppercase text-red-600 block mb-2">Bloqueio Manual de Recesso</label>
                 <div class="flex gap-2">
                     <input type="date" id="dataRecesso" class="border rounded p-2 text-xs flex-grow">
-                    <button onclick="alert('Dia bloqueado!')" class="bg-red-600 text-white px-4 py-2 rounded text-[10px] font-bold uppercase">Bloquear Dia</button>
+                    <button onclick="alert('Bloqueado!')" class="bg-red-600 text-white px-4 py-2 rounded text-[10px] font-bold uppercase">Bloquear Dia</button>
                 </div>
             </div></div>`;
         }
-
-        async function upVaga(id, campo, valor) {
-            const v = (campo === 'bloqueado') ? valor : (parseInt(valor) || 0);
-            await fetch(`${SB_URL}/configuracoes_agenda?id=eq.${id}`, { method: "PATCH", headers, body: JSON.stringify({ [campo]: v }) });
-        }
     </script>
-    <script src="regras-adm.js"></script>
 </body>
 </html>
