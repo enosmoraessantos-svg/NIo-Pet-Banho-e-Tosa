@@ -19,17 +19,9 @@
         @media (max-width: 768px) { .sidebar { left: -260px; } .content { margin-left: 0; } .sidebar.open { left: 0; } }
     </style>
 </head>
-<body>
+<body onload="carregarDados()"> <!-- Inicia carregando os dados automaticamente -->
 
-    <div id="loginArea" class="flex items-center justify-center min-h-screen bg-slate-100">
-        <div class="w-full max-w-md p-8 bg-white rounded-2xl shadow-2xl text-center">
-            <h1 class="text-3xl font-black text-slate-800 uppercase italic">Nilo Pet</h1>
-            <input type="password" id="senhaAdm" placeholder="Senha de acesso" class="w-full p-4 border-2 rounded-xl mb-4 text-center">
-            <button onclick="logar()" class="w-full bg-red-600 text-white font-black p-4 rounded-xl">ENTRAR</button>
-        </div>
-    </div>
-
-    <div id="painelArea" class="hidden">
+    <div id="painelArea">
         <div class="sidebar">
             <div class="p-6 border-b border-slate-700"><h2 class="font-black text-xl uppercase italic">Nilo Pet ADM</h2></div>
             <nav class="mt-4">
@@ -37,7 +29,7 @@
                 <div onclick="mudarFiltro('dia', this)" class="menu-item">📅 Agendamentos do Dia</div>
                 <div onclick="mudarFiltro('pacotes', this)" class="menu-item">📦 Controle de Pacotes</div>
                 <div onclick="mudarFiltro('vagas', this)" class="menu-item text-orange-400">🔒 Gestão de Vagas</div>
-                <div onclick="location.reload()" class="menu-item text-slate-400 mt-2">🚪 Sair</div>
+                <div onclick="location.reload()" class="menu-item text-slate-400 mt-2">↻ Atualizar Página</div>
             </nav>
         </div>
 
@@ -54,24 +46,13 @@
     </div>
 
     <script>
-        // SUBSTITUA pelo seu ID real do Supabase
-        const SB_URL = "https://yczhjyxisqrvfxxgipop.supabase.co/rest/v1"; 
+        // IMPORTANTE: Ajuste a URL abaixo com o ID do seu projeto Supabase
+        const SB_URL = "https://SEU_ID_DO_PROJETO.supabase.co/rest/v1"; 
         const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
         const headers = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json", "Prefer": "return=minimal" };
         
         let todosDados = [];
         let filtroAtual = 'geral';
-
-        function logar() {
-            const senhaInput = document.getElementById('senhaAdm').value;
-            if(senhaInput === 'nilopet2024') {
-                document.getElementById('loginArea').classList.add('hidden');
-                document.getElementById('painelArea').classList.remove('hidden');
-                carregarDados();
-            } else { 
-                alert("Senha incorreta!"); 
-            }
-        }
 
         async function carregarDados() {
             const container = document.getElementById('containerCards');
@@ -83,7 +64,7 @@
                 renderizar();
             } catch (e) { 
                 console.error(e);
-                alert("Erro ao conectar ao banco! Verifique se a SB_URL está correta."); 
+                container.innerHTML = "Erro ao conectar ao banco de dados.";
             }
         }
 
@@ -99,7 +80,7 @@
         async function novoAgendamento() {
             const nome = prompt("Nome do Cliente:");
             if(!nome) return;
-            const dataHoje = new Date().toISOString().split('T')[0]; // Corrigido: pegando a string, não o array
+            const dataHoje = new Date().toISOString().split('T')[0];
             await fetch(`${SB_URL}/agendamentos`, { method: "POST", headers, body: JSON.stringify({ cliente: nome.toUpperCase(), tipo_servico: 'avulso', data: dataHoje }) });
             carregarDados();
         }
@@ -134,7 +115,7 @@
             const container = document.getElementById('containerCards');
             if(filtroAtual === 'vagas') return renderVagas(container);
 
-            const hoje = new Date().toISOString().split('T')[0]; // Corrigido
+            const hoje = new Date().toISOString().split('T')[0];
             let filtrados = Array.isArray(todosDados) ? [...todosDados] : [];
 
             if(filtroAtual === 'dia') {
