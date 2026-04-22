@@ -3,132 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADM - Nilo Pet</title>
+    <title>Nilo Pet - Administrativo</title>
+    <link rel="stylesheet" href="style.css">
     <script src="https://tailwindcss.com"></script>
-    <style>
-        body { background-color: #f8fafc; font-family: sans-serif; }
-        .sidebar { width: 260px; height: 100vh; position: fixed; left: 0; top: 0; background: #1e293b; color: white; z-index: 1000; }
-        .content { margin-left: 260px; padding: 20px; }
-        .menu-item { padding: 15px 20px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 600; border-left: 4px solid transparent; }
-        .menu-item.active { background: #334155; border-left-color: #ef4444; color: #ef4444; }
-        .card-pet { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 20px; margin-bottom: 15px; }
-    </style>
 </head>
 <body>
 
-    <div class="sidebar">
-        <div class="p-6 border-b border-slate-700"><h2 class="font-black text-xl uppercase italic">Nilo Pet ADM</h2></div>
-        <nav class="mt-4">
-            <div onclick="mudarFiltro('geral', this)" class="menu-item active">📊 Agendamentos</div>
-            <div onclick="mudarFiltro('vagas', this)" class="menu-item text-orange-400 font-bold">⚙️ Gestão de Vagas</div>
-            <div onclick="carregarDados()" class="menu-item text-slate-400 mt-2">↻ Sincronizar</div>
+    <aside class="sidebar">
+        <div class="logo">
+            <h1 class="font-black text-xl uppercase italic text-white">Nilo Pet ADM</h1>
+        </div>
+        <nav class="menu">
+            <button onclick="mudarFiltro('geral', this)" class="menu-item active">📊 Agendamentos Geral</button>
+            <button onclick="mudarFiltro('dia', this)" class="menu-item">📅 Agendamentos do Dia</button>
+            <button onclick="mudarFiltro('pacotes', this)" class="menu-item">📦 Controle de Pacotes</button>
+            <button onclick="mudarFiltro('vagas', this)" class="menu-item text-orange-400">🔒 Gestão de Vagas</button>
+            <button onclick="exportarRelatorio()" class="menu-item text-green-400 mt-4 border-t border-slate-700 pt-4">📄 Exportar Relatório</button>
+            <button onclick="location.reload()" class="menu-item text-slate-400">↻ Atualizar Página</button>
         </nav>
-    </div>
+    </aside>
 
-    <div class="content">
-        <header class="flex justify-between items-center mb-8">
-            <h2 id="tituloPagina" class="text-2xl font-black text-slate-800 uppercase italic">Agendamentos</h2>
+    <main class="content">
+        <header class="header">
+            <h2 id="tituloPagina" class="text-2xl font-black text-slate-800 uppercase italic">Agendamentos Geral</h2>
+            <button onclick="novoAgendamento()" class="btn-novo">+ NOVO AGENDAMENTO</button>
         </header>
-        <div id="containerCards" class="grid grid-cols-1 gap-4"></div>
-    </div>
 
-    <script>
-        const SB_URL = "https://supabase.co"; // Sem barra no final
-        const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
-        const headers = { 
-            "apikey": SB_KEY, 
-            "Authorization": "Bearer " + SB_KEY, 
-            "Content-Type": "application/json", 
-            "Prefer": "return=minimal" 
-        };
+        <div id="containerCards" class="grid-container">
+            <!-- Os cards entrarão aqui via JS -->
+        </div>
+    </main>
 
-        let todosDados = [];
-        let filtroAtual = 'geral';
-
-        window.onload = carregarDados;
-
-        async function carregarDados() {
-            const container = document.getElementById('containerCards');
-            container.innerHTML = "<p class='text-center p-10 font-bold text-slate-400 uppercase italic'>Buscando informações...</p>";
-            
-            try {
-                const endpoint = filtroAtual === 'vagas' ? "configuracoes_agenda" : "agendamentos";
-                const response = await fetch(`${SB_URL}/${endpoint}?select=*`, { headers });
-                
-                if (!response.ok) throw new Error("Erro na rede");
-                
-                todosDados = await response.json();
-                renderizar();
-            } catch (e) { 
-                container.innerHTML = `<p class='text-red-500 font-bold p-10'>Erro ao carregar tabela: ${filtroAtual}. Verifique se a tabela existe no Supabase.</p>`;
-            }
-        }
-
-        function mudarFiltro(tipo, el) {
-            filtroAtual = tipo;
-            document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
-            el.classList.add('active');
-            document.getElementById('tituloPagina').innerText = el.innerText;
-            carregarDados();
-        }
-
-        function renderizar() {
-            const container = document.getElementById('containerCards');
-            if (todosDados.length === 0) {
-                container.innerHTML = "<p class='text-center p-10 text-slate-400'>Nenhum dado encontrado nesta tabela.</p>";
-                return;
-            }
-
-            if (filtroAtual === 'vagas') {
-                const dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-                todosDados.sort((a, b) => a.dia_semana - b.dia_semana || a.horario.localeCompare(b.horario));
-
-                let html = `<div class="card-pet"><h3 class="font-black mb-6 uppercase text-slate-800 border-b pb-2">Configuração de Vagas por Horário</h3>`;
-                html += todosDados.map(v => `
-                    <div class="flex items-center justify-between border-b py-4 hover:bg-slate-50 transition">
-                        <span class="text-xs font-black uppercase w-32 text-slate-700">${dias[v.dia_semana]} - ${v.horario}</span>
-                        <div class="flex gap-3 items-center">
-                            <div class="text-center">
-                                <label class="block text-[8px] font-bold text-slate-400 uppercase">Pequeno</label>
-                                <input type="number" value="${v.vagas_banho || 0}" onchange="upVaga(${v.id}, 'vagas_banho', this.value)" class="w-12 border rounded p-1 text-center font-bold">
-                            </div>
-                            <div class="text-center">
-                                <label class="block text-[8px] font-bold text-slate-400 uppercase">Grd Curto</label>
-                                <input type="number" value="${v.vagas_grande_curto || 0}" onchange="upVaga(${v.id}, 'vagas_grande_curto', this.value)" class="w-12 border rounded p-1 text-center font-bold">
-                            </div>
-                            <div class="text-center">
-                                <label class="block text-[8px] font-bold text-slate-400 uppercase">Grd Pelu</label>
-                                <input type="number" value="${v.vagas_grande_peludo || 0}" onchange="upVaga(${v.id}, 'vagas_grande_peludo', this.value)" class="w-12 border rounded p-1 text-center font-bold">
-                            </div>
-                            <div class="text-center">
-                                <label class="block text-[8px] font-bold text-slate-400 uppercase">Gato</label>
-                                <input type="number" value="${v.vagas_gato || 0}" onchange="upVaga(${v.id}, 'vagas_gato', this.value)" class="w-12 border rounded p-1 text-center font-bold">
-                            </div>
-                            <div class="ml-4 flex items-center gap-2">
-                                <input type="checkbox" ${v.bloqueado ? 'checked' : ''} onchange="upVaga(${v.id}, 'bloqueado', this.checked)" class="w-4 h-4">
-                                <span class="text-[10px] font-bold text-red-600 uppercase">Bloquear</span>
-                            </div>
-                        </div>
-                    </div>`).join('');
-                container.innerHTML = html + `</div>`;
-            } else {
-                container.innerHTML = todosDados.map(item => `
-                    <div class="card-pet shadow-sm">
-                        <p class="font-black text-slate-800 uppercase italic">${item.cliente || 'Sem Nome'}</p>
-                        <p class="text-xs text-slate-500 font-bold">${item.whatsapp || ''}</p>
-                    </div>`).join('');
-            }
-        }
-
-        async function upVaga(id, campo, valor) {
-            await fetch(`${SB_URL}/configuracoes_agenda?id=eq.${id}`, { 
-                method: "PATCH", 
-                headers, 
-                body: JSON.stringify({ [campo]: valor }) 
-            });
-            console.log(`Atualizado: ${campo} para ${valor}`);
-        }
-        </script> <script src="regras-adm.js"
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
