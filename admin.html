@@ -64,6 +64,99 @@ body { background-color: #f1f5f9; margin: 0; font-family: sans-serif; }
     background: white; border-radius: 12px; padding: 20px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 5px solid #cbd5e1;
 }
+// CONFIGURAÇÃO SUPABASE
+const SB_URL = "https://SEU_ID.supabase.co/rest/v1"; 
+const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
+const headers = { 
+    "apikey": SB_KEY, 
+    "Authorization": "Bearer " + SB_KEY, 
+    "Content-Type": "application/json" 
+};
+
+let todosDados = [];
+let filtroAtual = 'geral';
+
+// INICIALIZAÇÃO
+window.onload = () => carregarDados();
+
+async function carregarDados() {
+    const container = document.getElementById('containerCards');
+    container.innerHTML = "<p>Carregando dados...</p>";
+
+    try {
+        const res = await fetch(`${SB_URL}/agendamentos?select=*`, { headers });
+        todosDados = await res.json();
+        renderizar();
+    } catch (e) {
+        container.innerHTML = "<p>Erro ao carregar banco de dados.</p>";
+    }
+}
+
+function mudarFiltro(tipo, elemento) {
+    filtroAtual = tipo;
+    document.querySelectorAll('.menu-item').forEach(btn => btn.classList.remove('active'));
+    elemento.classList.add('active');
+    document.getElementById('tituloPagina').innerText = elemento.innerText;
+    renderizar();
+}
+
+function renderizar() {
+    const container = document.getElementById('containerCards');
+    const hoje = new Date().toISOString().split('T')[0];
+    
+    let lista = [...todosDados];
+
+    if(filtroAtual === 'dia') lista = lista.filter(i => i.data === hoje);
+    if(filtroAtual === 'pacotes') lista = lista.filter(i => i.tipo_servico !== 'avulso');
+
+    container.innerHTML = lista.map(item => `
+        <div class="card-pet">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h3 class="font-bold text-lg uppercase">${item.cliente || 'Sem Nome'}</h3>
+                    <p class="text-xs text-gray-500">${item.tipo_servico} - ${item.data}</p>
+                </div>
+                <div class="text-right">
+                    <span class="font-bold text-red-600">R$ ${item.valor_servico || 0}</span>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function exportarRelatorio() {
+    if (todosDados.length === 0) return alert("Não há dados para exportar");
+    
+    const csvRows = [
+        ["Cliente", "Data", "Servico", "Valor"],
+        ...todosDados.map(i => [i.cliente, i.data, i.tipo_servico, i.valor_servico])
+    ];
+
+    const csvContent = csvRows.map(e => e.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute("download", "relatorio_nilo_pet.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+async function novoAgendamento() {
+    const nome = prompt("Nome do Cliente:");
+    if(!nome) return;
+    
+    await fetch(`${SB_URL}/agendamentos`, { 
+        method: "POST", 
+        headers, 
+        body: JSON.stringify({ 
+            cliente: nome.toUpperCase(), 
+            tipo_servico: 'avulso', 
+            data: new Date().toISOString().split('T')[0] 
+        }) 
+    });
+    carregarDados();
+}
 
     <script src="script.js"></script>
 </body>
