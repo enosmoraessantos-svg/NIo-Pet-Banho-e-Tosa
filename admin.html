@@ -6,43 +6,34 @@
     <title>ADM - Nilo Pet</title>
     <script src="https://tailwindcss.com"></script>
     <style>
-        body { background-color: #f8fafc; font-family: sans-serif; overflow-x: hidden; }
-        .sidebar { width: 260px; height: 100vh; position: fixed; left: 0; top: 0; background: #1e293b; color: white; transition: 0.3s; z-index: 1000; }
-        .content { margin-left: 260px; padding: 20px; transition: 0.3s; }
+        body { background-color: #f8fafc; font-family: sans-serif; }
+        .sidebar { width: 260px; height: 100vh; position: fixed; left: 0; top: 0; background: #1e293b; color: white; z-index: 1000; }
+        .content { margin-left: 260px; padding: 20px; }
         .menu-item { padding: 15px 20px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 600; border-left: 4px solid transparent; }
-        .menu-item:hover { background: #334155; }
         .menu-item.active { background: #334155; border-left-color: #ef4444; color: #ef4444; }
-        .card-pet { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 15px; }
-        .input-edit { background: transparent; border: 1px solid transparent; transition: 0.2s; width: 100%; }
-        .input-edit:hover, .input-edit:focus { background: #f1f5f9; border-color: #cbd5e1; border-radius: 4px; padding: 2px; }
-        @media (max-width: 768px) { .sidebar { left: -260px; } .content { margin-left: 0; } .sidebar.open { left: 0; } }
+        .card-pet { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 20px; margin-bottom: 15px; }
     </style>
 </head>
 <body>
 
-    <div id="painelArea">
-        <div class="sidebar">
-            <div class="p-6 border-b border-slate-700"><h2 class="font-black text-xl uppercase italic">Nilo Pet ADM</h2></div>
-            <nav class="mt-4">
-                <div onclick="mudarFiltro('geral', this)" class="menu-item active">📊 Agendamentos Geral</div>
-                <div onclick="mudarFiltro('dia', this)" class="menu-item">📅 Agendamentos do Dia</div>
-                <div onclick="mudarFiltro('pacotes', this)" class="menu-item">📦 Controle de Pacotes</div>
-                <div onclick="mudarFiltro('vagas', this)" class="menu-item text-orange-400">🔒 Gestão de Vagas</div>
-                <div onclick="location.reload()" class="menu-item text-slate-400 mt-2">↻ Atualizar Sistema</div>
-            </nav>
-        </div>
+    <div class="sidebar">
+        <div class="p-6 border-b border-slate-700"><h2 class="font-black text-xl uppercase italic">Nilo Pet ADM</h2></div>
+        <nav class="mt-4">
+            <div onclick="mudarFiltro('geral', this)" class="menu-item active">📊 Agendamentos</div>
+            <div onclick="mudarFiltro('vagas', this)" class="menu-item text-orange-400 font-bold">⚙️ Gestão de Vagas</div>
+            <div onclick="carregarDados()" class="menu-item text-slate-400 mt-2">↻ Sincronizar</div>
+        </nav>
+    </div>
 
-        <div class="content">
-            <header class="flex justify-between items-center mb-8">
-                <h2 id="tituloPagina" class="text-2xl font-black text-slate-800 uppercase italic">Agendamentos Geral</h2>
-                <button onclick="carregarDados()" class="bg-white border p-3 rounded-xl shadow-sm font-bold text-xs uppercase">Sincronizar ↻</button>
-            </header>
-            <div id="containerCards" class="grid grid-cols-1 gap-4"></div>
-        </div>
+    <div class="content">
+        <header class="flex justify-between items-center mb-8">
+            <h2 id="tituloPagina" class="text-2xl font-black text-slate-800 uppercase italic">Agendamentos</h2>
+        </header>
+        <div id="containerCards" class="grid grid-cols-1 gap-4"></div>
     </div>
 
     <script>
-        const SB_URL = "https://yczhjyxisqrvfxxgipop.supabase.co/rest/v1";
+        const SB_URL = "https://supabase.co"; // Sem barra no final
         const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
         const headers = { 
             "apikey": SB_KEY, 
@@ -54,19 +45,22 @@
         let todosDados = [];
         let filtroAtual = 'geral';
 
-        // Inicia o carregamento automaticamente ao abrir
         window.onload = carregarDados;
 
         async function carregarDados() {
             const container = document.getElementById('containerCards');
-            container.innerHTML = "Carregando...";
+            container.innerHTML = "<p class='text-center p-10 font-bold text-slate-400 uppercase italic'>Buscando informações...</p>";
+            
             try {
                 const endpoint = filtroAtual === 'vagas' ? "configuracoes_agenda" : "agendamentos";
-                const res = await fetch(`${SB_URL}${endpoint}?select=*`, { headers });
-                todosDados = await res.json();
+                const response = await fetch(`${SB_URL}/${endpoint}?select=*`, { headers });
+                
+                if (!response.ok) throw new Error("Erro na rede");
+                
+                todosDados = await response.json();
                 renderizar();
             } catch (e) { 
-                container.innerHTML = "Erro ao conectar com o banco de dados.";
+                container.innerHTML = `<p class='text-red-500 font-bold p-10'>Erro ao carregar tabela: ${filtroAtual}. Verifique se a tabela existe no Supabase.</p>`;
             }
         }
 
@@ -80,78 +74,60 @@
 
         function renderizar() {
             const container = document.getElementById('containerCards');
-            if(filtroAtual === 'vagas') return renderVagas(container);
+            if (todosDados.length === 0) {
+                container.innerHTML = "<p class='text-center p-10 text-slate-400'>Nenhum dado encontrado nesta tabela.</p>";
+                return;
+            }
 
-            const hoje = new Date().toISOString().split('T')[0];
-            let filtrados = todosDados;
+            if (filtroAtual === 'vagas') {
+                const dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+                todosDados.sort((a, b) => a.dia_semana - b.dia_semana || a.horario.localeCompare(b.horario));
 
-            if(filtroAtual === 'dia') filtrados = todosDados.filter(i => i.pets?.some(p => p.agenda?.some(a => a.data === hoje)));
-            else if (filtroAtual === 'pacotes') filtrados = todosDados.filter(i => i.pets?.some(p => p.plano !== 'avulso'));
-
-            container.innerHTML = filtrados.map(item => `
-                <div class="card-pet shadow-sm">
-                    <div class="flex justify-between items-start border-b pb-3 mb-4">
-                        <div class="w-full">
-                            <input type="text" value="${item.cliente || ''}" onchange="updateDB('${item.id}', 'cliente', this.value)" class="input-edit font-black text-lg text-slate-800 uppercase italic">
-                            <div class="flex gap-2">
-                                <input type="text" value="${item.whatsapp || ''}" onchange="updateDB('${item.id}', 'whatsapp', this.value)" class="input-edit text-[10px] text-slate-500 font-bold uppercase w-24">
-                                <span class="text-slate-300">|</span>
-                                <input type="text" value="${item.rua || ''}" onchange="updateDB('${item.id}', 'rua', this.value)" class="input-edit text-[10px] text-slate-500 font-bold uppercase">
+                let html = `<div class="card-pet"><h3 class="font-black mb-6 uppercase text-slate-800 border-b pb-2">Configuração de Vagas por Horário</h3>`;
+                html += todosDados.map(v => `
+                    <div class="flex items-center justify-between border-b py-4 hover:bg-slate-50 transition">
+                        <span class="text-xs font-black uppercase w-32 text-slate-700">${dias[v.dia_semana]} - ${v.horario}</span>
+                        <div class="flex gap-3 items-center">
+                            <div class="text-center">
+                                <label class="block text-[8px] font-bold text-slate-400 uppercase">Pequeno</label>
+                                <input type="number" value="${v.vagas_banho || 0}" onchange="upVaga(${v.id}, 'vagas_banho', this.value)" class="w-12 border rounded p-1 text-center font-bold">
+                            </div>
+                            <div class="text-center">
+                                <label class="block text-[8px] font-bold text-slate-400 uppercase">Grd Curto</label>
+                                <input type="number" value="${v.vagas_grande_curto || 0}" onchange="upVaga(${v.id}, 'vagas_grande_curto', this.value)" class="w-12 border rounded p-1 text-center font-bold">
+                            </div>
+                            <div class="text-center">
+                                <label class="block text-[8px] font-bold text-slate-400 uppercase">Grd Pelu</label>
+                                <input type="number" value="${v.vagas_grande_peludo || 0}" onchange="upVaga(${v.id}, 'vagas_grande_peludo', this.value)" class="w-12 border rounded p-1 text-center font-bold">
+                            </div>
+                            <div class="text-center">
+                                <label class="block text-[8px] font-bold text-slate-400 uppercase">Gato</label>
+                                <input type="number" value="${v.vagas_gato || 0}" onchange="upVaga(${v.id}, 'vagas_gato', this.value)" class="w-12 border rounded p-1 text-center font-bold">
+                            </div>
+                            <div class="ml-4 flex items-center gap-2">
+                                <input type="checkbox" ${v.bloqueado ? 'checked' : ''} onchange="upVaga(${v.id}, 'bloqueado', this.checked)" class="w-4 h-4">
+                                <span class="text-[10px] font-bold text-red-600 uppercase">Bloquear</span>
                             </div>
                         </div>
-                    </div>
-                </div>`).join('');
-        }
-
-        function renderVagas(container) {
-            const dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-            // Ordenar por dia e horário
-            todosDados.sort((a, b) => a.dia_semana - b.dia_semana || a.horario.localeCompare(b.horario));
-
-            container.innerHTML = `<div class="card-pet"><h3 class="font-black mb-4 uppercase text-sm italic text-slate-800">⚙️ Gestão de Vagas / Recessos</h3>` + 
-            todosDados.map(v => `
-                <div class="flex items-center justify-between border-b py-3">
-                    <span class="text-[11px] font-black uppercase w-28 text-slate-700">${dias[v.dia_semana]} - ${v.horario}</span>
-                    <div class="flex gap-2 flex-wrap items-center">
-                        <div class="flex flex-col items-center"><label class="text-[7px] font-bold uppercase">Peq/Med</label><input type="number" value="${v.vagas_banho || 0}" onchange="upVaga(${v.id}, 'vagas_banho', this.value)" class="w-9 border rounded text-xs p-1 text-center font-bold"></div>
-                        <div class="flex flex-col items-center"><label class="text-[7px] font-bold uppercase">Grd Curto</label><input type="number" value="${v.vagas_grande_curto || 0}" onchange="upVaga(${v.id}, 'vagas_grande_curto', this.value)" class="w-9 border rounded text-xs p-1 text-center font-bold"></div>
-                        <div class="flex flex-col items-center"><label class="text-[7px] font-bold uppercase">Grd Peludo</label><input type="number" value="${v.vagas_grande_peludo || 0}" onchange="upVaga(${v.id}, 'vagas_grande_peludo', this.value)" class="w-9 border rounded text-xs p-1 text-center font-bold"></div>
-                        <div class="flex flex-col items-center"><label class="text-[7px] font-bold uppercase">Gato</label><input type="number" value="${v.vagas_gato || 0}" onchange="upVaga(${v.id}, 'vagas_gato', this.value)" class="w-9 border rounded text-xs p-1 text-center font-bold"></div>
-                        <div class="flex items-center gap-1 border-l pl-2">
-                            <input type="checkbox" ${v.bloqueado ? 'checked' : ''} onchange="upVaga(${v.id}, 'bloqueado', this.checked)">
-                            <label class="text-[9px] font-black uppercase text-red-500">Bloquear</label>
-                        </div>
-                    </div>
-                </div>`).join('') + 
-            `<div class="mt-6 p-4 bg-red-50 rounded-xl border border-dashed border-red-200">
-                <label class="text-[10px] font-black uppercase text-red-600 block mb-2 text-center">Bloqueio de Recesso (Dia Inteiro)</label>
-                <div class="flex gap-2">
-                    <input type="date" id="dataRecesso" class="border rounded p-2 text-xs flex-grow font-bold">
-                    <button onclick="alert('Data registrada para bloqueio!')" class="bg-red-600 text-white px-4 py-2 rounded text-[10px] font-black uppercase shadow-md">Bloquear Data</button>
-                </div>
-            </div></div>`;
+                    </div>`).join('');
+                container.innerHTML = html + `</div>`;
+            } else {
+                container.innerHTML = todosDados.map(item => `
+                    <div class="card-pet shadow-sm">
+                        <p class="font-black text-slate-800 uppercase italic">${item.cliente || 'Sem Nome'}</p>
+                        <p class="text-xs text-slate-500 font-bold">${item.whatsapp || ''}</p>
+                    </div>`).join('');
+            }
         }
 
         async function upVaga(id, campo, valor) {
-            try {
-                await fetch(`${SB_URL}configuracoes_agenda?id=eq.${id}`, { 
-                    method: "PATCH", 
-                    headers, 
-                    body: JSON.stringify({ [campo]: valor }) 
-                });
-            } catch (e) { console.error("Erro ao atualizar vaga"); }
+            await fetch(`${SB_URL}/configuracoes_agenda?id=eq.${id}`, { 
+                method: "PATCH", 
+                headers, 
+                body: JSON.stringify({ [campo]: valor }) 
+            });
+            console.log(`Atualizado: ${campo} para ${valor}`);
         }
-
-        async function updateDB(id, campo, valor) {
-            try {
-                await fetch(`${SB_URL}agendamentos?id=eq.${id}`, { 
-                    method: "PATCH", 
-                    headers, 
-                    body: JSON.stringify({ [campo]: valor }) 
-                });
-            } catch (e) { console.error("Erro ao atualizar agendamento"); }
-        }
-        </script> <script src="regras-adm.js"
     </script>
 </body>
 </html>
