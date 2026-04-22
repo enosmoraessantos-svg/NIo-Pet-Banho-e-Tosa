@@ -13,13 +13,12 @@
         .menu-item:hover { background: #334155; }
         .menu-item.active { background: #334155; border-left-color: #ef4444; color: #ef4444; }
         .card-pet { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 15px; }
-        .hidden { display: none; }
         .input-edit { background: transparent; border: 1px solid transparent; transition: 0.2s; width: 100%; }
         .input-edit:hover, .input-edit:focus { background: #f1f5f9; border-color: #cbd5e1; border-radius: 4px; padding: 2px; }
         @media (max-width: 768px) { .sidebar { left: -260px; } .content { margin-left: 0; } .sidebar.open { left: 0; } }
     </style>
 </head>
-<body onload="carregarDados()"> <!-- Inicia carregando os dados automaticamente -->
+<body>
 
     <div id="painelArea">
         <div class="sidebar">
@@ -29,66 +28,45 @@
                 <div onclick="mudarFiltro('dia', this)" class="menu-item">📅 Agendamentos do Dia</div>
                 <div onclick="mudarFiltro('pacotes', this)" class="menu-item">📦 Controle de Pacotes</div>
                 <div onclick="mudarFiltro('vagas', this)" class="menu-item text-orange-400">🔒 Gestão de Vagas</div>
-                <div onclick="location.reload()" class="menu-item text-slate-400 mt-2">↻ Atualizar Página</div>
+                <div onclick="location.reload()" class="menu-item text-slate-400 mt-2">↻ Atualizar Sistema</div>
             </nav>
         </div>
 
         <div class="content">
             <header class="flex justify-between items-center mb-8">
                 <h2 id="tituloPagina" class="text-2xl font-black text-slate-800 uppercase italic">Agendamentos Geral</h2>
-                <div class="flex gap-2">
-                    <button onclick="novoAgendamento()" class="bg-green-600 text-white p-3 rounded-xl shadow-sm font-bold text-xs uppercase">+ NOVO</button>
-                    <button onclick="carregarDados()" class="bg-white border p-3 rounded-xl shadow-sm font-bold text-xs uppercase italic">Sincronizar ↻</button>
-                </div>
+                <button onclick="carregarDados()" class="bg-white border p-3 rounded-xl shadow-sm font-bold text-xs uppercase">Sincronizar ↻</button>
             </header>
             <div id="containerCards" class="grid grid-cols-1 gap-4"></div>
         </div>
     </div>
 
     <script>
-        // IMPORTANTE: Ajuste a URL abaixo com o ID do seu projeto Supabase
-        const SB_URL = "https://yczhjyxisqrvfxxgipop.supabase.co/rest/v1"; 
+        const SB_URL = "https://supabase.co";
         const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
-        const headers = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json", "Prefer": "return=minimal" };
-        
+        const headers = { 
+            "apikey": SB_KEY, 
+            "Authorization": "Bearer " + SB_KEY, 
+            "Content-Type": "application/json", 
+            "Prefer": "return=minimal" 
+        };
+
         let todosDados = [];
         let filtroAtual = 'geral';
+
+        // Inicia o carregamento automaticamente ao abrir
+        window.onload = carregarDados;
 
         async function carregarDados() {
             const container = document.getElementById('containerCards');
             container.innerHTML = "Carregando...";
             try {
-                const endpoint = filtroAtual === 'vagas' ? "/configuracoes_agenda" : "/agendamentos";
+                const endpoint = filtroAtual === 'vagas' ? "configuracoes_agenda" : "agendamentos";
                 const res = await fetch(`${SB_URL}${endpoint}?select=*`, { headers });
                 todosDados = await res.json();
                 renderizar();
             } catch (e) { 
-                console.error(e);
-                container.innerHTML = "Erro ao conectar ao banco de dados.";
-            }
-        }
-
-        async function updateDB(id, campo, valor) {
-            await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: "PATCH", headers, body: JSON.stringify({ [campo]: valor }) });
-        }
-
-        async function upVaga(id, campo, valor) {
-            const v = (campo === 'bloqueado') ? valor : (parseInt(valor) || 0);
-            await fetch(`${SB_URL}/configuracoes_agenda?id=eq.${id}`, { method: "PATCH", headers, body: JSON.stringify({ [campo]: v }) });
-        }
-
-        async function novoAgendamento() {
-            const nome = prompt("Nome do Cliente:");
-            if(!nome) return;
-            const dataHoje = new Date().toISOString().split('T')[0];
-            await fetch(`${SB_URL}/agendamentos`, { method: "POST", headers, body: JSON.stringify({ cliente: nome.toUpperCase(), tipo_servico: 'avulso', data: dataHoje }) });
-            carregarDados();
-        }
-
-        async function excluirRegistro(id) {
-            if(confirm("Excluir registro?")) {
-                await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: "DELETE", headers });
-                carregarDados();
+                container.innerHTML = "Erro ao conectar com o banco de dados.";
             }
         }
 
@@ -100,81 +78,79 @@
             carregarDados();
         }
 
-        function renderVagas(container) {
-            container.innerHTML = todosDados.map(item => `
-                <div class="card-pet">
-                    <div class="flex justify-between items-center">
-                        <span class="font-bold uppercase">${item.dia_semana || 'Configuração'}</span>
-                        <input type="number" value="${item.vagas_totais || 0}" onchange="upVaga('${item.id}', 'vagas_totais', this.value)" class="border rounded p-1 w-16 text-center">
-                    </div>
-                </div>
-            `).join('') || "Nenhuma configuração encontrada.";
-        }
-
         function renderizar() {
             const container = document.getElementById('containerCards');
             if(filtroAtual === 'vagas') return renderVagas(container);
 
             const hoje = new Date().toISOString().split('T')[0];
-            let filtrados = Array.isArray(todosDados) ? [...todosDados] : [];
+            let filtrados = todosDados;
 
-            if(filtroAtual === 'dia') {
-                filtrados = filtrados.filter(i => i.data === hoje);
-            } else if (filtroAtual === 'pacotes') {
-                filtrados = filtrados.filter(i => i.tipo_servico && i.tipo_servico !== 'avulso');
-                filtrados.sort((a, b) => (a.cliente || '').localeCompare(b.cliente || ''));
-            } else {
-                filtrados.sort((a, b) => new Date(b.data) - new Date(a.data));
-            }
+            if(filtroAtual === 'dia') filtrados = todosDados.filter(i => i.pets?.some(p => p.agenda?.some(a => a.data === hoje)));
+            else if (filtroAtual === 'pacotes') filtrados = todosDados.filter(i => i.pets?.some(p => p.plano !== 'avulso'));
 
-            container.innerHTML = filtrados.map(item => {
-                const total = (parseFloat(item.valor_servico) || 0) + (parseFloat(item.taxa_leva_tras) || 0);
-                const ehPacote = item.tipo_servico && item.tipo_servico !== 'avulso';
-
-                return `
-                <div class="card-pet shadow-sm border-l-4 ${ehPacote ? 'border-purple-600' : 'border-red-600'}">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
+            container.innerHTML = filtrados.map(item => `
+                <div class="card-pet shadow-sm">
+                    <div class="flex justify-between items-start border-b pb-3 mb-4">
+                        <div class="w-full">
                             <input type="text" value="${item.cliente || ''}" onchange="updateDB('${item.id}', 'cliente', this.value)" class="input-edit font-black text-lg text-slate-800 uppercase italic">
-                            <input type="text" value="${item.whatsapp || ''}" onchange="updateDB('${item.id}', 'whatsapp', this.value)" class="input-edit text-[10px] text-slate-500 font-bold" placeholder="WHATSAPP">
-                            <input type="text" value="${item.rua || ''}" onchange="updateDB('${item.id}', 'rua', this.value)" class="input-edit text-[10px] text-slate-500 font-bold uppercase" placeholder="ENDEREÇO">
-                        </div>
-                        <div>
-                            <input type="date" value="${item.data || ''}" onchange="updateDB('${item.id}', 'data', this.value)" class="input-edit text-xs font-bold">
-                            <select onchange="updateDB('${item.id}', 'tipo_servico', this.value)" class="input-edit text-[10px] font-black uppercase italic mt-1">
-                                <option value="avulso" ${item.tipo_servico === 'avulso' ? 'selected' : ''}>Avulso</option>
-                                <option value="pacote_basico" ${item.tipo_servico === 'pacote_basico' ? 'selected' : ''}>Pacote Básico</option>
-                                <option value="pacote_tosa" ${item.tipo_servico === 'pacote_tosa' ? 'selected' : ''}>Básico c/ Tosa</option>
-                                <option value="pacote_premium" ${item.tipo_servico === 'pacote_premium' ? 'selected' : ''}>Pacote Premium</option>
-                            </select>
-                            ${ehPacote ? `
-                                <div class="mt-2 p-2 bg-purple-50 rounded border border-purple-100">
-                                    <input type="date" value="${item.vencimento_pacote || ''}" onchange="updateDB('${item.id}', 'vencimento_pacote', this.value)" class="text-[9px] w-full bg-transparent">
-                                    <input type="number" value="${item.valor_real_pago || 0}" onchange="updateDB('${item.id}', 'valor_real_pago', this.value)" class="text-[9px] font-black w-full bg-transparent" placeholder="VALOR PAGO">
-                                </div>` : ''}
-                        </div>
-                        <div class="bg-slate-50 p-2 rounded border border-slate-200">
-                            <div class="grid grid-cols-2 gap-1 text-[9px] font-black uppercase">
-                                <span>Valor Serv:</span> <input type="number" value="${item.valor_servico || 0}" onchange="updateDB('${item.id}', 'valor_servico', this.value)" class="bg-white border rounded">
-                                <span>Leva/Trás:</span> <input type="number" value="${item.taxa_leva_tras || 0}" onchange="updateDB('${item.id}', 'taxa_leva_tras', this.value)" class="bg-white border rounded text-orange-600">
-                                <span class="text-red-600 mt-1">Total: R$ ${total.toFixed(2)}</span>
-                                <input type="number" placeholder="Desconto" value="${item.total_com_desconto || 0}" onchange="updateDB('${item.id}', 'total_com_desconto', this.value)" class="bg-white border rounded px-1">
+                            <div class="flex gap-2">
+                                <input type="text" value="${item.whatsapp || ''}" onchange="updateDB('${item.id}', 'whatsapp', this.value)" class="input-edit text-[10px] text-slate-500 font-bold uppercase w-24">
+                                <span class="text-slate-300">|</span>
+                                <input type="text" value="${item.rua || ''}" onchange="updateDB('${item.id}', 'rua', this.value)" class="input-edit text-[10px] text-slate-500 font-bold uppercase">
                             </div>
-                            <select onchange="updateDB('${item.id}', 'forma_pagamento', this.value)" class="w-full text-[9px] font-black uppercase mt-2 p-1 border rounded bg-white font-bold">
-                                <option value="">Pagamento...</option>
-                                <option value="pix" ${item.forma_pagamento === 'pix' ? 'selected' : ''}>PIX</option>
-                                <option value="credito" ${item.forma_pagamento === 'credito' ? 'selected' : ''}>Cartão Crédito</option>
-                                <option value="debito" ${item.forma_pagamento === 'debito' ? 'selected' : ''}>Cartão Débito</option>
-                                <option value="dinheiro" ${item.forma_pagamento === 'dinheiro' ? 'selected' : ''}>Dinheiro</option>
-                                <option value="qrcode" ${item.forma_pagamento === 'qrcode' ? 'selected' : ''}>QR Code PIX</option>
-                            </select>
-                            <button onclick="excluirRegistro('${item.id}')" class="w-full mt-2 text-red-500 text-[8px] font-bold uppercase">Excluir</button>
                         </div>
                     </div>
                 </div>`).join('');
         }
-        </script>
-    <script src="regras-adm.js"></script>
+
+        function renderVagas(container) {
+            const dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+            // Ordenar por dia e horário
+            todosDados.sort((a, b) => a.dia_semana - b.dia_semana || a.horario.localeCompare(b.horario));
+
+            container.innerHTML = `<div class="card-pet"><h3 class="font-black mb-4 uppercase text-sm italic text-slate-800">⚙️ Gestão de Vagas / Recessos</h3>` + 
+            todosDados.map(v => `
+                <div class="flex items-center justify-between border-b py-3">
+                    <span class="text-[11px] font-black uppercase w-28 text-slate-700">${dias[v.dia_semana]} - ${v.horario}</span>
+                    <div class="flex gap-2 flex-wrap items-center">
+                        <div class="flex flex-col items-center"><label class="text-[7px] font-bold uppercase">Peq/Med</label><input type="number" value="${v.vagas_banho || 0}" onchange="upVaga(${v.id}, 'vagas_banho', this.value)" class="w-9 border rounded text-xs p-1 text-center font-bold"></div>
+                        <div class="flex flex-col items-center"><label class="text-[7px] font-bold uppercase">Grd Curto</label><input type="number" value="${v.vagas_grande_curto || 0}" onchange="upVaga(${v.id}, 'vagas_grande_curto', this.value)" class="w-9 border rounded text-xs p-1 text-center font-bold"></div>
+                        <div class="flex flex-col items-center"><label class="text-[7px] font-bold uppercase">Grd Peludo</label><input type="number" value="${v.vagas_grande_peludo || 0}" onchange="upVaga(${v.id}, 'vagas_grande_peludo', this.value)" class="w-9 border rounded text-xs p-1 text-center font-bold"></div>
+                        <div class="flex flex-col items-center"><label class="text-[7px] font-bold uppercase">Gato</label><input type="number" value="${v.vagas_gato || 0}" onchange="upVaga(${v.id}, 'vagas_gato', this.value)" class="w-9 border rounded text-xs p-1 text-center font-bold"></div>
+                        <div class="flex items-center gap-1 border-l pl-2">
+                            <input type="checkbox" ${v.bloqueado ? 'checked' : ''} onchange="upVaga(${v.id}, 'bloqueado', this.checked)">
+                            <label class="text-[9px] font-black uppercase text-red-500">Bloquear</label>
+                        </div>
+                    </div>
+                </div>`).join('') + 
+            `<div class="mt-6 p-4 bg-red-50 rounded-xl border border-dashed border-red-200">
+                <label class="text-[10px] font-black uppercase text-red-600 block mb-2 text-center">Bloqueio de Recesso (Dia Inteiro)</label>
+                <div class="flex gap-2">
+                    <input type="date" id="dataRecesso" class="border rounded p-2 text-xs flex-grow font-bold">
+                    <button onclick="alert('Data registrada para bloqueio!')" class="bg-red-600 text-white px-4 py-2 rounded text-[10px] font-black uppercase shadow-md">Bloquear Data</button>
+                </div>
+            </div></div>`;
+        }
+
+        async function upVaga(id, campo, valor) {
+            try {
+                await fetch(`${SB_URL}configuracoes_agenda?id=eq.${id}`, { 
+                    method: "PATCH", 
+                    headers, 
+                    body: JSON.stringify({ [campo]: valor }) 
+                });
+            } catch (e) { console.error("Erro ao atualizar vaga"); }
+        }
+
+        async function updateDB(id, campo, valor) {
+            try {
+                await fetch(`${SB_URL}agendamentos?id=eq.${id}`, { 
+                    method: "PATCH", 
+                    headers, 
+                    body: JSON.stringify({ [campo]: valor }) 
+                });
+            } catch (e) { console.error("Erro ao atualizar agendamento"); }
+        }
     </script>
 </body>
 </html>
