@@ -25,7 +25,7 @@
         <div class="w-full max-w-md p-8 bg-white rounded-2xl shadow-2xl text-center">
             <h1 class="text-3xl font-black text-slate-800 uppercase italic">Nilo Pet</h1>
             <input type="password" id="senhaAdm" placeholder="Senha de acesso" class="w-full p-4 border-2 rounded-xl mb-4 text-center">
-            <button onclick="logar()" class="w-full bg-red-600 text-white font-black p-4 rounded-xl">ENTRAR</button>
+            <button onclick="logar()" class="w-full bg-red-600 text-white font-black p-4 rounded-xl shadow-lg">ENTRAR</button>
         </div>
     </div>
 
@@ -37,6 +37,7 @@
                 <div onclick="mudarFiltro('dia', this)" class="menu-item">📅 Agendamentos do Dia</div>
                 <div onclick="mudarFiltro('pacotes', this)" class="menu-item">📦 Controle de Pacotes</div>
                 <div onclick="mudarFiltro('vagas', this)" class="menu-item text-orange-400">🔒 Gestão de Vagas</div>
+                <!-- VOLTEI O BOTAO SAIR / RESETAR -->
                 <div onclick="location.reload()" class="menu-item text-slate-400 mt-2">🚪 Sair</div>
             </nav>
         </div>
@@ -45,8 +46,8 @@
             <header class="flex justify-between items-center mb-8">
                 <h2 id="tituloPagina" class="text-2xl font-black text-slate-800 uppercase italic">Agendamentos Geral</h2>
                 <div class="flex gap-2">
-                    <button onclick="adicionarNovo()" class="bg-green-600 text-white p-3 rounded-xl font-bold text-xs uppercase">+ NOVO</button>
-                    <button onclick="carregarDados()" class="bg-white border p-3 rounded-xl shadow-sm font-bold text-xs uppercase italic">Sincronizar ↻</button>
+                    <button onclick="novoAgendamento()" class="bg-green-600 text-white p-3 rounded-xl shadow-sm font-bold text-xs uppercase">+ NOVO</button>
+                    <button onclick="carregarDados()" class="bg-white border p-3 rounded-xl shadow-sm font-bold text-xs uppercase">Sincronizar ↻</button>
                 </div>
             </header>
             <div id="containerCards" class="grid grid-cols-1 gap-4"></div>
@@ -62,14 +63,11 @@
         let filtroAtual = 'geral';
 
         function logar() {
-            const senha = document.getElementById('senhaAdm').value;
-            if(senha === 'nilopet2024') {
+            if(document.getElementById('senhaAdm').value === 'nilopet2024') {
                 document.getElementById('loginArea').classList.add('hidden');
                 document.getElementById('painelArea').classList.remove('hidden');
                 carregarDados();
-            } else { 
-                alert("Senha incorreta!"); 
-            }
+            } else { alert("Senha incorreta!"); }
         }
 
         async function carregarDados() {
@@ -80,9 +78,7 @@
                 const res = await fetch(`${SB_URL}${endpoint}?select=*`, { headers });
                 todosDados = await res.json();
                 renderizar();
-            } catch (e) { 
-                alert("Erro ao carregar banco!"); 
-            }
+            } catch (e) { alert("Erro ao carregar banco!"); }
         }
 
         async function updateDB(id, campo, valor) {
@@ -94,7 +90,7 @@
             await fetch(`${SB_URL}/configuracoes_agenda?id=eq.${id}`, { method: "PATCH", headers, body: JSON.stringify({ [campo]: v }) });
         }
 
-        async function adicionarNovo() {
+        async function novoAgendamento() {
             const nome = prompt("Nome do Cliente:");
             if(!nome) return;
             await fetch(`${SB_URL}/agendamentos`, { method: "POST", headers, body: JSON.stringify({ cliente: nome.toUpperCase(), tipo_servico: 'avulso', data: new Date().toISOString().split('T')[0] }) });
@@ -118,7 +114,7 @@
 
         function renderizar() {
             const container = document.getElementById('containerCards');
-            if(filtroAtual === 'vagas') return renderVagas(container);
+            if(filtroAtual === 'vagas' && typeof renderVagas === 'function') return renderVagas(container);
 
             const hoje = new Date().toISOString().split('T')[0];
             let filtrados = [...todosDados];
@@ -127,7 +123,9 @@
                 filtrados = todosDados.filter(i => i.data === hoje);
             } else if (filtroAtual === 'pacotes') {
                 filtrados = todosDados.filter(i => i.tipo_servico && i.tipo_servico !== 'avulso');
-                filtrados.sort((a, b) => (a.cliente || "").localeCompare(b.cliente || ""));
+                filtrados.sort((a, b) => (a.cliente || '').localeCompare(b.cliente || ''));
+            } else {
+                filtrados.sort((a, b) => new Date(b.data) - new Date(a.data));
             }
 
             container.innerHTML = filtrados.map(item => {
@@ -138,41 +136,44 @@
                 <div class="card-pet shadow-sm border-l-4 ${ehPacote ? 'border-purple-600' : 'border-red-600'}">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                            <input type="text" value="${item.cliente || ''}" onchange="updateDB('${item.id}', 'cliente', this.value)" class="input-edit font-black text-lg uppercase italic">
-                            <input type="text" value="${item.whatsapp || ''}" onchange="updateDB('${item.id}', 'whatsapp', this.value)" class="input-edit text-[10px] font-bold text-slate-500" placeholder="WHATSAPP">
+                            <input type="text" value="${item.cliente || ''}" onchange="updateDB('${item.id}', 'cliente', this.value)" class="input-edit font-black text-lg text-slate-800 uppercase italic">
+                            <input type="text" value="${item.whatsapp || ''}" onchange="updateDB('${item.id}', 'whatsapp', this.value)" class="input-edit text-[10px] text-slate-500 font-bold" placeholder="WHATSAPP">
+                            <input type="text" value="${item.rua || ''}" onchange="updateDB('${item.id}', 'rua', this.value)" class="input-edit text-[10px] text-slate-500 font-bold uppercase" placeholder="RUA">
                         </div>
                         <div>
                             <input type="date" value="${item.data || ''}" onchange="updateDB('${item.id}', 'data', this.value)" class="input-edit text-xs font-bold">
-                            ${ehPacote ? `
-                                <div class="mt-2 p-2 bg-purple-50 rounded border border-purple-100">
-                                    <input type="date" value="${item.vencimento_pacote || ''}" onchange="updateDB('${item.id}', 'vencimento_pacote', this.value)" class="text-[9px] w-full bg-transparent border-b border-purple-200">
-                                    <input type="number" value="${item.valor_real_pago || 0}" onchange="updateDB('${item.id}', 'valor_real_pago', this.value)" class="text-[9px] font-black w-full bg-transparent mt-1" placeholder="PAGO R$">
-                                </div>` : ''}
+                            <select onchange="updateDB('${item.id}', 'tipo_servico', this.value)" class="input-edit text-[10px] font-black uppercase italic mt-1">
+                                <option value="avulso" ${item.tipo_servico === 'avulso' ? 'selected' : ''}>Avulso</option>
+                                <option value="pacote_basico" ${item.tipo_servico === 'pacote_basico' ? 'selected' : ''}>Pacote Básico</option>
+                                <option value="pacote_tosa" ${item.tipo_servico === 'pacote_tosa' ? 'selected' : ''}>Básico c/ Tosa</option>
+                                <option value="pacote_premium" ${item.tipo_servico === 'pacote_premium' ? 'selected' : ''}>Pacote Premium</option>
+                            </select>
+                            ${ehPacote ? `<div class="mt-2 p-2 bg-purple-50 rounded border border-purple-100">
+                                <input type="date" value="${item.vencimento_pacote || ''}" onchange="updateDB('${item.id}', 'vencimento_pacote', this.value)" class="text-[9px] w-full bg-transparent">
+                                <input type="number" value="${item.valor_real_pago || 0}" onchange="updateDB('${item.id}', 'valor_real_pago', this.value)" class="text-[9px] font-black w-full bg-transparent" placeholder="PAGO">
+                            </div>` : ''}
                         </div>
                         <div class="bg-slate-50 p-2 rounded border border-slate-200">
-                            <div class="grid grid-cols-2 gap-1 text-[9px] font-black uppercase">
-                                <span>Valor:</span> <input type="number" value="${item.valor_servico || 0}" onchange="updateDB('${item.id}', 'valor_servico', this.value)" class="bg-white border px-1">
-                                <span>Total:</span> <span class="text-red-600">R$ ${total.toFixed(2)}</span>
+                            <div class="grid grid-cols-2 gap-1 text-[9px] font-black uppercase italic">
+                                <span>Valor Serv:</span> <input type="number" value="${item.valor_servico || 0}" onchange="updateDB('${item.id}', 'valor_servico', this.value)" class="bg-white border rounded">
+                                <span>Leva/Trás:</span> <input type="number" value="${item.taxa_leva_tras || 0}" onchange="updateDB('${item.id}', 'taxa_leva_tras', this.value)" class="bg-white border rounded text-orange-600">
+                                <span class="text-red-600 mt-1">Total:</span> <span class="mt-1">R$ ${total.toFixed(2)}</span>
+                                <span class="text-blue-600">Desconto:</span> <input type="number" value="${item.total_com_desconto || 0}" onchange="updateDB('${item.id}', 'total_com_desconto', this.value)" class="bg-white border rounded">
                             </div>
+                            <select onchange="updateDB('${item.id}', 'forma_pagamento', this.value)" class="w-full text-[9px] font-black uppercase mt-2 p-1 border rounded bg-white">
+                                <option value="">Pagamento...</option>
+                                <option value="pix" ${item.forma_pagamento === 'pix' ? 'selected' : ''}>PIX</option>
+                                <option value="credito" ${item.forma_pagamento === 'credito' ? 'selected' : ''}>Cartão Crédito</option>
+                                <option value="debito" ${item.forma_pagamento === 'debito' ? 'selected' : ''}>Cartão Débito</option>
+                                <option value="dinheiro" ${item.forma_pagamento === 'dinheiro' ? 'selected' : ''}>Dinheiro</option>
+                                <option value="qrcode" ${item.forma_pagamento === 'qrcode' ? 'selected' : ''}>QR Code PIX</option>
+                            </select>
                             <button onclick="excluirRegistro('${item.id}')" class="w-full mt-2 text-red-500 text-[8px] font-bold uppercase">Excluir</button>
                         </div>
                     </div>
-                </div>`;
-            }).join('');
-        }
-
-        function renderVagas(container) {
-            const dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-            container.innerHTML = `<div class="card-pet"><h3 class="font-bold mb-4 uppercase text-sm italic">Configuração de Vagas</h3>` + 
-            todosDados.map(v => `
-                <div class="flex items-center justify-between border-b py-3">
-                    <span class="text-[11px] font-bold uppercase w-28">${dias[v.dia_semana]} - ${v.horario}</span>
-                    <div class="flex gap-2 items-center">
-                        <input type="number" value="${v.vagas_banho || 0}" onchange="upVaga(${v.id}, 'vagas_banho', this.value)" class="w-9 border rounded text-xs p-1 text-center">
-                        <input type="checkbox" ${v.bloqueado ? 'checked' : ''} onchange="upVaga(${v.id}, 'bloqueado', this.checked)">
-                    </div>
-                </div>`).join('') + `</div>`;
+                </div>`).join('');
         }
     </script>
+    <script src="regras-adm.js"></script>
 </body>
 </html>
