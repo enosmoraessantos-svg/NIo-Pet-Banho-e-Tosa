@@ -54,8 +54,8 @@
     </div>
 
     <script>
-        // CORREÇÃO: A URL do Supabase precisa do ID do projeto e do caminho /rest/v1
-        const SB_URL = "https://SEU_PROJETO_ID.supabase.co/rest/v1"; 
+        // SUBSTITUA pelo seu ID real do Supabase
+        const SB_URL = "https://SEU_ID_AQUI.supabase.co/rest/v1"; 
         const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
         const headers = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json", "Prefer": "return=minimal" };
         
@@ -83,7 +83,7 @@
                 renderizar();
             } catch (e) { 
                 console.error(e);
-                alert("Erro ao carregar banco! Verifique a URL do Supabase."); 
+                alert("Erro ao conectar ao banco! Verifique se a SB_URL está correta."); 
             }
         }
 
@@ -99,7 +99,7 @@
         async function novoAgendamento() {
             const nome = prompt("Nome do Cliente:");
             if(!nome) return;
-            const dataHoje = new Date().toISOString().split('T')[0];
+            const dataHoje = new Date().toISOString().split('T')[0]; // Corrigido: pegando a string, não o array
             await fetch(`${SB_URL}/agendamentos`, { method: "POST", headers, body: JSON.stringify({ cliente: nome.toUpperCase(), tipo_servico: 'avulso', data: dataHoje }) });
             carregarDados();
         }
@@ -119,7 +119,6 @@
             carregarDados();
         }
 
-        // CORREÇÃO: Função renderVagas adicionada para não quebrar o filtro de vagas
         function renderVagas(container) {
             container.innerHTML = todosDados.map(item => `
                 <div class="card-pet">
@@ -133,13 +132,9 @@
 
         function renderizar() {
             const container = document.getElementById('containerCards');
-            
-            // CORREÇÃO: Verificação de segurança para renderVagas
-            if(filtroAtual === 'vagas') {
-                return renderVagas(container);
-            }
+            if(filtroAtual === 'vagas') return renderVagas(container);
 
-            const hoje = new Date().toISOString().split('T')[0];
+            const hoje = new Date().toISOString().split('T')[0]; // Corrigido
             let filtrados = Array.isArray(todosDados) ? [...todosDados] : [];
 
             if(filtroAtual === 'dia') {
@@ -197,8 +192,6 @@
                     </div>
                 </div>`).join('');
         }
-        </script>
-    <script src="regras-adm.js"></script>
     </script>
 </body>
 </html>
