@@ -25,7 +25,7 @@
         <div class="w-full max-w-md p-8 bg-white rounded-2xl shadow-2xl text-center">
             <h1 class="text-3xl font-black text-slate-800 uppercase italic">Nilo Pet</h1>
             <input type="password" id="senhaAdm" placeholder="Senha de acesso" class="w-full p-4 border-2 rounded-xl mb-4 text-center">
-            <button onclick="logar()" class="w-full bg-red-600 text-white font-black p-4 rounded-xl">ENTRAR</button>
+            <button onclick="logar()" class="w-full bg-red-600 text-white font-black p-4 rounded-xl shadow-lg">ENTRAR</button>
         </div>
     </div>
 
@@ -54,7 +54,7 @@
     </div>
 
     <script>
-        const SB_URL = "https://yczhjyxisqrvfxxgipop.supabase.co/rest/v1";
+        const SB_URL = "https://supabase.co";
         const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
         const headers = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json", "Prefer": "return=minimal" };
         
@@ -113,10 +113,7 @@
 
         function renderizar() {
             const container = document.getElementById('containerCards');
-            if(filtroAtual === 'vagas') {
-                if(typeof renderVagas === 'function') return renderVagas(container);
-                else return;
-            }
+            if(filtroAtual === 'vagas') return renderVagas(container);
 
             const hoje = new Date().toISOString().split('T')[0];
             let filtrados = [...todosDados];
@@ -152,35 +149,31 @@
                             </select>
                             ${ehPacote ? `
                                 <div class="mt-2 p-2 bg-purple-50 rounded border border-purple-100">
-                                    <input type="date" value="${item.vencimento_pacote || ''}" onchange="updateDB('${item.id}', 'vencimento_pacote', this.value)" class="text-[9px] w-full bg-transparent">
-                                    <input type="number" value="${item.valor_real_pago || 0}" onchange="updateDB('${item.id}', 'valor_real_pago', this.value)" class="text-[9px] font-black w-full bg-transparent" placeholder="VALOR PAGO">
+                                    <input type="date" value="${item.vencimento_pacote || ''}" onchange="updateDB('${item.id}', 'vencimento_pacote', this.value)" class="text-[9px] w-full bg-transparent border-b border-purple-200">
+                                    <input type="number" value="${item.valor_real_pago || 0}" onchange="updateDB('${item.id}', 'valor_real_pago', this.value)" class="text-[9px] font-black w-full bg-transparent mt-1" placeholder="PAGO R$">
                                 </div>` : ''}
                         </div>
                         <div class="bg-slate-50 p-2 rounded border border-slate-200">
-                            <div class="grid grid-cols-2 gap-1 text-[9px] font-black uppercase">
-                                <span>Valor Serv:</span> <input type="number" value="${item.valor_servico || 0}" onchange="updateDB('${item.id}', 'valor_servico', this.value)" class="bg-white border rounded px-1">
-                                <span>Leva/Trás:</span> <input type="number" value="${item.taxa_leva_tras || 0}" onchange="updateDB('${item.id}', 'taxa_leva_tras', this.value)" class="bg-white border rounded px-1 text-orange-600">
-                                <span class="text-red-600 mt-1 font-black">Total: R$ ${total.toFixed(2)}</span>
-                                <span>Desc:</span> <input type="number" value="${item.total_com_desconto || 0}" onchange="updateDB('${item.id}', 'total_com_desconto', this.value)" class="bg-white border rounded px-1">
+                            <div class="grid grid-cols-2 gap-1 text-[9px] font-black uppercase italic">
+                                <span>Valor:</span> <input type="number" value="${item.valor_servico || 0}" onchange="updateDB('${item.id}', 'valor_servico', this.value)" class="bg-white px-1">
+                                <span>Leva/Trás:</span> <input type="number" value="${item.taxa_leva_tras || 0}" onchange="updateDB('${item.id}', 'taxa_leva_tras', this.value)" class="bg-white px-1 text-orange-600">
+                                <span class="text-red-600">Total:</span> <span>R$ ${total.toFixed(2)}</span>
+                                <span class="text-blue-600">Desc:</span> <input type="number" value="${item.total_com_desconto || 0}" onchange="updateDB('${item.id}', 'total_com_desconto', this.value)" class="bg-white px-1">
                             </div>
-                            <select onchange="updateDB('${item.id}', 'forma_pagamento', this.value)" class="w-full text-[9px] font-black mt-2 p-1 border rounded bg-white">
-                                <option value="">Pagamento...</option>
+                            <select onchange="updateDB('${item.id}', 'forma_pagamento', this.value)" class="w-full text-[9px] font-black uppercase mt-2 p-1 border rounded bg-white">
+                                <option value="">Pgto...</option>
                                 <option value="pix" ${item.forma_pagamento === 'pix' ? 'selected' : ''}>PIX</option>
-                                <option value="credito" ${item.forma_pagamento === 'credito' ? 'selected' : ''}>Cartão Crédito</option>
-                                <option value="debito" ${item.forma_pagamento === 'debito' ? 'selected' : ''}>Cartão Débito</option>
+                                <option value="credito" ${item.forma_pagamento === 'credito' ? 'selected' : ''}>Crédito</option>
+                                <option value="debito" ${item.forma_pagamento === 'debito' ? 'selected' : ''}>Débito</option>
                                 <option value="dinheiro" ${item.forma_pagamento === 'dinheiro' ? 'selected' : ''}>Dinheiro</option>
-                                <option value="qrcode" ${item.forma_pagamento === 'qrcode' ? 'selected' : ''}>QR Code PIX</option>
+                                <option value="qrcode" ${item.forma_pagamento === 'qrcode' ? 'selected' : ''}>QR Code</option>
                             </select>
-                            <button onclick="excluirRegistro('${item.id}')" class="w-full mt-2 text-red-500 text-[8px] font-bold uppercase">Excluir</button>
+                            <button onclick="excluirRegistro('${item.id}')" class="w-full mt-2 text-red-500 text-[8px] font-bold uppercase hover:underline">Excluir Registro</button>
                         </div>
                     </div>
                 </div>`).join('');
         }
-    </script>
-    
-    <script src="regras-adm.js"></script>
 
-    <script>
         function renderVagas(container) {
             const dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
             container.innerHTML = `<div class="card-pet"><h3 class="font-bold mb-4 uppercase text-sm italic text-slate-800">⚙️ Gestão de Vagas / Recessos</h3>` + 
@@ -194,18 +187,13 @@
                         <div class="flex flex-col items-center"><label class="text-[7px] font-bold uppercase">Gato</label><input type="number" value="${v.vagas_gato || 0}" onchange="upVaga(${v.id}, 'vagas_gato', this.value)" class="w-9 border rounded text-xs p-1 text-center"></div>
                         <div class="flex items-center gap-1 border-l pl-2">
                             <input type="checkbox" ${v.bloqueado ? 'checked' : ''} onchange="upVaga(${v.id}, 'bloqueado', this.checked)">
-                            <label class="text-[9px] font-bold uppercase">Bloquear</label>
+                            <label class="text-[9px] font-bold uppercase text-slate-500">Bloquear</label>
                         </div>
                     </div>
                 </div>`).join('') + 
-            `<div class="mt-6 p-4 bg-slate-50 rounded-xl border border-dashed border-slate-300">
-                <label class="text-[10px] font-black uppercase text-red-600 block mb-2">Bloqueio Manual de Recesso</label>
-                <div class="flex gap-2">
-                    <input type="date" id="dataRecesso" class="border rounded p-2 text-xs flex-grow">
-                    <button onclick="alert('Bloqueado!')" class="bg-red-600 text-white px-4 py-2 rounded text-[10px] font-bold uppercase">Bloquear Dia</button>
-                </div>
-            </div></div>`;
+            `</div>`;
         }
     </script>
+    <script src="regras-adm.js"></script>
 </body>
 </html>
