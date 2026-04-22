@@ -54,7 +54,7 @@
     </div>
 
     <script>
-        const SB_URL = "https://lxclvlkjrvvuzpmsfofm.supabase.co/rest/v1";
+        const SB_URL = "https://supabase.co";
         const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
         const headers = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json", "Prefer": "return=minimal" };
         
@@ -97,7 +97,8 @@
         async function novoAgendamento() {
             const nome = prompt("Nome do Cliente:");
             if(!nome) return;
-            await fetch(`${SB_URL}/agendamentos`, { method: "POST", headers, body: JSON.stringify({ cliente: nome.toUpperCase(), tipo_servico: 'avulso', data: new Date().toISOString().split('T')[0] }) });
+            const dataHoje = new Date().toISOString().split('T')[0];
+            await fetch(`${SB_URL}/agendamentos`, { method: "POST", headers, body: JSON.stringify({ cliente: nome.toUpperCase(), tipo_servico: 'avulso', data: dataHoje }) });
             carregarDados();
         }
 
