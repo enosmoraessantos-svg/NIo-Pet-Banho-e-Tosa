@@ -25,7 +25,7 @@
         <div class="w-full max-w-md p-8 bg-white rounded-2xl shadow-2xl text-center">
             <h1 class="text-3xl font-black text-slate-800 uppercase italic">Nilo Pet</h1>
             <input type="password" id="senhaAdm" placeholder="Senha de acesso" class="w-full p-4 border-2 rounded-xl mb-4 text-center">
-            <button onclick="logar()" class="w-full bg-red-600 text-white font-black p-4 rounded-xl shadow-lg">ENTRAR</button>
+            <button onclick="logar()" class="w-full bg-red-600 text-white font-black p-4 rounded-xl">ENTRAR</button>
         </div>
     </div>
 
@@ -37,7 +37,6 @@
                 <div onclick="mudarFiltro('dia', this)" class="menu-item">📅 Agendamentos do Dia</div>
                 <div onclick="mudarFiltro('pacotes', this)" class="menu-item">📦 Controle de Pacotes</div>
                 <div onclick="mudarFiltro('vagas', this)" class="menu-item text-orange-400">🔒 Gestão de Vagas</div>
-                <!-- VOLTEI O BOTAO SAIR / RESETAR -->
                 <div onclick="location.reload()" class="menu-item text-slate-400 mt-2">🚪 Sair</div>
             </nav>
         </div>
@@ -47,7 +46,7 @@
                 <h2 id="tituloPagina" class="text-2xl font-black text-slate-800 uppercase italic">Agendamentos Geral</h2>
                 <div class="flex gap-2">
                     <button onclick="novoAgendamento()" class="bg-green-600 text-white p-3 rounded-xl shadow-sm font-bold text-xs uppercase">+ NOVO</button>
-                    <button onclick="carregarDados()" class="bg-white border p-3 rounded-xl shadow-sm font-bold text-xs uppercase">Sincronizar ↻</button>
+                    <button onclick="carregarDados()" class="bg-white border p-3 rounded-xl shadow-sm font-bold text-xs uppercase italic">Sincronizar ↻</button>
                 </div>
             </header>
             <div id="containerCards" class="grid grid-cols-1 gap-4"></div>
@@ -63,11 +62,14 @@
         let filtroAtual = 'geral';
 
         function logar() {
-            if(document.getElementById('senhaAdm').value === 'nilopet2024') {
+            const senhaInput = document.getElementById('senhaAdm').value;
+            if(senhaInput === 'nilopet2024') {
                 document.getElementById('loginArea').classList.add('hidden');
                 document.getElementById('painelArea').classList.remove('hidden');
                 carregarDados();
-            } else { alert("Senha incorreta!"); }
+            } else { 
+                alert("Senha incorreta!"); 
+            }
         }
 
         async function carregarDados() {
@@ -78,7 +80,9 @@
                 const res = await fetch(`${SB_URL}${endpoint}?select=*`, { headers });
                 todosDados = await res.json();
                 renderizar();
-            } catch (e) { alert("Erro ao carregar banco!"); }
+            } catch (e) { 
+                alert("Erro ao carregar banco!"); 
+            }
         }
 
         async function updateDB(id, campo, valor) {
@@ -98,7 +102,7 @@
         }
 
         async function excluirRegistro(id) {
-            if(confirm("Excluir?")) {
+            if(confirm("Excluir registro?")) {
                 await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: "DELETE", headers });
                 carregarDados();
             }
@@ -138,7 +142,7 @@
                         <div>
                             <input type="text" value="${item.cliente || ''}" onchange="updateDB('${item.id}', 'cliente', this.value)" class="input-edit font-black text-lg text-slate-800 uppercase italic">
                             <input type="text" value="${item.whatsapp || ''}" onchange="updateDB('${item.id}', 'whatsapp', this.value)" class="input-edit text-[10px] text-slate-500 font-bold" placeholder="WHATSAPP">
-                            <input type="text" value="${item.rua || ''}" onchange="updateDB('${item.id}', 'rua', this.value)" class="input-edit text-[10px] text-slate-500 font-bold uppercase" placeholder="RUA">
+                            <input type="text" value="${item.rua || ''}" onchange="updateDB('${item.id}', 'rua', this.value)" class="input-edit text-[10px] text-slate-500 font-bold uppercase" placeholder="ENDEREÇO">
                         </div>
                         <div>
                             <input type="date" value="${item.data || ''}" onchange="updateDB('${item.id}', 'data', this.value)" class="input-edit text-xs font-bold">
@@ -148,19 +152,20 @@
                                 <option value="pacote_tosa" ${item.tipo_servico === 'pacote_tosa' ? 'selected' : ''}>Básico c/ Tosa</option>
                                 <option value="pacote_premium" ${item.tipo_servico === 'pacote_premium' ? 'selected' : ''}>Pacote Premium</option>
                             </select>
-                            ${ehPacote ? `<div class="mt-2 p-2 bg-purple-50 rounded border border-purple-100">
-                                <input type="date" value="${item.vencimento_pacote || ''}" onchange="updateDB('${item.id}', 'vencimento_pacote', this.value)" class="text-[9px] w-full bg-transparent">
-                                <input type="number" value="${item.valor_real_pago || 0}" onchange="updateDB('${item.id}', 'valor_real_pago', this.value)" class="text-[9px] font-black w-full bg-transparent" placeholder="PAGO">
-                            </div>` : ''}
+                            ${ehPacote ? `
+                                <div class="mt-2 p-2 bg-purple-50 rounded border border-purple-100">
+                                    <input type="date" value="${item.vencimento_pacote || ''}" onchange="updateDB('${item.id}', 'vencimento_pacote', this.value)" class="text-[9px] w-full bg-transparent">
+                                    <input type="number" value="${item.valor_real_pago || 0}" onchange="updateDB('${item.id}', 'valor_real_pago', this.value)" class="text-[9px] font-black w-full bg-transparent" placeholder="VALOR PAGO">
+                                </div>` : ''}
                         </div>
                         <div class="bg-slate-50 p-2 rounded border border-slate-200">
-                            <div class="grid grid-cols-2 gap-1 text-[9px] font-black uppercase italic">
+                            <div class="grid grid-cols-2 gap-1 text-[9px] font-black uppercase">
                                 <span>Valor Serv:</span> <input type="number" value="${item.valor_servico || 0}" onchange="updateDB('${item.id}', 'valor_servico', this.value)" class="bg-white border rounded">
                                 <span>Leva/Trás:</span> <input type="number" value="${item.taxa_leva_tras || 0}" onchange="updateDB('${item.id}', 'taxa_leva_tras', this.value)" class="bg-white border rounded text-orange-600">
-                                <span class="text-red-600 mt-1">Total:</span> <span class="mt-1">R$ ${total.toFixed(2)}</span>
-                                <span class="text-blue-600">Desconto:</span> <input type="number" value="${item.total_com_desconto || 0}" onchange="updateDB('${item.id}', 'total_com_desconto', this.value)" class="bg-white border rounded">
+                                <span class="text-red-600 mt-1">Total: R$ ${total.toFixed(2)}</span>
+                                <input type="number" placeholder="Desconto" value="${item.total_com_desconto || 0}" onchange="updateDB('${item.id}', 'total_com_desconto', this.value)" class="bg-white border rounded px-1">
                             </div>
-                            <select onchange="updateDB('${item.id}', 'forma_pagamento', this.value)" class="w-full text-[9px] font-black uppercase mt-2 p-1 border rounded bg-white">
+                            <select onchange="updateDB('${item.id}', 'forma_pagamento', this.value)" class="w-full text-[9px] font-black uppercase mt-2 p-1 border rounded bg-white font-bold">
                                 <option value="">Pagamento...</option>
                                 <option value="pix" ${item.forma_pagamento === 'pix' ? 'selected' : ''}>PIX</option>
                                 <option value="credito" ${item.forma_pagamento === 'credito' ? 'selected' : ''}>Cartão Crédito</option>
