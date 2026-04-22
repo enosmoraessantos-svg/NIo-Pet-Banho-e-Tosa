@@ -33,6 +33,37 @@
             <!-- Os cards entrarão aqui via JS -->
         </div>
     </main>
+body { background-color: #f1f5f9; margin: 0; font-family: sans-serif; }
+
+.sidebar { 
+    width: 260px; height: 100vh; position: fixed; 
+    background: #0f172a; color: white; padding-top: 20px;
+}
+
+.logo { padding: 0 20px 20px; border-bottom: 1px solid #1e293b; }
+
+.menu { display: flex; flex-direction: column; margin-top: 10px; }
+
+.menu-item { 
+    padding: 15px 20px; text-align: left; transition: 0.2s;
+    font-weight: 600; font-size: 14px; border-left: 4px solid transparent;
+}
+
+.menu-item:hover { background: #1e293b; }
+.menu-item.active { background: #1e293b; border-left-color: #ef4444; color: #ef4444; }
+
+.content { margin-left: 260px; padding: 30px; }
+
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+
+.btn-novo { background: #16a34a; color: white; padding: 12px 20px; border-radius: 8px; font-weight: bold; font-size: 12px; }
+
+.grid-container { display: grid; grid-template-columns: 1fr; gap: 15px; }
+
+.card-pet { 
+    background: white; border-radius: 12px; padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 5px solid #cbd5e1;
+}
 
     <script src="script.js"></script>
 </body>
