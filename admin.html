@@ -54,7 +54,8 @@
     </div>
 
     <script>
-        const SB_URL = "https://supabase.co";
+        // CORREÇÃO: A URL do Supabase precisa do ID do projeto e do caminho /rest/v1
+        const SB_URL = "https://SEU_PROJETO_ID.supabase.co/rest/v1"; 
         const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
         const headers = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json", "Prefer": "return=minimal" };
         
@@ -82,7 +83,7 @@
                 renderizar();
             } catch (e) { 
                 console.error(e);
-                alert("Erro ao carregar banco!"); 
+                alert("Erro ao carregar banco! Verifique a URL do Supabase."); 
             }
         }
 
@@ -118,9 +119,25 @@
             carregarDados();
         }
 
+        // CORREÇÃO: Função renderVagas adicionada para não quebrar o filtro de vagas
+        function renderVagas(container) {
+            container.innerHTML = todosDados.map(item => `
+                <div class="card-pet">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold uppercase">${item.dia_semana || 'Configuração'}</span>
+                        <input type="number" value="${item.vagas_totais || 0}" onchange="upVaga('${item.id}', 'vagas_totais', this.value)" class="border rounded p-1 w-16 text-center">
+                    </div>
+                </div>
+            `).join('') || "Nenhuma configuração encontrada.";
+        }
+
         function renderizar() {
             const container = document.getElementById('containerCards');
-            if(filtroAtual === 'vagas' && typeof renderVagas === 'function') return renderVagas(container);
+            
+            // CORREÇÃO: Verificação de segurança para renderVagas
+            if(filtroAtual === 'vagas') {
+                return renderVagas(container);
+            }
 
             const hoje = new Date().toISOString().split('T')[0];
             let filtrados = Array.isArray(todosDados) ? [...todosDados] : [];
@@ -181,6 +198,5 @@
                 </div>`).join('');
         }
     </script>
-    <script src="regras-adm.js"></script>
 </body>
 </html>
