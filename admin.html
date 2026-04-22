@@ -81,6 +81,7 @@
                 todosDados = await res.json();
                 renderizar();
             } catch (e) { 
+                console.error(e);
                 alert("Erro ao carregar banco!"); 
             }
         }
@@ -122,12 +123,12 @@
             if(filtroAtual === 'vagas' && typeof renderVagas === 'function') return renderVagas(container);
 
             const hoje = new Date().toISOString().split('T')[0];
-            let filtrados = [...todosDados];
+            let filtrados = Array.isArray(todosDados) ? [...todosDados] : [];
 
             if(filtroAtual === 'dia') {
-                filtrados = todosDados.filter(i => i.data === hoje);
+                filtrados = filtrados.filter(i => i.data === hoje);
             } else if (filtroAtual === 'pacotes') {
-                filtrados = todosDados.filter(i => i.tipo_servico && i.tipo_servico !== 'avulso');
+                filtrados = filtrados.filter(i => i.tipo_servico && i.tipo_servico !== 'avulso');
                 filtrados.sort((a, b) => (a.cliente || '').localeCompare(b.cliente || ''));
             } else {
                 filtrados.sort((a, b) => new Date(b.data) - new Date(a.data));
