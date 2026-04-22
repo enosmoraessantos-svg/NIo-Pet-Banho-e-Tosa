@@ -1,38 +1,3 @@
-/**
- * MÓDULO 1: RECUPERAÇÃO DE SENHA
- */
-(function() {
-    const CONFIG_RECUPERACAO = {
-        pergunta: "Qual o nome da primeira mascote da Nilo Pet?",
-        respostaCorreta: "nilo",
-        senhaOriginal: "nilopet2024"
-    };
-
-    function injetarBotao() {
-        const btnEntrar = document.querySelector('#loginArea button');
-        if (btnEntrar && !document.getElementById('btnEsqueciInjetado')) {
-            const btnEsqueci = document.createElement('button');
-            btnEsqueci.id = "btnEsqueciInjetado";
-            btnEsqueci.innerText = "ESQUECI A SENHA";
-            btnEsqueci.style = "font-size: 10px; color: #94a3b8; font-weight: 800; margin-top: 15px; cursor: pointer; text-transform: uppercase; display: block; width: 100%; border:none; background:none;";
-            btnEntrar.parentNode.appendChild(btnEsqueci);
-
-            btnEsqueci.onclick = (e) => {
-                e.preventDefault();
-                const respostaUser = prompt(CONFIG_RECUPERACAO.pergunta);
-                if (respostaUser?.toLowerCase().trim() === CONFIG_RECUPERACAO.respostaCorreta) {
-                    alert("✅ VALIDAÇÃO COM SUCESSO!\nSua senha é: " + CONFIG_RECUPERACAO.senhaOriginal);
-                } else if (respostaUser !== null) {
-                    alert("❌ RESPOSTA INCORRETA!");
-                }
-            };
-        }
-    }
-
-    window.addEventListener('load', injetarBotao);
-    setTimeout(injetarBotao, 1000);
-})();
-/**
  * MÓDULO 2: GESTÃO DE VAGAS (AGENDA)
  */
 
