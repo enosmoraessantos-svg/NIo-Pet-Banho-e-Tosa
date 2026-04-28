@@ -1,33 +1,34 @@
-   <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>ADM - Nilo Pet</title>
+    <title>ADM - Nilo Pet Oficial</title>
     <script src="https://tailwindcss.com"></script>
     <style>
         .sidebar { width: 260px; height: 100vh; position: fixed; background: #1e293b; color: white; }
         .content { margin-left: 260px; padding: 20px; }
         .menu-item { padding: 12px 20px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 600; border-left: 4px solid transparent; }
+        .menu-item:hover { background: #334155; }
         .menu-item.active { background: #334155; border-left-color: #ef4444; color: #ef4444; }
-        .card-pet { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 10px; }
+        .card-pet { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .hidden { display: none; }
-        input, select { border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px; font-size: 12px; }
+        input, select { border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px; font-size: 12px; color: black; }
     </style>
 </head>
 <body class="bg-slate-50">
 
-    <!-- LOGIN -->
+    <!-- TELA DE LOGIN -->
     <div id="loginArea" class="flex items-center justify-center min-h-screen">
         <div class="w-full max-w-md p-8 bg-white rounded-2xl shadow-2xl">
-            <h1 class="text-2xl font-black text-center mb-6 text-slate-800 italic uppercase">NILO PET ADM</h1>
+            <h1 class="text-2xl font-black text-center mb-6 text-slate-800 italic uppercase">Nilo Pet ADM</h1>
             <input type="text" id="userAdm" placeholder="Usuário (nilo pet)" class="w-full mb-4 p-3 border rounded-xl">
             <input type="password" id="senhaAdm" placeholder="Senha (nilopet2026)" class="w-full mb-4 p-3 border rounded-xl">
-            <button onclick="logar()" class="w-full bg-red-600 text-white font-black p-4 rounded-xl">ENTRAR</button>
+            <button onclick="executarLogin()" class="w-full bg-red-600 text-white font-black p-4 rounded-xl hover:bg-red-700">ENTRAR</button>
             <button onclick="document.getElementById('loginArea').classList.add('hidden'); document.getElementById('esqueciArea').classList.remove('hidden');" class="w-full mt-4 text-sm underline text-slate-500">Esqueci minha senha</button>
         </div>
     </div>
 
-    <!-- ESQUECI SENHA -->
+    <!-- RECUPERAÇÃO DE SENHA -->
     <div id="esqueciArea" class="hidden flex items-center justify-center min-h-screen">
         <div class="w-full max-w-md p-8 bg-white rounded-2xl shadow-2xl text-center">
             <p class="mb-4 font-bold">Qual o nome do pet?</p>
@@ -37,17 +38,17 @@
         </div>
     </div>
 
-    <!-- PAINEL -->
+    <!-- PAINEL ADMINISTRATIVO -->
     <div id="painelArea" class="hidden">
         <div class="sidebar">
-            <div class="p-6 font-black italic border-b border-slate-700 uppercase">Nilo Pet Banho e Tosa</div>
+            <div class="p-6 font-black italic border-b border-slate-700 uppercase text-sm">Nilo Pet Banho e Tosa</div>
             <nav class="mt-4">
-                <div onclick="mudarFiltro('geral', this)" class="menu-item active">📊 Agendamento Geral</div>
-                <div onclick="mudarFiltro('dia', this)" class="menu-item">📅 Agendamento do Dia</div>
-                <div onclick="mudarFiltro('pacotes', this)" class="menu-item">📦 Pacotes</div>
-                <div onclick="mudarFiltro('vagas', this)" class="menu-item">🔒 Gestão de Vagas</div>
-                <div onclick="mudarFiltro('bloqueio', this)" class="menu-item">🚫 Bloqueio/Desbloqueio</div>
-                <div onclick="exportarExcel()" class="menu-item text-green-400">📥 Exportar Relatório</div>
+                <div onclick="mudarAba('geral', this)" class="menu-item active">📊 Agendamento Geral</div>
+                <div onclick="mudarAba('dia', this)" class="menu-item">📅 Agendamento do Dia</div>
+                <div onclick="mudarAba('pacotes', this)" class="menu-item">📦 Controle de Pacotes</div>
+                <div onclick="mudarAba('vagas', this)" class="menu-item">🔒 Gestão de Vagas</div>
+                <div onclick="mudarAba('bloqueio', this)" class="menu-item">🚫 Bloqueios</div>
+                <div onclick="exportarRelatorioExcel()" class="menu-item text-green-400">📥 Exportar Excel</div>
                 <div onclick="location.reload()" class="menu-item text-slate-400 mt-10">🚪 Sair</div>
             </nav>
         </div>
@@ -56,137 +57,118 @@
             <header class="flex justify-between items-center mb-6">
                 <h2 id="tituloPagina" class="text-xl font-black uppercase italic">Agendamento Geral</h2>
                 <div class="flex gap-2">
-                    <input type="date" id="filtroData" onchange="carregarDados()">
-                    <select id="filtroFalou" onchange="carregarDados()">
+                    <input type="date" id="filtroData" onchange="carregarDadosBanco()">
+                    <select id="filtroFalou" onchange="carregarDadosBanco()">
                         <option value="">Falou Cliente?</option>
                         <option value="sim">Sim</option>
                         <option value="nao">Não</option>
                     </select>
                 </div>
             </header>
-            <div id="containerCards" class="grid grid-cols-1 gap-4"></div>
+            <div id="containerPrincipal"></div>
         </div>
     </div>
 
     <script>
-        const SB_URL = "https://yczhjyxisqrvfxxgipop.supabase.co/rest/v1";
+        // CONFIGURAÇÕES TÉCNICAS
+        const SB_URL = "https://supabase.co";
         const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
-        const headers = { 
-            "apikey": SB_KEY, 
-            "Authorization": "Bearer " + SB_KEY, 
-            "Content-Type": "application/json" 
-        };
+        const headers = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json" };
 
         let todosDados = [];
-        let filtroAtual = 'geral';
+        let abaAtual = 'geral';
 
-        function logar() {
-            const user = document.getElementById('userAdm').value.toLowerCase().trim();
-            const pass = document.getElementById('senhaAdm').value.trim();
-            if(user === 'nilo pet' && pass === 'nilopet2026') {
+        // LOGIN
+        function executarLogin() {
+            const u = document.getElementById('userAdm').value.toLowerCase().trim();
+            const s = document.getElementById('senhaAdm').value.trim();
+            if(u === 'nilo pet' && s === 'nilopet2026') {
                 document.getElementById('loginArea').classList.add('hidden');
                 document.getElementById('painelArea').classList.remove('hidden');
-                carregarDados();
-            } else { alert("Usuário ou Senha incorretos!"); }
+                carregarDadosBanco();
+            } else { alert("Usuário ou Senha inválidos!"); }
         }
 
-        async function carregarDados() {
-            const container = document.getElementById('containerCards');
-            container.innerHTML = "<p class='text-center font-bold'>Carregando dados...</p>";
+        // BUSCA DE DADOS
+        async function carregarDadosBanco() {
             try {
-                const res = await fetch(`${SB_URL}/agendamentos?select=*`, { headers });
+                const res = await fetch(`${SB_URL}/agendamentos?select=*&order=data.asc,hora.asc`, { headers });
                 todosDados = await res.json();
-                renderizar();
-            } catch (e) { console.error(e); }
+                renderizarConteudo();
+            } catch (e) { console.error("Erro ao conectar:", e); }
         }
 
-        async function update(id, campo, valor) {
-            await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { 
-                method: 'PATCH', 
-                headers, 
-                body: JSON.stringify({ [campo]: valor }) 
-            });
-            carregarDados();
+        // ATUALIZAÇÃO MANUAL
+        async function salvarAlteracao(id, campo, valor) {
+            await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: 'PATCH', headers, body: JSON.stringify({ [campo]: valor }) });
+            carregarDadosBanco(); // Atualiza tudo automaticamente
         }
 
-        async function excluir(id) {
-            if(confirm("Deseja realmente excluir?")) {
-                await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: 'DELETE', headers });
-                carregarDados();
-            }
+        // WHATSAPP
+        function abrirZap(tel, msg) {
+            window.open(`https://wa.me{tel}?text=${encodeURIComponent(msg)}`);
         }
 
-        function renderizar() {
-            const container = document.getElementById('containerCards');
+        // RENDERIZAÇÃO DAS TELAS
+        function renderizarConteudo() {
+            const container = document.getElementById('containerPrincipal');
             const dataFiltro = document.getElementById('filtroData').value;
-            const falouFiltro = document.getElementById('filtroFalou').value;
             const hoje = new Date().toISOString().split('T')[0];
 
             let filtrados = todosDados.filter(i => {
-                if (filtroAtual === 'dia' && i.data !== hoje) return false;
-                if (filtroAtual === 'pacotes' && (!i.tipo_servico || i.tipo_servico === 'avulso')) return false;
+                if (abaAtual === 'dia' && i.data !== hoje) return false;
+                if (abaAtual === 'pacotes' && i.tipo_servico === 'avulso') return false;
                 if (dataFiltro && i.data !== dataFiltro) return false;
-                if (falouFiltro && i.falou_cliente !== falouFiltro) return false;
                 return true;
             });
 
-            if(filtrados.length === 0) {
-                container.innerHTML = "<p class='text-center text-gray-500'>Nenhum registro encontrado.</p>";
-                return;
-            }
-
             container.innerHTML = filtrados.map(item => `
-                <div class="card-pet grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+                <div class="card-pet grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
-                        <p class="font-black text-xs uppercase">${item.cliente || 'SEM NOME'}</p>
-                        <p class="text-[10px] text-blue-600 font-bold uppercase">${item.pet || 'SEM PET'}</p>
-                        <p class="text-[9px] text-gray-500 uppercase">${item.rua || 'SOL NASCENTE'}</p>
+                        <p class="font-black text-xs uppercase">${item.cliente || 'CLIENTE'}</p>
+                        <p class="text-[10px] text-blue-600 font-bold uppercase">${item.pet || 'PET'}</p>
+                        <p class="text-[9px] text-gray-500 uppercase italic">${item.rua || 'Sol Nascente'}</p>
                     </div>
-                    <div class="text-[10px]">
-                        <p class="font-bold">SERVIÇO: ${item.tipo_servico || 'AVULSO'}</p>
-                        <p>DATA: ${item.data || '--'} - ${item.hora || '--'}</p>
+                    <div class="text-[10px] space-y-1">
+                        <p><b>SERVIÇO:</b> ${item.tipo_servico}</p>
+                        <p><b>DATA:</b> ${item.data} às ${item.hora}</p>
                     </div>
-                    <div>
-                        <select onchange="update('${item.id}', 'falou_cliente', this.value)" class="w-full text-[10px]">
-                            <option value="nao" ${item.falou_cliente === 'nao' ? 'selected' : ''}>Não Falou</option>
+                    <div class="space-y-1">
+                        <select onchange="salvarAlteracao('${item.id}', 'falou_cliente', this.value)" class="w-full text-[10px]">
+                            <option value="nao" ${item.falou_cliente === 'nao' ? 'selected' : ''}>Não falou</option>
                             <option value="sim" ${item.falou_cliente === 'sim' ? 'selected' : ''}>Falou OK</option>
                         </select>
-                        <input type="number" value="${item.valor_real_pago || 0}" onchange="update('${item.id}', 'valor_real_pago', this.value)" class="w-full mt-1" placeholder="R$ Pago">
+                        <input type="number" placeholder="Valor Pago" value="${item.valor_real_pago || ''}" onchange="salvarAlteracao('${item.id}', 'valor_real_pago', this.value)" class="w-full">
                     </div>
                     <div class="flex flex-col gap-1">
-                        <button onclick="zapLembrar('${item.whatsapp}', '${item.cliente}')" class="bg-green-500 text-white text-[9px] font-bold p-1 rounded">WHATSAPP</button>
-                        <button onclick="excluir('${item.id}')" class="text-red-500 text-[9px] font-bold">EXCLUIR</button>
+                        <button onclick="abrirZap('${item.whatsapp}', 'Olá ${item.cliente}, segue os dados do seu agendamento Nilo Pet...')" class="bg-green-600 text-white text-[9px] p-1 rounded font-bold">ZAP LEMBRAR</button>
+                        <button onclick="excluirRegistro('${item.id}')" class="text-red-500 text-[9px] font-bold uppercase">Excluir</button>
                     </div>
                 </div>
             `).join('');
         }
 
-        function zapLembrar(tel, nome) {
-            const msg = window.encodeURIComponent(`Olá ${nome}, segue os dados do seu agendamento conosco na Nilo Pet!`);
-            window.open(`https://wa.me{tel}?text=${msg}`);
+        async function excluirRegistro(id) {
+            if(confirm("Excluir agendamento permanentemente?")) {
+                await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: 'DELETE', headers });
+                carregarDadosBanco();
+            }
         }
 
-        function exportarExcel() {
-            let csv = "Data,Cliente,Pet,Servico,Valor Pago\n";
-            todosDados.forEach(i => { 
-                csv += `${i.data || ''},${i.cliente || ''},${i.pet || ''},${i.tipo_servico || ''},${i.valor_real_pago || 0}\n`; 
-            });
-            const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'relatorio_nilo_pet.csv';
-            a.click();
+        function exportarRelatorioExcel() {
+            let csv = "\ufeffData;Cliente;Pet;Servico;Valor Pago\n";
+            todosDados.forEach(i => { csv += `${i.data};${i.cliente};${i.pet};${i.tipo_servico};${i.valor_real_pago}\n`; });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'relatorio_nilopet.csv'; a.click();
         }
 
-        function mudarFiltro(tipo, el) {
-            filtroAtual = tipo;
+        function mudarAba(aba, el) {
+            abaAtual = aba;
             document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
             el.classList.add('active');
             document.getElementById('tituloPagina').innerText = el.innerText;
-            renderizar();
+            renderizarConteudo();
         }
-       <script src="adm-adicional.js"></script>
     </script>
 </body>
 </html>
