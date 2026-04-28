@@ -2,172 +2,254 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>ADM - Nilo Pet Oficial</title>
+    <title>Nilo Pet - Sistema Integrado ADM</title>
     <script src="https://tailwindcss.com"></script>
     <style>
-        .sidebar { width: 260px; height: 100vh; position: fixed; background: #1e293b; color: white; }
-        .content { margin-left: 260px; padding: 20px; }
+        body { background: #f1f5f9; font-family: sans-serif; }
+        .sidebar { width: 260px; height: 100vh; position: fixed; background: #1e293b; color: white; z-index: 100; }
+        .content { margin-left: 260px; padding: 25px; }
         .menu-item { padding: 12px 20px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 600; border-left: 4px solid transparent; }
-        .menu-item:hover { background: #334155; }
         .menu-item.active { background: #334155; border-left-color: #ef4444; color: #ef4444; }
-        .card-pet { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .card-adm { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .hidden { display: none; }
-        input, select { border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px; font-size: 12px; color: black; }
+        input, select, textarea { border: 1px solid #cbd5e1; border-radius: 6px; padding: 5px; font-size: 12px; width: 100%; color: black; }
+        .label-field { font-size: 9px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-top: 5px; display: block; }
     </style>
 </head>
-<body class="bg-slate-50">
+<body>
 
     <!-- TELA DE LOGIN -->
-    <div id="loginArea" class="flex items-center justify-center min-h-screen">
-        <div class="w-full max-w-md p-8 bg-white rounded-2xl shadow-2xl">
-            <h1 class="text-2xl font-black text-center mb-6 text-slate-800 italic uppercase">Nilo Pet ADM</h1>
-            <input type="text" id="userAdm" placeholder="Usuário (nilo pet)" class="w-full mb-4 p-3 border rounded-xl">
-            <input type="password" id="senhaAdm" placeholder="Senha (nilopet2026)" class="w-full mb-4 p-3 border rounded-xl">
-            <button onclick="executarLogin()" class="w-full bg-red-600 text-white font-black p-4 rounded-xl hover:bg-red-700">ENTRAR</button>
-            <button onclick="document.getElementById('loginArea').classList.add('hidden'); document.getElementById('esqueciArea').classList.remove('hidden');" class="w-full mt-4 text-sm underline text-slate-500">Esqueci minha senha</button>
+    <div id="loginArea" class="flex items-center justify-center min-h-screen bg-slate-100">
+        <div class="w-full max-w-md p-8 bg-white rounded-2xl shadow-2xl text-center">
+            <h1 class="text-3xl font-black text-slate-800 uppercase italic mb-6">Nilo Pet ADM</h1>
+            <input type="text" id="userAdm" placeholder="Login (nilo pet)" class="mb-4 p-4 border-2 rounded-xl">
+            <input type="password" id="senhaAdm" placeholder="Senha (nilopet2026)" class="mb-4 p-4 border-2 rounded-xl">
+            <button onclick="logar()" class="w-full bg-red-600 text-white font-black p-4 rounded-xl shadow-lg">ENTRAR</button>
+            <button onclick="document.getElementById('loginArea').classList.add('hidden'); document.getElementById('esqueciArea').classList.remove('hidden');" class="mt-4 text-xs font-bold text-slate-500 underline">ESQUECI SENHA</button>
         </div>
     </div>
 
-    <!-- RECUPERAÇÃO DE SENHA -->
+    <!-- ESQUECI SENHA -->
     <div id="esqueciArea" class="hidden flex items-center justify-center min-h-screen">
         <div class="w-full max-w-md p-8 bg-white rounded-2xl shadow-2xl text-center">
             <p class="mb-4 font-bold">Qual o nome do pet?</p>
-            <input type="text" id="petRecupera" placeholder="Nome do pet" class="w-full mb-4 p-3 border rounded-xl">
-            <button onclick="if(document.getElementById('petRecupera').value.toLowerCase()==='nilo') alert('Senha: nilopet2026'); else alert('Incorreto');" class="w-full bg-slate-800 text-white p-3 rounded-xl">VERIFICAR</button>
-            <button onclick="location.reload()" class="mt-4 text-xs underline">Voltar</button>
+            <input type="text" id="petRec" placeholder="Nome do pet" class="mb-4 p-4 border-2 rounded-xl">
+            <button onclick="if(document.getElementById('petRec').value.toLowerCase()==='nilo') alert('Sua senha é: nilopet2026'); else alert('Nome incorreto');" class="w-full bg-slate-800 text-white p-4 rounded-xl">VERIFICAR</button>
+            <button onclick="location.reload()" class="mt-4 text-xs underline">VOLTAR</button>
         </div>
     </div>
 
-    <!-- PAINEL ADMINISTRATIVO -->
+    <!-- PAINEL PRINCIPAL -->
     <div id="painelArea" class="hidden">
         <div class="sidebar">
-            <div class="p-6 font-black italic border-b border-slate-700 uppercase text-sm">Nilo Pet Banho e Tosa</div>
+            <div class="p-6 font-black italic border-b border-slate-700 text-sm">NILO PET BANHO E TOSA</div>
             <nav class="mt-4">
                 <div onclick="mudarAba('geral', this)" class="menu-item active">📊 Agendamento Geral</div>
                 <div onclick="mudarAba('dia', this)" class="menu-item">📅 Agendamento do Dia</div>
                 <div onclick="mudarAba('pacotes', this)" class="menu-item">📦 Controle de Pacotes</div>
                 <div onclick="mudarAba('vagas', this)" class="menu-item">🔒 Gestão de Vagas</div>
                 <div onclick="mudarAba('bloqueio', this)" class="menu-item">🚫 Bloqueios</div>
-                <div onclick="exportarRelatorioExcel()" class="menu-item text-green-400">📥 Exportar Excel</div>
+                <div onclick="exportarExcel()" class="menu-item text-green-400">📥 Exportar Excel</div>
                 <div onclick="location.reload()" class="menu-item text-slate-400 mt-10">🚪 Sair</div>
             </nav>
         </div>
 
         <div class="content">
-            <header class="flex justify-between items-center mb-6">
-                <h2 id="tituloPagina" class="text-xl font-black uppercase italic">Agendamento Geral</h2>
-                <div class="flex gap-2">
-                    <input type="date" id="filtroData" onchange="carregarDadosBanco()">
-                    <select id="filtroFalou" onchange="carregarDadosBanco()">
-                        <option value="">Falou Cliente?</option>
-                        <option value="sim">Sim</option>
-                        <option value="nao">Não</option>
+            <header class="flex justify-between items-center mb-8">
+                <h2 id="tituloAba" class="text-2xl font-black uppercase italic text-slate-800">Agendamento Geral</h2>
+                <div id="filtrosHeader" class="flex gap-2">
+                    <input type="date" id="fData" onchange="carregarDados()" class="w-40">
+                    <select id="fFalou" onchange="carregarDados()" class="w-40">
+                        <option value="">FALOU COM CLIENTE?</option>
+                        <option value="sim">SIM</option>
+                        <option value="nao">NÃO</option>
                     </select>
                 </div>
             </header>
-            <div id="containerPrincipal"></div>
+            <div id="containerDados"></div>
         </div>
     </div>
 
     <script>
-        // CONFIGURAÇÕES TÉCNICAS
-        const SB_URL = "https://supabase.co";
+        const SB_URL = "https://yczhjyxisqrvfxxgipop.supabase.co/rest/v1;
         const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
-        const headers = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json" };
+        const headers = { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json", "Prefer": "return=minimal" };
 
         let todosDados = [];
-        let abaAtual = 'geral';
+        let abaAtiva = 'geral';
 
-        // LOGIN
-        function executarLogin() {
-            const u = document.getElementById('userAdm').value.toLowerCase().trim();
+        function logar() {
+            const u = document.getElementById('userAdm').value.trim();
             const s = document.getElementById('senhaAdm').value.trim();
             if(u === 'nilo pet' && s === 'nilopet2026') {
                 document.getElementById('loginArea').classList.add('hidden');
                 document.getElementById('painelArea').classList.remove('hidden');
-                carregarDadosBanco();
-            } else { alert("Usuário ou Senha inválidos!"); }
+                carregarDados();
+            } else { alert("Acesso Negado!"); }
         }
 
-        // BUSCA DE DADOS
-        async function carregarDadosBanco() {
-            try {
-                const res = await fetch(`${SB_URL}/agendamentos?select=*&order=data.asc,hora.asc`, { headers });
-                todosDados = await res.json();
-                renderizarConteudo();
-            } catch (e) { console.error("Erro ao conectar:", e); }
+        async function carregarDados() {
+            const res = await fetch(`${SB_URL}/agendamentos?select=*&order=data.asc,hora.asc`, { headers });
+            todosDados = await res.json();
+            renderizar();
         }
 
-        // ATUALIZAÇÃO MANUAL
-        async function salvarAlteracao(id, campo, valor) {
+        async function salvar(id, campo, valor) {
             await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: 'PATCH', headers, body: JSON.stringify({ [campo]: valor }) });
-            carregarDadosBanco(); // Atualiza tudo automaticamente
+            carregarDados();
         }
 
-        // WHATSAPP
-        function abrirZap(tel, msg) {
-            window.open(`https://wa.me{tel}?text=${encodeURIComponent(msg)}`);
-        }
+        function zap(tel, msg) { window.open(`https://wa.me{tel}?text=${encodeURIComponent(msg)}`); }
 
-        // RENDERIZAÇÃO DAS TELAS
-        function renderizarConteudo() {
-            const container = document.getElementById('containerPrincipal');
-            const dataFiltro = document.getElementById('filtroData').value;
+        function renderizar() {
+            const container = document.getElementById('containerDados');
             const hoje = new Date().toISOString().split('T')[0];
+            const filtros = document.getElementById('filtrosHeader');
+            
+            filtros.classList.toggle('hidden', abaAtiva === 'vagas' || abaAtiva === 'bloqueio');
 
+            // --- ABA GESTÃO DE VAGAS ---
+            if (abaAtiva === 'vagas') {
+                container.innerHTML = `
+                    <div class="card-adm border-t-4 border-yellow-500">
+                        <h3 class="font-black mb-4 uppercase italic">Configuração de Vagas Diárias</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <div class="p-4 bg-slate-50 rounded">
+                                <p class="font-bold text-red-600 border-b mb-2">CACHORRO P/M</p>
+                                <label class="label-field">Banho Qtd</label><input type="number" onchange="salvarVaga('pm_banho', this.value)">
+                                <label class="label-field">Banho+Tosa Qtd</label><input type="number" onchange="salvarVaga('pm_tosa', this.value)">
+                                <label class="label-field">Banho+Higi Qtd</label><input type="number" onchange="salvarVaga('pm_higi', this.value)">
+                            </div>
+                            <div class="p-4 bg-slate-50 rounded">
+                                <p class="font-bold text-red-600 border-b mb-2">GRANDE PELUDO</p>
+                                <label class="label-field">Banho Qtd</label><input type="number" onchange="salvarVaga('gp_banho', this.value)">
+                                <label class="label-field">Banho+Tosa Qtd</label><input type="number" onchange="salvarVaga('gp_tosa', this.value)">
+                            </div>
+                            <div class="p-4 bg-slate-50 rounded">
+                                <p class="font-bold text-red-600 border-b mb-2">GRANDE PELO CURTO</p>
+                                <label class="label-field">Banho Qtd</label><input type="number" onchange="salvarVaga('gc_banho', this.value)">
+                                <label class="label-field">Banho+Tosa Qtd</label><input type="number" onchange="salvarVaga('gc_tosa', this.value)">
+                            </div>
+                            <div class="p-4 bg-slate-50 rounded">
+                                <p class="font-bold text-red-600 border-b mb-2">GATO</p>
+                                <label class="label-field">Banho Somente (Qtd)</label><input type="number" onchange="salvarVaga('gato_banho', this.value)">
+                            </div>
+                        </div>
+                        <button onclick="alert('Agenda do mês seguinte liberada!')" class="mt-6 bg-blue-600 text-white font-bold p-3 rounded-lg text-[10px]">LIBERAR PRÓXIMO MÊS (DIA 20)</button>
+                    </div>`;
+                return;
+            }
+
+            // --- ABA BLOQUEIOS ---
+            if (abaAtiva === 'bloqueio') {
+                container.innerHTML = `
+                    <div class="card-adm border-t-4 border-red-600">
+                        <h3 class="font-black mb-4 uppercase italic">Bloquear Dia / Período</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div><label class="label-field">Início</label><input type="datetime-local" id="b_inicio"></div>
+                            <div><label class="label-field">Fim</label><input type="datetime-local" id="b_fim"></div>
+                            <div><label class="label-field">Motivo (Ex: Reforma)</label><input type="text" id="b_motivo"></div>
+                        </div>
+                        <button onclick="alert('Bloqueio Definivo Ativado!')" class="mt-4 bg-red-600 text-white font-bold p-3 rounded-lg text-[10px]">SALVAR BLOQUEIO</button>
+                    </div>`;
+                return;
+            }
+
+            // --- ABAS DE AGENDAMENTO (GERAL, DIA, PACOTES) ---
             let filtrados = todosDados.filter(i => {
-                if (abaAtual === 'dia' && i.data !== hoje) return false;
-                if (abaAtual === 'pacotes' && i.tipo_servico === 'avulso') return false;
-                if (dataFiltro && i.data !== dataFiltro) return false;
+                if (abaAtiva === 'dia' && i.data !== hoje) return false;
+                if (abaAtiva === 'pacotes' && i.tipo_servico === 'avulso') return false;
+                const dataF = document.getElementById('fData').value;
+                const falouF = document.getElementById('fFalou').value;
+                if (dataF && i.data !== dataF) return false;
+                if (falouF && i.falou_cliente !== falouF) return false;
                 return true;
             });
 
-            container.innerHTML = filtrados.map(item => `
-                <div class="card-pet grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div>
-                        <p class="font-black text-xs uppercase">${item.cliente || 'CLIENTE'}</p>
-                        <p class="text-[10px] text-blue-600 font-bold uppercase">${item.pet || 'PET'}</p>
-                        <p class="text-[9px] text-gray-500 uppercase italic">${item.rua || 'Sol Nascente'}</p>
+            container.innerHTML = filtrados.map(i => {
+                const ehPacote = i.tipo_servico && i.tipo_servico !== 'avulso';
+                return `
+                <div class="card-adm border-l-8 ${ehPacote ? 'border-purple-600' : 'border-red-600'}">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <p class="font-black text-slate-800 text-sm uppercase">${i.cliente || 'CLIENTE'}</p>
+                            <p class="text-blue-600 font-bold text-[11px] uppercase">${i.pet || 'PET'}</p>
+                            <p class="text-[10px] text-slate-500 uppercase">${i.rua || 'SOL NASCENTE'}</p>
+                            <div class="mt-2 flex gap-1">
+                                <button onclick="zap('${i.whatsapp}', 'Olá ${i.cliente}, segue os dados do seu agendamento: ${i.data} às ${i.hora}')" class="bg-green-500 text-white text-[9px] px-2 py-1 rounded font-bold">ZAP DADOS</button>
+                                <button onclick="zap('${i.whatsapp}', 'Olá, passando para lembrar do seu agendamento conosco hoje!')" class="bg-blue-500 text-white text-[9px] px-2 py-1 rounded font-bold">ZAP LEMBRAR</button>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="label-field">Tipo / Data / Hora</p>
+                            <select onchange="salvar('${i.id}', 'tipo_servico', this.value)" class="mb-1">
+                                <option value="avulso" ${i.tipo_servico==='avulso'?'selected':''}>Avulso</option>
+                                <option value="pacote_basico" ${i.tipo_servico==='pacote_basico'?'selected':''}>P. Básico</option>
+                                <option value="pacote_tosa" ${i.tipo_servico==='pacote_tosa'?'selected':''}>P. c/ Tosa</option>
+                                <option value="premium" ${i.tipo_servico==='premium'?'selected':''}>P. Premium</option>
+                            </select>
+                            <div class="flex gap-1"><input type="date" value="${i.data}" onchange="salvar('${i.id}', 'data', this.value)"><input type="time" value="${i.hora}" onchange="salvar('${i.id}', 'hora', this.value)"></div>
+                        </div>
+                        <div class="bg-slate-50 p-2 rounded">
+                            ${ehPacote ? `
+                                <p class="label-field">PAGTO PACOTE / VALOR REAL PAGO</p>
+                                <input type="date" value="${i.data_pagamento || ''}" onchange="salvar('${i.id}', 'data_pagamento', this.value)">
+                                <input type="number" value="${i.valor_real_pago || ''}" onchange="salvar('${i.id}', 'valor_real_pago', this.value)" placeholder="R$" class="mt-1">
+                            ` : `
+                                <p class="label-field">TAXA LEVA-TRÁS / TOTAL DESCONTO</p>
+                                <input type="number" value="${i.taxa_leva_tras || 0}" onchange="salvar('${i.id}', 'taxa_leva_tras', this.value)">
+                                <input type="number" value="${i.total_com_desconto || ''}" onchange="salvar('${i.id}', 'total_com_desconto', this.value)" placeholder="R$" class="mt-1">
+                            `}
+                            <select onchange="salvar('${i.id}', 'forma_pagamento', this.value)" class="mt-1">
+                                <option value="">FORMA PAGTO...</option>
+                                <option value="pix" ${i.forma_pagamento==='pix'?'selected':''}>PIX</option>
+                                <option value="credito" ${i.forma_pagamento==='credito'?'selected':''}>CARTÃO CRÉDITO</option>
+                                <option value="debito" ${i.forma_pagamento==='debito'?'selected':''}>CARTÃO DÉBITO</option>
+                                <option value="dinheiro" ${i.forma_pagamento==='dinheiro'?'selected':''}>DINHEIRO</option>
+                                <option value="qrcode" ${i.forma_pagamento==='qrcode'?'selected':''}>QR CODE PIX</option>
+                            </select>
+                        </div>
+                        <div class="flex flex-col justify-between">
+                            <div>
+                                <p class="label-field">Falou c/ Cliente?</p>
+                                <select onchange="salvar('${i.id}', 'falou_cliente', this.value)">
+                                    <option value="nao" ${i.falou_cliente==='nao'?'selected':''}>NÃO</option>
+                                    <option value="sim" ${i.falou_cliente==='sim'?'selected':''}>SIM</option>
+                                </select>
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                ${ehPacote ? `
+                                    <button onclick="zap('${i.whatsapp}', 'Olá, informamos que o pacote do seu pet deve ser pago dia 20 de cada mês. Valor: R$ ${i.valor_real_pago}')" class="bg-purple-600 text-white text-[8px] p-1 rounded font-bold uppercase">Zap Cobrança</button>
+                                    <button onclick="zap('${i.whatsapp}', 'Caro cliente, informamos que seu pacote encerrou. Acesse o link para renovar!')" class="bg-slate-700 text-white text-[8px] p-1 rounded font-bold uppercase">Zap Renovação</button>
+                                ` : ''}
+                                <button onclick="excluirRegistro('${i.id}')" class="text-red-600 text-[9px] font-black uppercase mt-1">Excluir Registro</button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="text-[10px] space-y-1">
-                        <p><b>SERVIÇO:</b> ${item.tipo_servico}</p>
-                        <p><b>DATA:</b> ${item.data} às ${item.hora}</p>
-                    </div>
-                    <div class="space-y-1">
-                        <select onchange="salvarAlteracao('${item.id}', 'falou_cliente', this.value)" class="w-full text-[10px]">
-                            <option value="nao" ${item.falou_cliente === 'nao' ? 'selected' : ''}>Não falou</option>
-                            <option value="sim" ${item.falou_cliente === 'sim' ? 'selected' : ''}>Falou OK</option>
-                        </select>
-                        <input type="number" placeholder="Valor Pago" value="${item.valor_real_pago || ''}" onchange="salvarAlteracao('${item.id}', 'valor_real_pago', this.value)" class="w-full">
-                    </div>
-                    <div class="flex flex-col gap-1">
-                        <button onclick="abrirZap('${item.whatsapp}', 'Olá ${item.cliente}, segue os dados do seu agendamento Nilo Pet...')" class="bg-green-600 text-white text-[9px] p-1 rounded font-bold">ZAP LEMBRAR</button>
-                        <button onclick="excluirRegistro('${item.id}')" class="text-red-500 text-[9px] font-bold uppercase">Excluir</button>
-                    </div>
-                </div>
-            `).join('');
+                </div>`;
+            }).join('');
         }
 
         async function excluirRegistro(id) {
-            if(confirm("Excluir agendamento permanentemente?")) {
+            if(confirm("Excluir permanentemente?")) {
                 await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: 'DELETE', headers });
-                carregarDadosBanco();
+                carregarDados();
             }
         }
 
-        function exportarRelatorioExcel() {
-            let csv = "\ufeffData;Cliente;Pet;Servico;Valor Pago\n";
-            todosDados.forEach(i => { csv += `${i.data};${i.cliente};${i.pet};${i.tipo_servico};${i.valor_real_pago}\n`; });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'relatorio_nilopet.csv'; a.click();
-        }
-
         function mudarAba(aba, el) {
-            abaAtual = aba;
+            abaAtiva = aba;
             document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
             el.classList.add('active');
-            document.getElementById('tituloPagina').innerText = el.innerText;
-            renderizarConteudo();
+            document.getElementById('tituloAba').innerText = el.innerText;
+            renderizar();
+        }
+
+        function exportarExcel() {
+            let csv = "\ufeffData;Cliente;Pet;Servico;Valor Pago\n";
+            todosDados.forEach(i => { csv += `${i.data};${i.cliente};${i.pet};${i.tipo_servico};${i.valor_real_pago || i.total_com_desconto}\n`; });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Relatorio_NiloPet.csv'; a.click();
         }
     </script>
 </body>
