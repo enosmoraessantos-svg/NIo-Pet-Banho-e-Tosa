@@ -3,108 +3,187 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nilo Pet - Agendamento</title>
+    <title>Nilo Pet - Agendamento Oficial</title>
     <script src="https://tailwindcss.com"></script>
     <style>
         .step { display: none; }
         .step.active { display: block; }
-        .card { background: white; padding: 20px; border-radius: 15px; margin: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        input, select { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid #e2e8f0; border-radius: 10px; }
-        .btn { background: #dc2626; color: white; width: 100%; padding: 15px; border-radius: 10px; font-weight: 800; }
+        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); margin: 15px; border: 1px solid #e2e8f0; }
+        input, select { width: 100%; padding: 14px; border-radius: 10px; border: 2px solid #e2e8f0; margin-bottom: 12px; font-size: 16px; }
+        .btn-next { background-color: #dc2626; color: white; width: 100%; padding: 18px; border-radius: 12px; font-weight: 800; font-size: 18px; cursor: pointer; }
+        .label-req { display: block; font-size: 10px; margin-bottom: 4px; text-transform: uppercase; font-weight: 900; color: #64748b; }
     </style>
 </head>
 <body class="bg-blue-50">
 
-    <div class="p-6 text-center font-black text-2xl italic italic uppercase">NILO PET</div>
+    <div class="bg-white p-6 text-center border-b shadow-sm">
+        <h1 class="text-2xl font-black text-slate-800 uppercase italic">Nilo Pet</h1>
+        <p class="text-red-600 font-bold text-xs uppercase">Agendamento Online</p>
+    </div>
 
-    <div id="fluxo">
-        <!-- ETAPA 1 -->
+    <div id="fluxoAgendamento">
+        <!-- ETAPA 1: CLIENTE -->
         <div id="step1" class="step active card">
-            <h2 class="font-bold mb-4 uppercase text-sm underline">Etapa 1: Dados</h2>
-            <select id="acao" onchange="toggleCance()">
+            <h2 class="font-bold mb-4 text-slate-700 uppercase underline text-sm">Etapa 1: Seus Dados</h2>
+            <label class="label-req">Ação desejada *</label>
+            <select id="acao" onchange="toggleCancelamento()">
                 <option value="agendar">NOVO AGENDAMENTO</option>
-                <option value="cancelar_avulso">CANCELAR AVULSO</option>
+                <option value="cancelar_avulso">CANCELAR SERVIÇO AVULSO</option>
                 <option value="cancelar_pacote">CANCELAR PACOTE</option>
             </select>
-            <input type="text" id="nome" placeholder="Seu Nome *" required>
-            <input type="tel" id="zap" placeholder="WhatsApp (119...) *" maxlength="11" required>
-            <div class="flex gap-1">
-                <input type="text" id="rua" placeholder="Rua e Número *" required>
-                <input type="text" value="Sol Nascente" readonly class="bg-gray-100 font-bold text-[10px] w-24">
+
+            <div id="camposCliente">
+                <label class="label-req">Nome Completo *</label>
+                <input type="text" id="nomeCliente" placeholder="Seu nome" required>
+                <label class="label-req">WhatsApp *</label>
+                <input type="tel" id="whatsapp" placeholder="11999998888" maxlength="11" required>
+                <label class="label-req">Endereço *</label>
+                <div class="flex gap-2">
+                    <input type="text" id="rua" placeholder="Rua e Número" class="flex-grow" required>
+                    <input type="text" value="Sol Nascente" readonly class="bg-slate-100 w-32 font-bold text-slate-500 text-center text-[10px]">
+                </div>
+                <button onclick="validarEtapa(1, 2)" class="btn-next mt-4">PRÓXIMO</button>
             </div>
-            <button onclick="valida(1, 2)" class="btn">PRÓXIMO</button>
+            
+            <div id="camposCancelamento" class="hidden">
+                <button onclick="processarCancelamento()" class="btn-next bg-slate-800">CONFIRMAR CANCELAMENTO</button>
+            </div>
         </div>
 
         <!-- ETAPA 2: PETS -->
         <div id="step2" class="step card">
-            <h2 class="font-bold mb-4 uppercase text-sm">Etapa 2: Pets</h2>
-            <select id="qtd" onchange="gerarPets()">
-                <option value="1">1 Pet</option><option value="2">2 Pets</option><option value="3">3 Pets</option><option value="4">4 Pets</option>
+            <h2 class="font-bold mb-4 text-slate-700 uppercase underline text-sm">Etapa 2: Quantos Pets?</h2>
+            <select id="qtdPets" onchange="gerarCamposPets()">
+                <option value="1">1 Pet</option>
+                <option value="2">2 Pets</option>
+                <option value="3">3 Pets</option>
+                <option value="4">4 Pets</option>
             </select>
-            <div id="petsCont"></div>
-            <button onclick="valida(2, 3)" class="btn">PRÓXIMO</button>
+            <div id="containerPets"></div>
+            <button onclick="validarEtapa(2, 3)" class="btn-next">PRÓXIMO</button>
         </div>
 
-        <!-- ETAPA 3: PLANO -->
+        <!-- ETAPA 3: PLANOS -->
         <div id="step3" class="step card">
-            <h2 class="font-bold mb-4 uppercase text-sm">Etapa 3: Planos</h2>
-            <div id="planoCont"></div>
-            <button onclick="valida(3, 4)" class="btn">PRÓXIMO</button>
+            <h2 class="font-bold mb-4 text-slate-700 uppercase underline text-sm">Etapa 3: Planos e Serviços</h2>
+            <div id="containerPlanos"></div>
+            <button onclick="validarEtapa(3, 4)" class="btn-next">ESCOLHER HORÁRIOS</button>
         </div>
 
-        <!-- ETAPA 4: DATA -->
+        <!-- ETAPA 4: DATAS -->
         <div id="step4" class="step card">
-            <h2 class="font-bold mb-4 uppercase text-sm">Etapa 4: Horário</h2>
-            <div id="dataCont"></div>
-            <button id="btnFin" onclick="finalizar()" class="btn">CONFIRMAR ✅</button>
+            <h2 class="font-bold mb-4 text-slate-700 uppercase underline text-sm">Etapa 4: Finalizar</h2>
+            <div id="containerDatas"></div>
+            <button id="btnFinalizar" onclick="enviarAgendamento()" class="btn-next bg-green-600">CONFIRMAR AGENDAMENTO ✅</button>
         </div>
     </div>
 
     <script>
-        const SB_URL = "https://yczhjyxisqrvfxxgipop.supabase.co/rest/v1";
+        const SB_URL = "https://supabase.co";
         const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
+        const headers = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json", "Prefer": "return=minimal" };
 
-        function valida(atual, prox) {
-            const inputs = document.getElementById('step'+atual).querySelectorAll('[required]');
-            for(let i of inputs) if(!i.value) return alert("Preencha tudo!");
+        function toggleCancelamento() {
+            const acao = document.getElementById('acao').value;
+            document.getElementById('camposCliente').classList.toggle('hidden', acao !== 'agendar');
+            document.getElementById('camposCancelamento').classList.toggle('hidden', acao === 'agendar');
+        }
+
+        function processarCancelamento() {
+            const acao = document.getElementById('acao').value;
+            if(acao === 'cancelar_avulso') {
+                alert("Agendamento cancelado. Caso precise, deve fazer um novo agendamento.");
+                location.reload();
+            } else {
+                alert("Caro cliente, se você tem pacote ativo e deseja mudar a data, entre em contato com nossos atendentes para mudar o horário.");
+            }
+        }
+
+        function validarEtapa(atual, prox) {
+            const step = document.getElementById('step'+atual);
+            const obrigatorios = step.querySelectorAll('[required]');
+            for(let i of obrigatorios) if(!i.value) return alert("Preencha todos os campos obrigatórios!");
+            
             document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
             document.getElementById('step'+prox).classList.add('active');
-            if(prox===2) gerarPets();
-            if(prox===3) gerarPlanos();
-            if(prox===4) gerarDatas();
+            
+            if(prox === 2) gerarCamposPets();
+            if(prox === 3) gerarCamposPlanos();
+            if(prox === 4) gerarCamposDatas();
         }
 
-        function gerarPets() {
-            const q = document.getElementById('qtd').value;
-            let h = '';
-            for(let i=1; i<=q; i++) h += `<input type="text" id="p_nome${i}" placeholder="Nome do Pet ${i} *" required>
-            <select id="p_esp${i}"><option value="cachorro">Cachorro</option><option value="gato">Gato</option></select>`;
-            document.getElementById('petsCont').innerHTML = h;
+        function gerarCamposPets() {
+            const q = document.getElementById('qtdPets').value;
+            let html = '';
+            for(let i=1; i<=q; i++) {
+                html += `<div class="p-4 border-2 rounded-xl mb-4 bg-slate-50">
+                    <label class="label-req">Nome do Pet ${i} *</label>
+                    <input type="text" id="pet_nome_${i}" required>
+                    <label class="label-req">Espécie *</label>
+                    <select id="pet_esp_${i}"><option value="cachorro">Cachorro</option><option value="gato">Gato</option></select>
+                </div>`;
+            }
+            document.getElementById('containerPets').innerHTML = html;
         }
 
-        // Simplificação da lógica de finalização
-        async function finalizar() {
-            const btn = document.getElementById('btnFin');
+        function gerarCamposPlanos() {
+            const q = document.getElementById('qtdPets').value;
+            let html = '';
+            for(let i=1; i<=q; i++) {
+                const nome = document.getElementById(`pet_nome_${i}`).value;
+                html += `<div class="mb-6"><p class="font-black text-xs text-red-600 uppercase underline">${nome}</p>
+                    <label class="label-req">Escolha o Plano *</label>
+                    <select id="plano_${i}">
+                        <option value="avulso">Avulso</option>
+                        <option value="pacote_basico">Pacote Básico</option>
+                        <option value="pacote_tosa">Básico com Tosa</option>
+                        <option value="premium">Premium</option>
+                    </select>
+                </div>`;
+            }
+            document.getElementById('containerPlanos').innerHTML = html;
+        }
+
+        function gerarCamposDatas() {
+            const q = document.getElementById('qtdPets').value;
+            let html = '';
+            for(let i=1; i<=q; i++) {
+                const nome = document.getElementById(`pet_nome_${i}`).value;
+                html += `<div class="mb-4"><p class="font-bold text-xs uppercase">${nome}</p>
+                    <input type="date" id="data_${i}" required>
+                    <select id="hora_${i}" required>
+                        <option value="09:00">09:00</option><option value="10:00">10:00</option>
+                        <option value="14:00">14:00</option><option value="15:00">15:00</option>
+                    </select>
+                </div>`;
+            }
+            document.getElementById('containerDatas').innerHTML = html;
+        }
+
+        async function enviarAgendamento() {
+            const btn = document.getElementById('btnFinalizar');
             btn.innerText = "ENVIANDO..."; btn.disabled = true;
 
-            const dados = {
-                cliente: document.getElementById('nome').value,
-                whatsapp: document.getElementById('zap').value,
-                rua: document.getElementById('rua').value + ", Sol Nascente",
-                tipo_servico: "Agendamento via Site",
-                data: new Date().toISOString().split('T')[0]
-            };
+            const q = document.getElementById('qtdPets').value;
+            
+            for(let i=1; i<=q; i++) {
+                const corpo = {
+                    cliente: document.getElementById('nomeCliente').value,
+                    whatsapp: document.getElementById('whatsapp').value,
+                    rua: document.getElementById('rua').value + ", Sol Nascente",
+                    pet: document.getElementById(`pet_nome_${i}`).value,
+                    especie: document.getElementById(`pet_esp_${i}`).value,
+                    tipo_servico: document.getElementById(`plano_${i}`).value,
+                    data: document.getElementById(`data_${i}`).value,
+                    hora: document.getElementById(`hora_${i}`).value,
+                    falou_cliente: 'nao'
+                };
 
-            const res = await fetch(`${SB_URL}/agendamentos`, {
-                method: 'POST',
-                headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json", "Prefer": "return=minimal" },
-                body: JSON.stringify(dados)
-            });
-
-            if(res.ok) {
-                alert("AGENDADO! Em breve nossa equipe entrará em contato. De imediato mande foto do seu pet para adiantar o atendimento.");
-                location.reload();
+                await fetch(`${SB_URL}/agendamentos`, { method: 'POST', headers, body: JSON.stringify(corpo) });
             }
+
+            alert("AGENDADO! Em breve nossa equipe entrará em contato. De imediato mande foto do seu pet para adiantar o atendimento.");
+            location.reload();
         }
     </script>
 </body>
