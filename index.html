@@ -1,64 +1,255 @@
-import { useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendamento - Nilo Pet</title>
+    <script src="https://jsdelivr.net"></script>
+    <link href="https://googleapis.com" rel="stylesheet">
+    <style>
+        :root {
+            --azul-fundo: #e3f2fd;
+            --azul-botao: #2196f3;
+            --branco: #ffffff;
+            --texto: #333;
+        }
 
-const supabase = createClient("https://supabase.co", "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm");
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--azul-fundo);
+            color: var(--texto);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
 
-export default function Home() {
-  const [etapa, setEtapa] = useState(1);
-  const [form, setForm] = useState({ cliente_nome: '', pet_nome: '', whatsapp: '', data_hora: '', servico: 'Banho' });
+        .container {
+            background: var(--branco);
+            width: 90%;
+            max-width: 500px;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
 
-  // CSS dentro do código para não ter erro de visual
-  const estiloCard = {
-    background: '#ffffff', padding: '30px', borderRadius: '20px', 
-    boxShadow: '0px 10px 30px rgba(0,0,0,0.1)', maxWidth: '400px', margin: '50px auto',
-    fontFamily: 'Arial, sans-serif', textAlign: 'center'
-  };
+        .header { text-align: center; margin-bottom: 2rem; }
+        .header h2 { color: var(--azul-botao); margin: 0; }
 
-  const estiloInput = {
-    width: '100%', padding: '12px', margin: '10px 0', border: '1px solid #ddd',
-    borderRadius: '10px', display: 'block', boxSizing: 'border-box'
-  };
+        .step { display: none; }
+        .step.active { display: block; animation: fadeIn 0.5s; }
 
-  const estiloBotao = {
-    width: '100%', padding: '15px', background: '#27ae60', color: 'white',
-    border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold'
-  };
+        label { display: block; margin-top: 15px; font-weight: 600; font-size: 0.9rem; }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-sizing: border-box;
+            background: #fafafa;
+        }
 
-  const salvar = async () => {
-    const { error } = await supabase.from('agendamentos').insert([form]);
-    if (!error) setEtapa(3); else alert("Erro ao salvar no banco!");
-  };
+        input[readonly] { background: #eee; cursor: not-allowed; }
 
-  return (
-    <div style={{ background: '#f4f7f6', minHeight: '100vh', paddingTop: '20px' }}>
-      <div style={estiloCard}>
-        <h1 style={{ color: '#2c3e50', marginBottom: '5px' }}>Nilo Pet</h1>
-        <p style={{ color: '#7f8c8d', marginBottom: '20px' }}>Agendamento Fácil</p>
+        .btn-group { display: flex; gap: 10px; margin-top: 25px; }
+        
+        button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+        }
 
-        {etapa === 1 && (
-          <div>
-            <input style={estiloInput} placeholder="Seu Nome" onChange={e => setForm({...form, cliente_nome: e.target.value})} />
-            <input style={estiloInput} placeholder="WhatsApp" onChange={e => setForm({...form, whatsapp: e.target.value})} />
-            <button style={estiloBotao} onClick={() => setEtapa(2)}>PRÓXIMO</button>
-          </div>
-        )}
+        .btn-next { background: var(--azul-botao); color: white; }
+        .btn-prev { background: #ccc; color: white; }
+        button:hover { opacity: 0.9; transform: translateY(-2px); }
 
-        {etapa === 2 && (
-          <div>
-            <input style={estiloInput} placeholder="Nome do Pet" onChange={e => setForm({...form, pet_nome: e.target.value})} />
-            <input style={estiloInput} type="datetime-local" onChange={e => setForm({...form, data_hora: e.target.value})} />
-            <button style={estiloBotao} onClick={salvar}>FINALIZAR AGENDAMENTO</button>
-          </div>
-        )}
+        .resumo { background: #f0f7ff; padding: 15px; border-radius: 10px; margin-top: 10px; font-size: 0.85rem; }
 
-        {etapa === 3 && (
-          <div>
-            <h2 style={{ color: '#27ae60' }}>✅ Sucesso!</h2>
-            <p>Agendamento realizado para {form.pet_nome}.</p>
-            <button style={estiloBotao} onClick={() => window.location.reload()}>Novo Agendamento</button>
-          </div>
-        )}
-      </div>
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>Nilo Pet</h2>
+        <p>Agendamento Online</p>
     </div>
-  );
-}
+
+    <form id="agendamentoForm">
+        <!-- ETAPA 1: Identificação -->
+        <div class="step active" id="step1">
+            <label>Seu Nome Completo</label>
+            <input type="text" id="cliente_nome" required placeholder="Ex: João Silva">
+            
+            <label>Seu WhatsApp</label>
+            <input type="tel" id="whatsapp" required placeholder="(00) 00000-0000">
+
+            <label>Quantos pets deseja agendar?</label>
+            <select id="qtd_pets" required>
+                <option value="1">1 Pet</option>
+                <option value="2">2 Pets</option>
+                <option value="3">3 Pets</option>
+                <option value="4">4 Pets</option>
+            </select>
+            
+            <div class="btn-group">
+                <button type="button" class="btn-next" onclick="nextStep(2)">Próximo</button>
+            </div>
+        </div>
+
+        <!-- ETAPA 2: Detalhes do Pet e Serviço -->
+        <div class="step" id="step2">
+            <label>Escolha o Plano</label>
+            <select id="tipo_plano" required>
+                <option value="avulso">Avulso</option>
+                <option value="basico">Básico</option>
+                <option value="basico_tosa">Básico com Tosa</option>
+                <option value="premium">Premium</option>
+            </select>
+
+            <label>Espécie</label>
+            <select id="especie" required>
+                <option value="Cachorro">Cachorro</option>
+                <option value="Gato">Gato</option>
+            </select>
+
+            <label>Nome do Pet</label>
+            <input type="text" id="pet_nome" required>
+
+            <label>Porte</label>
+            <select id="porte" required>
+                <option value="Pequeno">Pequeno</option>
+                <option value="Médio">Médio</option>
+                <option value="Grande">Grande</option>
+            </select>
+
+            <label>Possui Alergia?</label>
+            <input type="text" id="alergia" placeholder="Se não, deixe em branco">
+
+            <div class="btn-group">
+                <button type="button" class="btn-prev" onclick="prevStep(1)">Voltar</button>
+                <button type="button" class="btn-next" onclick="nextStep(3)">Próximo</button>
+            </div>
+        </div>
+
+        <!-- ETAPA 3: Endereço -->
+        <div class="step" id="step3">
+            <label>Endereço</label>
+            <input type="text" id="rua" required placeholder="Rua e Número">
+            
+            <label>Bairro (Fixo)</label>
+            <input type="text" id="bairro" value="Sol Nascente" readonly>
+
+            <label>Ponto de Referência</label>
+            <input type="text" id="referencia">
+
+            <div class="btn-group">
+                <button type="button" class="btn-prev" onclick="prevStep(2)">Voltar</button>
+                <button type="button" class="btn-next" onclick="nextStep(4)">Próximo</button>
+            </div>
+        </div>
+
+        <!-- ETAPA 4: Data, Horário e Confirmação -->
+        <div class="step" id="step4">
+            <label>Data desejada</label>
+            <input type="date" id="data_agendamento" required>
+
+            <label>Horário disponível</label>
+            <select id="horario" required>
+                <option value="08:00">08:00</option>
+                <option value="09:00">09:00</option>
+                <option value="10:00">10:00</option>
+                <option value="11:00">11:00</option>
+                <option value="13:00">13:00</option>
+                <option value="14:00">14:00</option>
+                <option value="15:00">15:00</option>
+            </select>
+
+            <div id="resumo_final" class="resumo"></div>
+
+            <div class="btn-group">
+                <button type="button" class="btn-prev" onclick="prevStep(3)">Voltar</button>
+                <button type="button" class="btn-next" style="background:#4caf50" onclick="finalizar()">Finalizar Agendamento</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Conexão Supabase
+    const SB_URL = "https://supabase.co";
+    const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
+    const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+
+    function nextStep(step) {
+        // Validação básica de campos obrigatórios
+        const currentStepDiv = document.querySelector('.step.active');
+        const inputs = currentStepDiv.querySelectorAll('input[required], select[required]');
+        
+        for (let input of inputs) {
+            if (!input.value) {
+                alert("Por favor, preencha todos os campos obrigatórios.");
+                return;
+            }
+        }
+
+        document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+        document.getElementById('step' + step).classList.add('active');
+
+        if(step === 4) gerarResumo();
+    }
+
+    function prevStep(step) {
+        document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+        document.getElementById('step' + step).classList.add('active');
+    }
+
+    function gerarResumo() {
+        const resumo = `
+            <strong>Resumo do Agendamento:</strong><br>
+            Cliente: ${document.getElementById('cliente_nome').value}<br>
+            Pet: ${document.getElementById('pet_nome').value} (${document.getElementById('especie').value})<br>
+            Plano: ${document.getElementById('tipo_plano').value}<br>
+            Data: ${document.getElementById('data_agendamento').value} às ${document.getElementById('horario').value}
+        `;
+        document.getElementById('resumo_final').innerHTML = resumo;
+    }
+
+    async function finalizar() {
+        const dados = {
+            cliente_nome: document.getElementById('cliente_nome').value,
+            whatsapp: document.getElementById('whatsapp').value,
+            pet_nome: document.getElementById('pet_nome').value,
+            especie: document.getElementById('especie').value,
+            porte: document.getElementById('porte').value,
+            tipo_plano: document.getElementById('tipo_plano').value,
+            data_agendamento: document.getElementById('data_agendamento').value,
+            horario: document.getElementById('horario').value,
+            endereco: document.getElementById('rua').value + " - Bairro Sol Nascente"
+        };
+
+        const { error } = await supabaseClient.from('agendamentos').insert([dados]);
+
+        if (error) {
+            alert("Erro ao salvar: " + error.message);
+        } else {
+            document.body.innerHTML = `
+                <div class="container" style="text-align:center">
+                    <h2 style="color:#4caf50">Agendado com Sucesso!</h2>
+                    <p>Em breve nossa equipe entrará em contato.</p>
+                    <p><strong>Dica:</strong> Mande uma foto do seu pet no nosso WhatsApp para adiantar o atendimento!</p>
+                    <button onclick="location.reload()" class="btn-next">Fazer novo agendamento</button>
+                </div>
+            `;
+        }
+    }
+</script>
+</body>
+</html>
