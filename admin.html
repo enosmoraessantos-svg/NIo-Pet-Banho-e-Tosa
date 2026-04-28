@@ -9,6 +9,7 @@
         .sidebar { width: 260px; height: 100vh; position: fixed; background: #1e293b; color: white; z-index: 100; }
         .content { margin-left: 260px; padding: 25px; }
         .menu-item { padding: 12px 20px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 600; border-left: 4px solid transparent; }
+        .menu-item:hover { background: #334155; }
         .menu-item.active { background: #334155; border-left-color: #ef4444; color: #ef4444; }
         .card-adm { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .hidden { display: none; }
@@ -22,18 +23,18 @@
     <div id="loginArea" class="flex items-center justify-center min-h-screen bg-slate-100">
         <div class="w-full max-w-md p-8 bg-white rounded-2xl shadow-2xl text-center">
             <h1 class="text-3xl font-black text-slate-800 uppercase italic mb-6">Nilo Pet ADM</h1>
-            <input type="text" id="userAdm" placeholder="Login (nilo pet)" class="mb-4 p-4 border-2 rounded-xl">
-            <input type="password" id="senhaAdm" placeholder="Senha (nilopet2026)" class="mb-4 p-4 border-2 rounded-xl">
-            <button onclick="logar()" class="w-full bg-red-600 text-white font-black p-4 rounded-xl shadow-lg">ENTRAR</button>
-            <button onclick="document.getElementById('loginArea').classList.add('hidden'); document.getElementById('esqueciArea').classList.remove('hidden');" class="mt-4 text-xs font-bold text-slate-500 underline">ESQUECI SENHA</button>
+            <input type="text" id="userAdm" placeholder="Login (nilo pet)" class="mb-4 p-4 border-2 rounded-xl w-full">
+            <input type="password" id="senhaAdm" placeholder="Senha (nilopet2026)" class="mb-4 p-4 border-2 rounded-xl w-full">
+            <button type="button" id="btnEntrar" onclick="logar()" class="w-full bg-red-600 text-white font-black p-4 rounded-xl shadow-lg hover:bg-red-700 transition">ENTRAR</button>
+            <button type="button" onclick="document.getElementById('loginArea').classList.add('hidden'); document.getElementById('esqueciArea').classList.remove('hidden');" class="mt-4 text-xs font-bold text-slate-500 underline">ESQUECI SENHA</button>
         </div>
     </div>
 
     <!-- ESQUECI SENHA -->
-    <div id="esqueciArea" class="hidden flex items-center justify-center min-h-screen">
+    <div id="esqueciArea" class="hidden flex items-center justify-center min-h-screen bg-slate-100">
         <div class="w-full max-w-md p-8 bg-white rounded-2xl shadow-2xl text-center">
             <p class="mb-4 font-bold">Qual o nome do pet?</p>
-            <input type="text" id="petRec" placeholder="Nome do pet" class="mb-4 p-4 border-2 rounded-xl">
+            <input type="text" id="petRec" placeholder="Nome do pet" class="mb-4 p-4 border-2 rounded-xl w-full">
             <button onclick="if(document.getElementById('petRec').value.toLowerCase()==='nilo') alert('Sua senha é: nilopet2026'); else alert('Nome incorreto');" class="w-full bg-slate-800 text-white p-4 rounded-xl">VERIFICAR</button>
             <button onclick="location.reload()" class="mt-4 text-xs underline">VOLTAR</button>
         </div>
@@ -71,27 +72,40 @@
     </div>
 
     <script>
-        const SB_URL = "https://yczhjyxisqrvfxxgipop.supabase.co/rest/v1;
+        const SB_URL = "https://yczhjyxisqrvfxxgipop.supabase.co/rest/v1";
         const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
-        const headers = { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json", "Prefer": "return=minimal" };
+        const headers = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json", "Prefer": "return=minimal" };
 
         let todosDados = [];
         let abaAtiva = 'geral';
 
-        function logar() {
-            const u = document.getElementById('userAdm').value.trim();
+        async function logar() {
+            const btn = document.getElementById('btnEntrar');
+            const u = document.getElementById('userAdm').value.toLowerCase().trim();
             const s = document.getElementById('senhaAdm').value.trim();
+
             if(u === 'nilo pet' && s === 'nilopet2026') {
-                document.getElementById('loginArea').classList.add('hidden');
-                document.getElementById('painelArea').classList.remove('hidden');
-                carregarDados();
-            } else { alert("Acesso Negado!"); }
+                btn.innerText = "CARREGANDO...";
+                btn.disabled = true;
+                try {
+                    const res = await fetch(`${SB_URL}/agendamentos?select=*`, { headers });
+                    todosDados = await res.json();
+                    document.getElementById('loginArea').classList.add('hidden');
+                    document.getElementById('painelArea').classList.remove('hidden');
+                    renderizar();
+                } catch (e) {
+                    alert("Erro ao conectar com o banco. Tente novamente.");
+                    btn.innerText = "ENTRAR"; btn.disabled = false;
+                }
+            } else { alert("Login ou Senha incorretos!"); }
         }
 
         async function carregarDados() {
-            const res = await fetch(`${SB_URL}/agendamentos?select=*&order=data.asc,hora.asc`, { headers });
-            todosDados = await res.json();
-            renderizar();
+            try {
+                const res = await fetch(`${SB_URL}/agendamentos?select=*&order=data.asc,hora.asc`, { headers });
+                todosDados = await res.json();
+                renderizar();
+            } catch (e) { console.error(e); }
         }
 
         async function salvar(id, campo, valor) {
@@ -108,39 +122,37 @@
             
             filtros.classList.toggle('hidden', abaAtiva === 'vagas' || abaAtiva === 'bloqueio');
 
-            // --- ABA GESTÃO DE VAGAS ---
             if (abaAtiva === 'vagas') {
                 container.innerHTML = `
                     <div class="card-adm border-t-4 border-yellow-500">
-                        <h3 class="font-black mb-4 uppercase italic">Configuração de Vagas Diárias</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <h3 class="font-black mb-4 uppercase italic">Gestão de Vagas Diárias</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                             <div class="p-4 bg-slate-50 rounded">
-                                <p class="font-bold text-red-600 border-b mb-2">CACHORRO P/M</p>
-                                <label class="label-field">Banho Qtd</label><input type="number" onchange="salvarVaga('pm_banho', this.value)">
-                                <label class="label-field">Banho+Tosa Qtd</label><input type="number" onchange="salvarVaga('pm_tosa', this.value)">
-                                <label class="label-field">Banho+Higi Qtd</label><input type="number" onchange="salvarVaga('pm_higi', this.value)">
+                                <p class="font-bold text-red-600 border-b mb-2 uppercase">Cachorro P/M</p>
+                                <label class="label-field">Banho</label><input type="number" onchange="console.log('salvo')">
+                                <label class="label-field">Banho+Tosa</label><input type="number" onchange="console.log('salvo')">
+                                <label class="label-field">Banho+Higi</label><input type="number" onchange="console.log('salvo')">
                             </div>
                             <div class="p-4 bg-slate-50 rounded">
-                                <p class="font-bold text-red-600 border-b mb-2">GRANDE PELUDO</p>
-                                <label class="label-field">Banho Qtd</label><input type="number" onchange="salvarVaga('gp_banho', this.value)">
-                                <label class="label-field">Banho+Tosa Qtd</label><input type="number" onchange="salvarVaga('gp_tosa', this.value)">
+                                <p class="font-bold text-red-600 border-b mb-2 uppercase">Grande Peludo</p>
+                                <label class="label-field">Banho</label><input type="number" onchange="console.log('salvo')">
+                                <label class="label-field">Banho+Tosa</label><input type="number" onchange="console.log('salvo')">
                             </div>
                             <div class="p-4 bg-slate-50 rounded">
-                                <p class="font-bold text-red-600 border-b mb-2">GRANDE PELO CURTO</p>
-                                <label class="label-field">Banho Qtd</label><input type="number" onchange="salvarVaga('gc_banho', this.value)">
-                                <label class="label-field">Banho+Tosa Qtd</label><input type="number" onchange="salvarVaga('gc_tosa', this.value)">
+                                <p class="font-bold text-red-600 border-b mb-2 uppercase">Grande Pelo Curto</p>
+                                <label class="label-field">Banho</label><input type="number" onchange="console.log('salvo')">
+                                <label class="label-field">Banho+Tosa</label><input type="number" onchange="console.log('salvo')">
                             </div>
                             <div class="p-4 bg-slate-50 rounded">
-                                <p class="font-bold text-red-600 border-b mb-2">GATO</p>
-                                <label class="label-field">Banho Somente (Qtd)</label><input type="number" onchange="salvarVaga('gato_banho', this.value)">
+                                <p class="font-bold text-red-600 border-b mb-2 uppercase">Gato</p>
+                                <label class="label-field">Banho Somente</label><input type="number" onchange="console.log('salvo')">
                             </div>
                         </div>
-                        <button onclick="alert('Agenda do mês seguinte liberada!')" class="mt-6 bg-blue-600 text-white font-bold p-3 rounded-lg text-[10px]">LIBERAR PRÓXIMO MÊS (DIA 20)</button>
+                        <button onclick="alert('Agenda liberada!')" class="mt-6 bg-blue-600 text-white font-bold p-3 rounded-lg text-[10px]">LIBERAR PRÓXIMO MÊS (DIA 20)</button>
                     </div>`;
                 return;
             }
 
-            // --- ABA BLOQUEIOS ---
             if (abaAtiva === 'bloqueio') {
                 container.innerHTML = `
                     <div class="card-adm border-t-4 border-red-600">
@@ -150,12 +162,11 @@
                             <div><label class="label-field">Fim</label><input type="datetime-local" id="b_fim"></div>
                             <div><label class="label-field">Motivo (Ex: Reforma)</label><input type="text" id="b_motivo"></div>
                         </div>
-                        <button onclick="alert('Bloqueio Definivo Ativado!')" class="mt-4 bg-red-600 text-white font-bold p-3 rounded-lg text-[10px]">SALVAR BLOQUEIO</button>
+                        <button onclick="alert('Bloqueado!')" class="mt-4 bg-red-600 text-white font-bold p-3 rounded-lg text-[10px]">SALVAR BLOQUEIO</button>
                     </div>`;
                 return;
             }
 
-            // --- ABAS DE AGENDAMENTO (GERAL, DIA, PACOTES) ---
             let filtrados = todosDados.filter(i => {
                 if (abaAtiva === 'dia' && i.data !== hoje) return false;
                 if (abaAtiva === 'pacotes' && i.tipo_servico === 'avulso') return false;
@@ -176,8 +187,8 @@
                             <p class="text-blue-600 font-bold text-[11px] uppercase">${i.pet || 'PET'}</p>
                             <p class="text-[10px] text-slate-500 uppercase">${i.rua || 'SOL NASCENTE'}</p>
                             <div class="mt-2 flex gap-1">
-                                <button onclick="zap('${i.whatsapp}', 'Olá ${i.cliente}, segue os dados do seu agendamento: ${i.data} às ${i.hora}')" class="bg-green-500 text-white text-[9px] px-2 py-1 rounded font-bold">ZAP DADOS</button>
-                                <button onclick="zap('${i.whatsapp}', 'Olá, passando para lembrar do seu agendamento conosco hoje!')" class="bg-blue-500 text-white text-[9px] px-2 py-1 rounded font-bold">ZAP LEMBRAR</button>
+                                <button onclick="zap('${i.whatsapp}', 'Olá ${i.cliente}, segue os dados do seu agendamento: ${i.data} às ${i.hora}')" class="bg-green-500 text-white text-[9px] px-2 py-1 rounded font-bold uppercase">Zap Dados</button>
+                                <button onclick="zap('${i.whatsapp}', 'Olá, passando para lembrar do seu agendamento conosco hoje!')" class="bg-blue-500 text-white text-[9px] px-2 py-1 rounded font-bold uppercase">Zap Lembrar</button>
                             </div>
                         </div>
                         <div>
@@ -192,11 +203,11 @@
                         </div>
                         <div class="bg-slate-50 p-2 rounded">
                             ${ehPacote ? `
-                                <p class="label-field">PAGTO PACOTE / VALOR REAL PAGO</p>
+                                <p class="label-field">Pagto Pacote / Valor Real Pago</p>
                                 <input type="date" value="${i.data_pagamento || ''}" onchange="salvar('${i.id}', 'data_pagamento', this.value)">
                                 <input type="number" value="${i.valor_real_pago || ''}" onchange="salvar('${i.id}', 'valor_real_pago', this.value)" placeholder="R$" class="mt-1">
                             ` : `
-                                <p class="label-field">TAXA LEVA-TRÁS / TOTAL DESCONTO</p>
+                                <p class="label-field">Taxa Leva-Trás / Total Desconto</p>
                                 <input type="number" value="${i.taxa_leva_tras || 0}" onchange="salvar('${i.id}', 'taxa_leva_tras', this.value)">
                                 <input type="number" value="${i.total_com_desconto || ''}" onchange="salvar('${i.id}', 'total_com_desconto', this.value)" placeholder="R$" class="mt-1">
                             `}
