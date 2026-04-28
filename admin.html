@@ -54,8 +54,13 @@
     </div>
 
     <script>
-        const SB_URL = "https://supabase.co";
-        const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
+       // A URL deve parar no .co
+const SB_URL = "https://yczhjyxisqrvfxxgipop.supabase.co"; 
+const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
+
+// A inicialização deve ser assim:
+const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+
         
         let todosDados = [];
         let filtroAtual = 'geral';
