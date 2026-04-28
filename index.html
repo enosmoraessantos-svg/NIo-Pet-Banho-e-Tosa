@@ -1,190 +1,401 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nilo Pet - Agendamento Oficial</title>
-    <script src="https://tailwindcss.com"></script>
-    <style>
-        .step { display: none; }
-        .step.active { display: block; }
-        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); margin: 15px; border: 1px solid #e2e8f0; }
-        input, select { width: 100%; padding: 14px; border-radius: 10px; border: 2px solid #e2e8f0; margin-bottom: 12px; font-size: 16px; }
-        .btn-next { background-color: #dc2626; color: white; width: 100%; padding: 18px; border-radius: 12px; font-weight: 800; font-size: 18px; cursor: pointer; }
-        .label-req { display: block; font-size: 10px; margin-bottom: 4px; text-transform: uppercase; font-weight: 900; color: #64748b; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nilo Pet Banho e Tosa - Agendamento</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body class="bg-blue-50">
-
-    <div class="bg-white p-6 text-center border-b shadow-sm">
-        <h1 class="text-2xl font-black text-slate-800 uppercase italic">Nilo Pet</h1>
-        <p class="text-red-600 font-bold text-xs uppercase">Agendamento Online</p>
+  <div id="app" class="min-h-screen">
+    <!-- LOGIN ADMIN -->
+    <div id="loginScreen" class="hidden fixed inset-0 bg-blue-900 bg-opacity-95 z-50 flex items-center justify-center">
+      <div class="bg-white p-8 rounded-xl w-96">
+        <h2 class="text-2xl font-bold mb-6 text-center">Painel Nilo Pet</h2>
+        <input id="loginUser" type="text" placeholder="Login" class="w-full border p-3 rounded mb-3" value="nilo pet">
+        <input id="loginPass" type="password" placeholder="Senha" class="w-full border p-3 rounded mb-3">
+        <button onclick="fazerLogin()" class="w-full bg-blue-600 text-white p-3 rounded font-semibold mb-2">Entrar</button>
+        <button onclick="esqueciSenha()" class="text-sm text-blue-600 hover:underline">Esqueci senha</button>
+        <div id="msgLogin" class="text-red-600 text-sm mt-2 hidden"></div>
+      </div>
     </div>
 
-    <div id="fluxoAgendamento">
-        <!-- ETAPA 1: CLIENTE -->
-        <div id="step1" class="step active card">
-            <h2 class="font-bold mb-4 text-slate-700 uppercase underline text-sm">Etapa 1: Seus Dados</h2>
-            <label class="label-req">Ação desejada *</label>
-            <select id="acao" onchange="toggleCancelamento()">
-                <option value="agendar">NOVO AGENDAMENTO</option>
-                <option value="cancelar_avulso">CANCELAR SERVIÇO AVULSO</option>
-                <option value="cancelar_pacote">CANCELAR PACOTE</option>
-            </select>
+    <!-- HEADER -->
+    <header class="bg-white shadow-md p-4">
+      <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-blue-800">Nilo Pet Banho e Tosa</h1>
+        <button id="btnToggleAdmin" onclick="toggleAdmin()" class="bg-blue-600 text-white px-4 py-2 rounded-lg">
+          Área Admin
+        </button>
+      </div>
+    </header>
 
-            <div id="camposCliente">
-                <label class="label-req">Nome Completo *</label>
-                <input type="text" id="nomeCliente" placeholder="Seu nome" required>
-                <label class="label-req">WhatsApp *</label>
-                <input type="tel" id="whatsapp" placeholder="11999998888" maxlength="11" required>
-                <label class="label-req">Endereço *</label>
-                <div class="flex gap-2">
-                    <input type="text" id="rua" placeholder="Rua e Número" class="flex-grow" required>
-                    <input type="text" value="Sol Nascente" readonly class="bg-slate-100 w-32 font-bold text-slate-500 text-center text-[10px]">
-                </div>
-                <button onclick="validarEtapa(1, 2)" class="btn-next mt-4">PRÓXIMO</button>
+    <!-- CLIENTE: 4 ETAPAS -->
+    <main id="clienteView" class="max-w-4xl mx-auto p-4">
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <div class="flex justify-between mb-6">
+          <h2 class="text-xl font-bold">Agendamento Cliente</h2>
+          <div class="text-sm">Etapa <span id="etapaAtual">1</span> de 4</div>
+        </div>
+
+        <!-- ETAPA 1 -->
+        <div id="etapa1" class="etapa">
+          <h3 class="font-semibold mb-4">1. Dados do Cliente</h3>
+          <input id="c_nome" placeholder="Nome do cliente" class="w-full border p-2 rounded mb-3" required>
+          <select id="c_qtd_pets" class="w-full border p-2 rounded mb-3" required>
+            <option value="">Quantidade de pets</option>
+            <option value="1">1</option><option value="2">2</option>
+            <option value="3">3</option><option value="4">4</option>
+          </select>
+          <input id="c_whatsapp" placeholder="WhatsApp (11) 99999-9999" class="w-full border p-2 rounded mb-3" required>
+          <input id="c_endereco" placeholder="Endereço completo" class="w-full border p-2 rounded mb-3" required>
+          <input value="Sol Nascente" class="w-full border p-2 rounded mb-3 bg-gray-100" disabled>
+          <button onclick="proximaEtapa(2)" class="w-full bg-blue-600 text-white p-3 rounded">Próximo</button>
+        </div>
+
+        <!-- ETAPA 2 -->
+        <div id="etapa2" class="etapa hidden">
+          <h3 class="font-semibold mb-4">2. Escolha o Pacote</h3>
+          <select id="c_pacote" class="w-full border p-2 rounded mb-4" required onchange="mostrarCamposPacote()">
+            <option value="">Selecione</option>
+            <option value="Avulso">Avulso</option>
+            <option value="Básico">Básico - 1 Banho + 1 Banho/Tosa Higiênica</option>
+            <option value="Básico com Tosa">Básico com Tosa - 1 Banho + 1 Banho/Tosa</option>
+            <option value="Premium">Premium - 3 Banhos + 1 Banho/Tosa ou Higiênica</option>
+          </select>
+          <div id="camposPacote"></div>
+          <div class="flex gap-2 mt-4">
+            <button onclick="proximaEtapa(1)" class="w-1/2 bg-gray-300 p-3 rounded">Voltar</button>
+            <button onclick="proximaEtapa(3)" class="w-1/2 bg-blue-600 text-white p-3 rounded">Próximo</button>
+          </div>
+        </div>
+
+        <!-- ETAPA 3 -->
+        <div id="etapa3" class="etapa hidden">
+          <h3 class="font-semibold mb-4">3. Dados do Pet</h3>
+          <div id="petsContainer"></div>
+          <div class="flex gap-2 mt-4">
+            <button onclick="proximaEtapa(2)" class="w-1/2 bg-gray-300 p-3 rounded">Voltar</button>
+            <button onclick="validarPetsEAvancar()" class="w-1/2 bg-blue-600 text-white p-3 rounded">Próximo</button>
+          </div>
+        </div>
+
+        <!-- ETAPA 4 -->
+        <div id="etapa4" class="etapa hidden">
+          <h3 class="font-semibold mb-4">4. Confirmar Agendamento</h3>
+          <div id="resumoAgendamento" class="bg-gray-50 p-4 rounded mb-4 text-sm"></div>
+          <div id="avisoVaga" class="hidden bg-red-100 text-red-700 p-3 rounded mb-4 text-sm"></div>
+          <div class="flex gap-2">
+            <button onclick="proximaEtapa(3)" class="w-1/2 bg-gray-300 p-3 rounded">Voltar</button>
+            <button id="btnConfirmar" onclick="finalizarAgendamento()" class="w-1/2 bg-green-600 text-white p-3 rounded font-bold">Confirmar</button>
+          </div>
+        </div>
+
+        <div id="msgSucesso" class="hidden text-center p-6">
+          <h3 class="text-2xl font-bold text-green-600 mb-2">Agendado!</h3>
+          <p class="mb-4">Em breve nossa equipe vai entrar em contato.</p>
+          <p class="font-semibold">De imediato mande foto do seu pet para adiantar o atendimento.</p>
+          <button onclick="location.reload()" class="mt-4 bg-blue-600 text-white px-6 py-2 rounded">Novo Agendamento</button>
+        </div>
+
+        <div class="mt-6 border-t pt-4">
+          <button onclick="cancelarAvulso()" class="text-red-600 text-sm hover:underline mr-4">Cancelar serviço avulso</button>
+          <button onclick="alert('Caro cliente, se vc tem pacote ativo e deseja mudar data do seu agendamento entre em contato com nossos atendentes para mudar o horário do seu agendamento.')" class="text-red-600 text-sm hover:underline">Cancelar pacote</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- ADMIN -->
+    <main id="adminView" class="hidden max-w-7xl mx-auto p-4">
+      <div class="flex gap-4">
+        <div class="w-64 bg-white rounded-xl shadow-lg p-4 h-fit">
+          <button onclick="abaAdmin('geral')" class="w-full text-left p-3 rounded hover:bg-blue-50 mb-1">Agendamento Geral</button>
+          <button onclick="abaAdmin('dia')" class="w-full text-left p-3 rounded hover:bg-blue-50 mb-1">Agendamento do Dia</button>
+          <button onclick="abaAdmin('pacotes')" class="w-full text-left p-3 rounded hover:bg-blue-50 mb-1">Pacotes</button>
+          <button onclick="abaAdmin('vagas')" class="w-full text-left p-3 rounded hover:bg-blue-50 mb-1">Gestão de Vagas</button>
+          <button onclick="abaAdmin('bloqueio')" class="w-full text-left p-3 rounded hover:bg-blue-50 mb-1">Bloqueio/Desbloqueio</button>
+          <button onclick="abaAdmin('relatorio')" class="w-full text-left p-3 rounded hover:bg-blue-50 mb-1">Exportar Relatório</button>
+          <button onclick="sairAdmin()" class="w-full text-left p-3 rounded hover:bg-red-50 text-red-600 mt-4">Sair</button>
+        </div>
+
+        <div class="flex-1 bg-white rounded-xl shadow-lg p-6">
+          <div id="adminGeral" class="abaAdmin">
+            <h2 class="text-xl font-bold mb-4">Agendamento Geral</h2>
+            <div class="flex gap-2 mb-4">
+              <input type="date" id="filtroData" class="border p-2 rounded">
+              <select id="filtroFalou" class="border p-2 rounded">
+                <option value="">Falou com cliente?</option>
+                <option value="true">Sim</option><option value="false">Não</option>
+              </select>
+              <button onclick="carregarGeral()" class="bg-blue-600 text-white px-4 rounded">Filtrar</button>
             </div>
-            
-            <div id="camposCancelamento" class="hidden">
-                <button onclick="processarCancelamento()" class="btn-next bg-slate-800">CONFIRMAR CANCELAMENTO</button>
+            <div id="listaGeral" class="space-y-3"></div>
+          </div>
+
+          <div id="adminVagas" class="abaAdmin hidden">
+            <h2 class="text-xl font-bold mb-4">Gestão de Vagas</h2>
+            <p class="text-sm text-gray-600 mb-4">Defina quantas vagas por serviço/dia. Passando da quantidade, bloqueia no link do cliente.</p>
+            <div id="configVagas" class="space-y-4"></div>
+            <button onclick="salvarVagas()" class="mt-4 bg-green-600 text-white px-6 py-2 rounded">Salvar Configurações</button>
+          </div>
+
+          <div id="adminBloqueio" class="abaAdmin hidden">
+            <h2 class="text-xl font-bold mb-4">Bloqueio/Desbloqueio</h2>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <input type="date" id="b_data_inicio" class="border p-2 rounded">
+              <input type="date" id="b_data_fim" class="border p-2 rounded" placeholder="Data fim - só pra período">
             </div>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <input type="time" id="b_hora_inicio" class="border p-2 rounded" placeholder="Hora início">
+              <input type="time" id="b_hora_fim" class="border p-2 rounded" placeholder="Hora fim">
+            </div>
+            <input id="b_motivo" placeholder="Motivo do bloqueio" class="w-full border p-2 rounded mb-3">
+            <button onclick="bloquearHorario()" class="bg-red-600 text-white px-4 py-2 rounded mr-2">Bloquear Horário</button>
+            <button onclick="bloquearDia()" class="bg-red-600 text-white px-4 py-2 rounded mr-2">Fechar Dia Todo</button>
+            <button onclick="bloquearPeriodo()" class="bg-red-600 text-white px-4 py-2 rounded">Bloquear Período</button>
+            <div id="listaBloqueios" class="mt-6"></div>
+          </div>
+
+          <div id="adminRelatorio" class="abaAdmin hidden">
+            <h2 class="text-xl font-bold mb-4">Exportar Relatório</h2>
+            <input type="date" id="dataRelatorio" class="border p-2 rounded mb-3">
+            <br>
+            <button onclick="exportarExcel('dia')" class="bg-green-600 text-white px-4 py-2 rounded mr-2">Exportar Dia</button>
+            <button onclick="exportarExcel('semana')" class="bg-green-600 text-white px-4 py-2 rounded mr-2">Exportar Semana</button>
+            <button onclick="exportarExcel('mes')" class="bg-green-600 text-white px-4 py-2 rounded">Exportar Mês</button>
+          </div>
+
+          <div id="adminDia" class="abaAdmin hidden">
+            <h2 class="text-xl font-bold mb-4">Agendamento do Dia</h2>
+            <div id="listaDia"></div>
+          </div>
+
+          <div id="adminPacotes" class="abaAdmin hidden">
+            <h2 class="text-xl font-bold mb-4">Pacotes</h2>
+            <div id="listaPacotes"></div>
+          </div>
         </div>
+      </div>
+    </main>
+  </div>
 
-        <!-- ETAPA 2: PETS -->
-        <div id="step2" class="step card">
-            <h2 class="font-bold mb-4 text-slate-700 uppercase underline text-sm">Etapa 2: Quantos Pets?</h2>
-            <select id="qtdPets" onchange="gerarCamposPets()">
-                <option value="1">1 Pet</option>
-                <option value="2">2 Pets</option>
-                <option value="3">3 Pets</option>
-                <option value="4">4 Pets</option>
-            </select>
-            <div id="containerPets"></div>
-            <button onclick="validarEtapa(2, 3)" class="btn-next">PRÓXIMO</button>
-        </div>
+<script>
+  const SB_URL = "https://yczhjyxisqrvfxxgipop.supabase.co";
+  const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
+  const supabase = window.supabase.createClient(SB_URL, SB_KEY);
 
-        <!-- ETAPA 3: PLANOS -->
-        <div id="step3" class="step card">
-            <h2 class="font-bold mb-4 text-slate-700 uppercase underline text-sm">Etapa 3: Planos e Serviços</h2>
-            <div id="containerPlanos"></div>
-            <button onclick="validarEtapa(3, 4)" class="btn-next">ESCOLHER HORÁRIOS</button>
-        </div>
+  const SENHA_CORRETA = "nilopet2026";
+  const NOME_PET_SENHA = "nilo";
 
-        <!-- ETAPA 4: DATAS -->
-        <div id="step4" class="step card">
-            <h2 class="font-bold mb-4 text-slate-700 uppercase underline text-sm">Etapa 4: Finalizar</h2>
-            <div id="containerDatas"></div>
-            <button id="btnFinalizar" onclick="enviarAgendamento()" class="btn-next bg-green-600">CONFIRMAR AGENDAMENTO ✅</button>
-        </div>
-    </div>
+  let etapa = 1;
+  let dadosAgendamento = { pets: [] };
+  let logado = false;
 
-    <script>
-        const SB_URL = "https://supabase.co";
-        const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
-        const headers = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json", "Prefer": "return=minimal" };
+  // LIBERAR AGENDA DIA 20
+  const hoje = new Date();
+  const diaAtual = hoje.getDate();
+  const mesLiberado = diaAtual >= 20? hoje.getMonth() + 1 : hoje.getMonth();
 
-        function toggleCancelamento() {
-            const acao = document.getElementById('acao').value;
-            document.getElementById('camposCliente').classList.toggle('hidden', acao !== 'agendar');
-            document.getElementById('camposCancelamento').classList.toggle('hidden', acao === 'agendar');
+  function proximaEtapa(n) {
+    if(n > etapa &&!validarEtapa()) return;
+    document.querySelectorAll('.etapa').forEach(e => e.classList.add('hidden'));
+    document.getElementById(`etapa${n}`).classList.remove('hidden');
+    etapa = n;
+    document.getElementById('etapaAtual').textContent = n;
+    if(n === 3) gerarCamposPets();
+    if(n === 4) mostrarResumo();
+  }
+
+  function validarEtapa() {
+    if(etapa === 1) return c_nome.value && c_qtd_pets.value && c_whatsapp.value && c_endereco.value;
+    if(etapa === 2) return c_pacote.value;
+    return true;
+  }
+
+  function gerarCamposPets() {
+    const qtd = parseInt(c_qtd_pets.value);
+    let html = '';
+    for(let i = 0; i < qtd; i++) {
+      html += `
+        <div class="border p-4 rounded mb-4">
+          <h4 class="font-semibold mb-2">Pet ${i+1}</h4>
+          <select class="pet_especie w-full border p-2 rounded mb-2" required onchange="atualizarServicos(this)">
+            <option value="">Espécie</option><option value="Cachorro">Cachorro</option><option value="Gato">Gato</option>
+          </select>
+          <input placeholder="Nome do pet" class="pet_nome w-full border p-2 rounded mb-2" required>
+          <select class="pet_porte w-full border p-2 rounded mb-2" required>
+            <option value="">Porte</option>
+            <option value="Pequeno/Médio">Pequeno/Médio</option>
+            <option value="Grande Peludo">Grande Peludo</option>
+            <option value="Grande Pelo Curto">Grande Pelo Curto</option>
+          </select>
+          <select class="pet_servico w-full border p-2 rounded mb-2" required>
+            <option value="">Serviço</option>
+          </select>
+          <select class="pet_alergia w-full border p-2 rounded" required>
+            <option value="">Possui alergia?</option><option value="Não">Não</option><option value="Sim">Sim</option>
+          </select>
+        </div>`;
+    }
+    document.getElementById('petsContainer').innerHTML = html;
+  }
+
+  function atualizarServicos(selectEspecie) {
+    const div = selectEspecie.closest('.border');
+    const selectServico = div.querySelector('.pet_servico');
+    if(selectEspecie.value === 'Gato') {
+      selectServico.innerHTML = '<option value="Banho">Banho somente</option>';
+    } else {
+      selectServico.innerHTML = `
+        <option value="">Serviço</option>
+        <option value="Banho">Banho</option>
+        <option value="Banho + Tosa Higiênica">Banho + Tosa Higiênica</option>
+        <option value="Banho + Tosa">Banho + Tosa</option>`;
+    }
+  }
+
+  function mostrarCamposPacote() {
+    const tipo = c_pacote.value;
+    let html = '';
+    const hojeStr = new Date().toISOString().split('T')[0];
+    const proximoMes = new Date(hoje.getFullYear(), mesLiberado, 1).toISOString().split('T')[0];
+
+    if(tipo === 'Básico') {
+      html = `<input type="date" id="p_data1" min="${hojeStr}" max="${proximoMes}" class="w-full border p-2 rounded mb-2" required><label class="text-sm">Data Banho</label>
+              <input type="date" id="p_data2" min="${hojeStr}" max="${proximoMes}" class="w-full border p-2 rounded mb-2" required><label class="text-sm">Data Banho+Tosa Higiênica</label>`;
+    } else if(tipo === 'Básico com Tosa') {
+      html = `<input type="date" id="p_data1" min="${hojeStr}" max="${proximoMes}" class="w-full border p-2 rounded mb-2" required><label class="text-sm">Data Banho</label>
+              <input type="date" id="p_data2" min="${hojeStr}" max="${proximoMes}" class="w-full border p-2 rounded mb-2" required><label class="text-sm">Data Banho+Tosa</label>`;
+    } else if(tipo === 'Premium') {
+      html = `<select id="p_tipo_tosa" class="w-full border p-2 rounded mb-2" required>
+                <option value="">Este mês deseja fazer:</option>
+                <option value="Banho + Tosa">Banho + Tosa</option>
+                <option value="Banho + Tosa Higiênica">Banho + Tosa Higiênica</option>
+              </select>
+              <input type="date" id="p_sem1" placeholder="Semana 1 - Banho" min="${hojeStr}" class="w-full border p-2 rounded mb-1" required>
+              <input type="date" id="p_sem2" placeholder="Semana 2 - Banho" min="${hojeStr}" class="w-full border p-2 rounded mb-1" required>
+              <input type="date" id="p_sem3" placeholder="Semana 3 - Banho" min="${hojeStr}" class="w-full border p-2 rounded mb-1" required>
+              <input type="date" id="p_sem4" placeholder="Semana 4 - Tosa" min="${hojeStr}" class="w-full border p-2 rounded mb-1" required>
+              <p class="text-xs text-gray-600">5ª semana se o mês tiver deve ser banho</p>`;
+    } else if(tipo === 'Avulso') {
+      html = `<input type="date" id="p_data1" min="${hojeStr}" max="${proximoMes}" class="w-full border p-2 rounded mb-2" required>
+              <select id="p_hora1" class="w-full border p-2 rounded" required>
+                <option value="">Horário</option>
+              </select>`;
+    }
+    document.getElementById('camposPacote').innerHTML = html;
+  }
+
+  async function validarPetsEAvancar() {
+    let todosPreenchidos = true;
+    document.querySelectorAll('#petsContainer > div').forEach(div => {
+      if(!div.querySelector('.pet_especie').value ||!div.querySelector('.pet_nome').value ||
+        !div.querySelector('.pet_porte').value ||!div.querySelector('.pet_servico').value) {
+        todosPreenchidos = false;
+      }
+    });
+    if(!todosPreenchidos) {
+      alert('Preencha todos os dados dos pets');
+      return;
+    }
+    proximaEtapa(4);
+  }
+
+  async function mostrarResumo() {
+    dadosAgendamento = {
+      cliente: c_nome.value,
+      qtd_pets: c_qtd_pets.value,
+      whatsapp: c_whatsapp.value,
+      endereco: c_endereco.value + ', Sol Nascente',
+      pacote: c_pacote.value,
+      pets: [],
+      datas_agendadas: []
+    };
+
+    document.querySelectorAll('#petsContainer > div').forEach(div => {
+      dadosAgendamento.pets.push({
+        especie: div.querySelector('.pet_especie').value,
+        nome: div.querySelector('.pet_nome').value,
+        porte: div.querySelector('.pet_porte').value,
+        servico: div.querySelector('.pet_servico').value,
+        alergia: div.querySelector('.pet_alergia').value
+      });
+    });
+
+    // Coletar datas
+    if(c_pacote.value === 'Avulso') {
+      dadosAgendamento.datas_agendadas = [document.getElementById('p_data1').value];
+    } else if(c_pacote.value === 'Básico' || c_pacote.value === 'Básico com Tosa') {
+      dadosAgendamento.datas_agendadas = [document.getElementById('p_data1').value, document.getElementById('p_data2').value];
+    } else if(c_pacote.value === 'Premium') {
+      dadosAgendamento.datas_agendadas = [
+        document.getElementById('p_sem1').value,
+        document.getElementById('p_sem2').value,
+        document.getElementById('p_sem3').value,
+        document.getElementById('p_sem4').value
+      ];
+    }
+
+    // VERIFICAR VAGAS DISPONÍVEIS
+    let temVaga = true;
+    let msgErro = '';
+    for(let pet of dadosAgendamento.pets) {
+      for(let data of dadosAgendamento.datas_agendadas) {
+        const { data: disponivel } = await supabase.rpc('verificar_vaga_disponivel', {
+          p_data: data,
+          p_especie: pet.especie,
+          p_porte: pet.porte,
+          p_servico: pet.servico
+        });
+        if(!disponivel) {
+          temVaga = false;
+          msgErro = `Sem vagas para ${pet.nome} - ${pet.servico} no dia ${data}`;
+          break;
         }
+      }
+    }
 
-        function processarCancelamento() {
-            const acao = document.getElementById('acao').value;
-            if(acao === 'cancelar_avulso') {
-                alert("Agendamento cancelado. Caso precise, deve fazer um novo agendamento.");
-                location.reload();
-            } else {
-                alert("Caro cliente, se você tem pacote ativo e deseja mudar a data, entre em contato com nossos atendentes para mudar o horário.");
-            }
-        }
+    document.getElementById('resumoAgendamento').innerHTML = `
+      <p><b>Cliente:</b> ${dadosAgendamento.cliente}</p>
+      <p><b>WhatsApp:</b> ${dadosAgendamento.whatsapp}</p>
+      <p><b>Pacote:</b> ${dadosAgendamento.pacote}</p>
+      <p><b>Datas:</b> ${dadosAgendamento.datas_agendadas.join(', ')}</p>
+      <p><b>Pets:</b> ${dadosAgendamento.pets.map(p => `${p.nome} - ${p.servico}`).join('<br>')}</p>
+    `;
 
-        function validarEtapa(atual, prox) {
-            const step = document.getElementById('step'+atual);
-            const obrigatorios = step.querySelectorAll('[required]');
-            for(let i of obrigatorios) if(!i.value) return alert("Preencha todos os campos obrigatórios!");
-            
-            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
-            document.getElementById('step'+prox).classList.add('active');
-            
-            if(prox === 2) gerarCamposPets();
-            if(prox === 3) gerarCamposPlanos();
-            if(prox === 4) gerarCamposDatas();
-        }
+    if(!temVaga) {
+      document.getElementById('avisoVaga').textContent = msgErro;
+      document.getElementById('avisoVaga').classList.remove('hidden');
+      document.getElementById('btnConfirmar').disabled = true;
+      document.getElementById('btnConfirmar').classList.add('bg-gray-400');
+    } else {
+      document.getElementById('avisoVaga').classList.add('hidden');
+      document.getElementById('btnConfirmar').disabled = false;
+      document.getElementById('btnConfirmar').classList.remove('bg-gray-400');
+    }
+  }
 
-        function gerarCamposPets() {
-            const q = document.getElementById('qtdPets').value;
-            let html = '';
-            for(let i=1; i<=q; i++) {
-                html += `<div class="p-4 border-2 rounded-xl mb-4 bg-slate-50">
-                    <label class="label-req">Nome do Pet ${i} *</label>
-                    <input type="text" id="pet_nome_${i}" required>
-                    <label class="label-req">Espécie *</label>
-                    <select id="pet_esp_${i}"><option value="cachorro">Cachorro</option><option value="gato">Gato</option></select>
-                </div>`;
-            }
-            document.getElementById('containerPets').innerHTML = html;
-        }
+  async function finalizarAgendamento() {
+    const { error } = await supabase.from('agendamentos').insert({
+      cliente: dadosAgendamento.cliente,
+      whatsapp: dadosAgendamento.whatsapp,
+      endereco: dadosAgendamento.endereco,
+      qtd_pets: parseInt(dadosAgendamento.qtd_pets),
+      pacote: dadosAgendamento.pacote,
+      pets: dadosAgendamento.pets,
+      datas_agendadas: dadosAgendamento.datas_agendadas,
+      status: 'confirmado'
+    });
+    if(!error) {
+      document.querySelectorAll('.etapa').forEach(e => e.classList.add('hidden'));
+      document.getElementById('msgSucesso').classList.remove('hidden');
+    } else {
+      alert('Erro ao agendar: ' + error.message);
+    }
+  }
 
-        function gerarCamposPlanos() {
-            const q = document.getElementById('qtdPets').value;
-            let html = '';
-            for(let i=1; i<=q; i++) {
-                const nome = document.getElementById(`pet_nome_${i}`).value;
-                html += `<div class="mb-6"><p class="font-black text-xs text-red-600 uppercase underline">${nome}</p>
-                    <label class="label-req">Escolha o Plano *</label>
-                    <select id="plano_${i}">
-                        <option value="avulso">Avulso</option>
-                        <option value="pacote_basico">Pacote Básico</option>
-                        <option value="pacote_tosa">Básico com Tosa</option>
-                        <option value="premium">Premium</option>
-                    </select>
-                </div>`;
-            }
-            document.getElementById('containerPlanos').innerHTML = html;
-        }
-
-        function gerarCamposDatas() {
-            const q = document.getElementById('qtdPets').value;
-            let html = '';
-            for(let i=1; i<=q; i++) {
-                const nome = document.getElementById(`pet_nome_${i}`).value;
-                html += `<div class="mb-4"><p class="font-bold text-xs uppercase">${nome}</p>
-                    <input type="date" id="data_${i}" required>
-                    <select id="hora_${i}" required>
-                        <option value="09:00">09:00</option><option value="10:00">10:00</option>
-                        <option value="14:00">14:00</option><option value="15:00">15:00</option>
-                    </select>
-                </div>`;
-            }
-            document.getElementById('containerDatas').innerHTML = html;
-        }
-
-        async function enviarAgendamento() {
-            const btn = document.getElementById('btnFinalizar');
-            btn.innerText = "ENVIANDO..."; btn.disabled = true;
-
-            const q = document.getElementById('qtdPets').value;
-            
-            for(let i=1; i<=q; i++) {
-                const corpo = {
-                    cliente: document.getElementById('nomeCliente').value,
-                    whatsapp: document.getElementById('whatsapp').value,
-                    rua: document.getElementById('rua').value + ", Sol Nascente",
-                    pet: document.getElementById(`pet_nome_${i}`).value,
-                    especie: document.getElementById(`pet_esp_${i}`).value,
-                    tipo_servico: document.getElementById(`plano_${i}`).value,
-                    data: document.getElementById(`data_${i}`).value,
-                    hora: document.getElementById(`hora_${i}`).value,
-                    falou_cliente: 'nao'
-                };
-
-                await fetch(`${SB_URL}/agendamentos`, { method: 'POST', headers, body: JSON.stringify(corpo) });
-            }
-
-            alert("AGENDADO! Em breve nossa equipe entrará em contato. De imediato mande foto do seu pet para adiantar o atendimento.");
-            location.reload();
-        }
-    </script>
-</body>
-</html>
+  // ADMIN
+  function toggleAdmin() {
+    if(!logado) {
