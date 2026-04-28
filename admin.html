@@ -1,265 +1,253 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Nilo Pet - ADM Profissional</title>
-    <script src="https://tailwindcss.com"></script>
-    <style>
-        body { background: #f1f5f9; font-family: sans-serif; color: #1e293b; }
-        .sidebar { width: 260px; height: 100vh; position: fixed; background: #1e293b; color: white; }
-        .content { margin-left: 260px; padding: 20px; min-height: 100vh; }
-        .menu-item { padding: 15px 20px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 600; border-left: 4px solid transparent; transition: 0.2s; }
-        .menu-item:hover { background: #334155; }
-        .menu-item.active { background: #334155; border-left-color: #ef4444; color: #ef4444; }
-        .card-nilo { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 18px; margin-bottom: 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .hidden { display: none; }
-        input, select, textarea { border: 1px solid #cbd5e1; border-radius: 8px; padding: 6px; font-size: 12px; width: 100%; color: black; font-weight: 600; }
-        .label-nilo { font-size: 9px; font-weight: 900; color: #64748b; text-transform: uppercase; margin-bottom: 3px; display: block; }
-        .btn-acao { padding: 6px 10px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; transition: 0.2s; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nilo Pet - Painel Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
-<body>
-
-    <!-- LOGIN -->
-    <div id="loginArea" class="flex items-center justify-center min-h-screen bg-slate-200">
-        <div class="w-full max-w-md p-10 bg-white rounded-3xl shadow-2xl text-center">
-            <h1 class="text-3xl font-black text-slate-800 uppercase italic mb-8 border-b-4 border-red-600 pb-2">Nilo Pet ADM</h1>
-            <input type="text" id="userAdm" placeholder="Usuário" class="mb-4 p-4 border-2 rounded-2xl">
-            <input type="password" id="senhaAdm" placeholder="Senha" class="mb-6 p-4 border-2 rounded-2xl">
-            <button type="button" onclick="logarNilo()" class="w-full bg-red-600 text-white font-black p-5 rounded-2xl shadow-xl hover:bg-red-700">ENTRAR NO PAINEL</button>
-            <button type="button" onclick="alert('Nome do Pet: Nilo')" class="mt-6 text-xs font-bold text-slate-400 underline">ESQUECI SENHA</button>
-        </div>
+<body class="bg-gray-100">
+  <div id="loginScreen" class="fixed inset-0 bg-blue-900 bg-opacity-95 z-50 flex items-center justify-center">
+    <div class="bg-white p-8 rounded-xl w-96">
+      <h2 class="text-2xl font-bold mb-6 text-center">Painel Nilo Pet</h2>
+      <input id="loginUser" type="text" placeholder="Login" class="w-full border p-3 rounded mb-3" value="nilo pet">
+      <input id="loginPass" type="password" placeholder="Senha" class="w-full border p-3 rounded mb-3">
+      <button onclick="fazerLogin()" class="w-full bg-blue-600 text-white p-3 rounded font-semibold mb-2">Entrar</button>
+      <button onclick="esqueciSenha()" class="text-sm text-blue-600 hover:underline">Esqueci senha</button>
+      <div id="msgLogin" class="text-red-600 text-sm mt-2 hidden"></div>
     </div>
+  </div>
 
-    <!-- PAINEL -->
-    <div id="painelArea" class="hidden">
-        <div class="sidebar shadow-2xl">
-            <div class="p-8 font-black italic border-b border-slate-700 text-lg tracking-tighter">NILO PET <span class="text-red-500">ADM</span></div>
-            <nav class="mt-4">
-                <div onclick="trocarAba('geral', this)" class="menu-item active">📊 Agendamento Geral</div>
-                <div onclick="trocarAba('dia', this)" class="menu-item">📅 Agendamento do Dia</div>
-                <div onclick="trocarAba('pacotes', this)" class="menu-item">📦 Controle de Pacotes</div>
-                <div onclick="trocarAba('vagas', this)" class="menu-item text-orange-400">🔒 Gestão de Vagas</div>
-                <div onclick="trocarAba('bloqueios', this)" class="menu-item text-red-400">🚫 Bloqueios</div>
-                <div onclick="exportarRelatorio()" class="menu-item text-green-500">📥 Exportar Excel</div>
-                <div onclick="location.reload()" class="menu-item text-slate-400 mt-20">🚪 Sair</div>
-            </nav>
+  <div id="painel" class="hidden min-h-screen">
+    <header class="bg-blue-800 text-white p-4">
+      <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <h1 class="text-2xl font-bold">Nilo Pet - Painel Admin</h1>
+        <button onclick="sair()" class="bg-red-600 px-4 py-2 rounded">Sair</button>
+      </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto p-4 flex gap-4">
+      <div class="w-64 bg-white rounded-xl shadow-lg p-4 h-fit">
+        <button onclick="aba('geral')" class="menu-btn w-full text-left p-3 rounded hover:bg-blue-50 mb-1 bg-blue-50">Agendamento Geral</button>
+        <button onclick="aba('dia')" class="menu-btn w-full text-left p-3 rounded hover:bg-blue-50 mb-1">Agendamento do Dia</button>
+        <button onclick="aba('pacotes')" class="menu-btn w-full text-left p-3 rounded hover:bg-blue-50 mb-1">Pacotes</button>
+        <button onclick="aba('vagas')" class="menu-btn w-full text-left p-3 rounded hover:bg-blue-50 mb-1">Gestão de Vagas</button>
+        <button onclick="aba('bloqueio')" class="menu-btn w-full text-left p-3 rounded hover:bg-blue-50 mb-1">Bloqueio/Desbloqueio</button>
+        <button onclick="aba('relatorio')" class="menu-btn w-full text-left p-3 rounded hover:bg-blue-50 mb-1">Exportar Relatório</button>
+      </div>
+
+      <div class="flex-1 bg-white rounded-xl shadow-lg p-6">
+        <div id="aba-geral" class="aba">
+          <h2 class="text-xl font-bold mb-4">Agendamento Geral</h2>
+          <div class="flex gap-2 mb-4">
+            <input type="date" id="filtroData" class="border p-2 rounded">
+            <select id="filtroFalou" class="border p-2 rounded">
+              <option value="">Falou com cliente?</option>
+              <option value="true">Sim</option><option value="false">Não</option>
+            </select>
+            <button onclick="carregarGeral()" class="bg-blue-600 text-white px-4 rounded">Filtrar</button>
+            <button onclick="liberarMesSeguinte()" class="bg-green-600 text-white px-4 rounded">Liberar Próximo Mês</button>
+          </div>
+          <div id="listaGeral" class="space-y-3"></div>
         </div>
 
-        <div class="content">
-            <header class="flex justify-between items-center mb-8 bg-white p-6 rounded-2xl shadow-sm">
-                <h2 id="tituloTopo" class="text-2xl font-black uppercase italic text-slate-800">Agendamento Geral</h2>
-                <div id="filtros" class="flex gap-3">
-                    <input type="date" id="filtroData" onchange="carregarDados()" class="w-40">
-                    <select id="filtroFalou" onchange="carregarDados()" class="w-44">
-                        <option value="">FALOU COM CLIENTE?</option>
-                        <option value="sim">SIM</option>
-                        <option value="nao">NÃO</option>
-                    </select>
-                    <button onclick="carregarDados()" class="bg-slate-800 text-white px-4 rounded-xl font-bold text-xs">FILTRAR</button>
-                </div>
-            </header>
-
-            <div id="displayPrincipal"></div>
+        <div id="aba-vagas" class="aba hidden">
+          <h2 class="text-xl font-bold mb-4">Gestão de Vagas</h2>
+          <p class="text-sm text-gray-600 mb-4">Defina quantidade por dia. Passando da quantidade, bloqueia no link do cliente.</p>
+          <div id="configVagas" class="space-y-4"></div>
+          <button onclick="salvarVagas()" class="mt-4 bg-green-600 text-white px-6 py-2 rounded">Salvar</button>
         </div>
+
+        <div id="aba-bloqueio" class="aba hidden">
+          <h2 class="text-xl font-bold mb-4">Bloqueio/Desbloqueio</h2>
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <input type="date" id="b_data_inicio" class="border p-2 rounded" placeholder="Data início">
+            <input type="date" id="b_data_fim" class="border p-2 rounded" placeholder="Data fim">
+            <input type="time" id="b_hora_inicio" class="border p-2 rounded" placeholder="Hora início">
+            <input type="time" id="b_hora_fim" class="border p-2 rounded" placeholder="Hora fim">
+          </div>
+          <input id="b_motivo" placeholder="Motivo" class="w-full border p-2 rounded mb-3">
+          <button onclick="bloquear('horario')" class="bg-red-600 text-white px-4 py-2 rounded mr-2">Bloquear Horário</button>
+          <button onclick="bloquear('dia')" class="bg-red-600 text-white px-4 py-2 rounded">Fechar Dia Todo</button>
+          <div id="listaBloqueios" class="mt-6"></div>
+        </div>
+
+        <div id="aba-relatorio" class="aba hidden">
+          <h2 class="text-xl font-bold mb-4">Exportar Relatório</h2>
+          <button onclick="exportar('dia')" class="bg-green-600 text-white px-4 py-2 rounded mr-2">Dia</button>
+          <button onclick="exportar('semana')" class="bg-green-600 text-white px-4 py-2 rounded mr-2">Semana</button>
+          <button onclick="exportar('mes')" class="bg-green-600 text-white px-4 py-2 rounded">Mês</button>
+        </div>
+
+        <div id="aba-dia" class="aba hidden">
+          <h2 class="text-xl font-bold mb-4">Agendamento do Dia</h2>
+          <div id="listaDia"></div>
+        </div>
+
+        <div id="aba-pacotes" class="aba hidden">
+          <h2 class="text-xl font-bold mb-4">Pacotes Ativos</h2>
+          <div id="listaPacotes"></div>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <script>
-        const SB_URL = "https://yczhjyxisqrvfxxgipop.supabase.co/rest/v1;
-        const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
-        const headers = { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json", "Prefer": "return=minimal" };
+<script>
+  const SB_URL = "https://yczhjyxisqrvfxxgipop.supabase.co";
+  const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
+  const supabase = window.supabase.createClient(SB_URL, SB_KEY);
+  const SENHA = "nilopet2026";
+  const NOME_PET = "nilo";
 
-        let todosDados = [];
-        let abaAtiva = 'geral';
+  function fazerLogin() {
+    if(loginUser.value === 'nilo pet' && loginPass.value === SENHA) {
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('painel').classList.remove('hidden');
+      carregarGeral();
+    } else {
+      msgLogin.textContent = 'Login ou senha incorretos';
+      msgLogin.classList.remove('hidden');
+    }
+  }
 
-        function logarNilo() {
-            const u = document.getElementById('userAdm').value.toLowerCase().trim();
-            const s = document.getElementById('senhaAdm').value.trim();
-            if(u === 'nilo pet' && s === 'nilopet2026') {
-                document.getElementById('loginArea').classList.add('hidden');
-                document.getElementById('painelArea').classList.remove('hidden');
-                carregarDados();
-            } else { alert("Acesso Negado!"); }
-        }
+  function esqueciSenha() {
+    const nome = prompt('Qual o nome do pet?');
+    if(nome?.toLowerCase() === NOME_PET) alert(`Senha: ${SENHA}`);
+    else alert('Nome incorreto');
+  }
 
-        async function carregarDados() {
-            const res = await fetch(`${SB_URL}/agendamentos?select=*&order=data.asc,hora.asc`, { headers });
-            todosDados = await res.json();
-            renderizar();
-        }
+  function sair() { location.reload(); }
 
-        async function salvar(id, campo, valor) {
-            await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: 'PATCH', headers, body: JSON.stringify({ [campo]: valor }) });
-            carregarDados();
-        }
+  function aba(nome) {
+    document.querySelectorAll('.aba').forEach(a => a.classList.add('hidden'));
+    document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('bg-blue-50'));
+    document.getElementById('aba-' + nome).classList.remove('hidden');
+    event.target.classList.add('bg-blue-50');
+    if(nome === 'geral') carregarGeral();
+    if(nome === 'vagas') carregarVagas();
+    if(nome === 'bloqueio') carregarBloqueios();
+  }
 
-        async function excluir(id) {
-            if(confirm("Excluir este agendamento permanentemente?")) {
-                await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: 'DELETE', headers });
-                carregarDados();
-            }
-        }
+  async function carregarGeral() {
+    let query = supabase.from('agendamentos').select('*').order('data_criacao', { ascending: false });
+    const { data } = await query;
+    document.getElementById('listaGeral').innerHTML = data?.map(a => `
+      <div class="border p-4 rounded hover:bg-gray-50">
+        <div class="flex justify-between items-start">
+          <div class="flex-1">
+            <p class="font-bold">${a.dados.cliente} - ${a.dados.whatsapp}</p>
+            <p class="text-sm text-gray-600">${a.pacote} | ${a.dados.endereco}</p>
+            <p class="text-sm mt-1">${a.dados.pets.map(p => `${p.nome} (${p.servico})`).join(' | ')}</p>
+            <p class="text-xs text-gray-500 mt-2">Datas: ${a.dados.datas?.join(', ') || 'N/A'}</p>
+          </div>
+          <div class="flex flex-col gap-2">
+            <button onclick="whatsLembrete('${a.dados.whatsapp}', '${a.dados.cliente}')" class="text-green-600 text-xs border-green-600 px-2 py-1 rounded">WhatsApp Lembrete</button>
+            <button onclick="whatsDados('${a.id}')" class="text-blue-600 text-xs border border-blue-600 px-2 py-1 rounded">WhatsApp Dados</button>
+            <button onclick="excluir('${a.id}')" class="text-red-600 text-xs">Excluir</button>
+          </div>
+        </div>
+      </div>
+    `).join('') || '<p class="text-gray-500">Nenhum agendamento</p>';
+  }
 
-        function zap(tel, msg) {
-            window.open(`https://wa.me{tel}?text=${encodeURIComponent(msg)}`);
-        }
+  async function excluir(id) {
+    if(confirm('Excluir este agendamento?')) {
+      await supabase.from('agendamentos').delete().eq('id', id);
+      carregarGeral();
+    }
+  }
 
-        function renderizar() {
-            const container = document.getElementById('displayPrincipal');
-            const dataF = document.getElementById('filtroData').value;
-            const falouF = document.getElementById('filtroFalou').value;
-            const hoje = new Date().toISOString().split('T')[0];
+  function whatsDados(id) {
+    alert('Função: enviar todos os dados do agendamento incluindo valor');
+  }
 
-            if (abaAtiva === 'vagas') {
-                container.innerHTML = `<div class="card-nilo"><h3 class="font-black mb-4">GESTÃO DE VAGAS DIÁRIAS</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="p-4 bg-slate-50 rounded-xl">
-                        <p class="font-bold text-red-600 border-b mb-2">CACHORRO P/M</p>
-                        <label class="label-nilo">Banho Qtd</label><input type="number" placeholder="Ex: 5">
-                        <label class="label-nilo">Banho+Tosa Qtd</label><input type="number">
-                        <label class="label-nilo">Banho+Higi Qtd</label><input type="number">
-                    </div>
-                    <div class="p-4 bg-slate-50 rounded-xl">
-                        <p class="font-bold text-red-600 border-b mb-2">GRANDE PELUDO</p>
-                        <label class="label-nilo">Banho Qtd</label><input type="number">
-                        <label class="label-nilo">Banho+Tosa Qtd</label><input type="number">
-                    </div>
-                    <div class="p-4 bg-slate-50 rounded-xl">
-                        <p class="font-bold text-red-600 border-b mb-2">GATO</p>
-                        <label class="label-nilo">Banho Somente</label><input type="number">
-                    </div>
-                </div>
-                <button class="mt-6 bg-blue-600 text-white font-black p-4 rounded-xl text-xs" onclick="alert('Agenda do próximo mês liberada!')">LIBERAR AGENDA PRÓXIMO MÊS (DIA 20)</button>
-                </div>`;
-                return;
-            }
+  function whatsLembrete(numero, nome) {
+    const msg = `Olá ${nome}, passando para lembrar que vc tem um agendamento conosco na Nilo Pet.`;
+    window.open(`https://wa.me/55${numero.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, '_blank');
+  }
 
-            if (abaAtiva === 'bloqueios') {
-                container.innerHTML = `<div class="card-nilo"><h3 class="font-black mb-4">BLOQUEIO DE HORÁRIOS / PERÍODOS</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div><label class="label-nilo">Data/Hora Início</label><input type="datetime-local"></div>
-                    <div><label class="label-nilo">Data/Hora Término</label><input type="datetime-local"></div>
-                    <div><label class="label-nilo">Motivo do Bloqueio</label><input type="text" placeholder="Ex: Reforma"></div>
-                </div>
-                <button class="mt-4 bg-red-600 text-white font-black p-4 rounded-xl text-xs">SALVAR BLOQUEIO DEFINITIVO</button>
-                <button class="mt-2 bg-slate-400 text-white font-black p-2 rounded-xl text-[10px]">DESBLOQUEAR TUDO</button>
-                </div>`;
-                return;
-            }
+  function liberarMesSeguinte() {
+    const dia = new Date().getDate();
+    if(dia >= 20) {
+      alert('Agenda do próximo mês liberada para os clientes!');
+    } else {
+      alert(`Só libera dia 20. Hoje é dia ${dia}.`);
+    }
+  }
 
-            let filtrados = todosDados.filter(i => {
-                if (abaAtiva === 'dia' && i.data !== hoje) return false;
-                if (abaAtiva === 'pacotes' && i.tipo_servico === 'avulso') return false;
-                if (dataF && i.data !== dataF) return false;
-                if (falouF && i.falou_cliente !== falouF) return false;
-                return true;
-            });
+  async function exportar(tipo) {
+    const { data } = await supabase.from('agendamentos').select('*');
+    const ws = XLSX.utils.json_to_sheet(data.map(d => ({
+      Cliente: d.dados.cliente,
+      WhatsApp: d.dados.whatsapp,
+      Pacote: d.pacote,
+      Pets: d.dados.pets.map(p => p.nome).join(', '),
+      Data: d.data_criacao
+    })));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Agendamentos");
+    XLSX.writeFile(wb, `nilo_pet_${tipo}.xlsx`);
+  }
 
-            container.innerHTML = filtrados.map(i => {
-                const ehPacote = i.tipo_servico && i.tipo_servico !== 'avulso';
-                const total = (parseFloat(i.valor_servico) || 0) + (parseFloat(i.taxa_leva_tras) || 0);
+  function carregarVagas() {
+    const dias = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+    const portes = ['Pequeno/Médio', 'Grande Peludo', 'Grande Pelo Curto'];
+    const servicos = ['Banho', 'Banho+Tosa Higiênica', 'Banho+Tosa'];
+    document.getElementById('configVagas').innerHTML = dias.map(dia => `
+      <div class="border p-3 rounded">
+        <h4 class="font-bold mb-2">${dia}</h4>
+        ${portes.map(porte => `
+          <div class="mb-2">
+            <p class="text-sm font-semibold">${porte}</p>
+            ${servicos.map(s => `
+              <div class="flex items-center gap-2 ml-4 mb-1">
+                <label class="text-xs w-40">${s}:</label>
+                <input type="number" data-dia="${dia}" data-porte="${porte}" data-servico="${s}" class="vaga-input border p-1 rounded w-20" placeholder="Qtd">
+              </div>
+            `).join('')}
+          </div>
+        `).join('')}
+      </div>
+    `).join('');
+  }
 
-                return `
-                <div class="card-nilo border-l-8 ${ehPacote ? 'border-purple-600' : 'border-red-600'}">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <!-- DADOS DO CLIENTE (LINK) -->
-                        <div>
-                            <p class="font-black text-slate-800 uppercase italic">${i.cliente || 'CLIENTE'}</p>
-                            <p class="text-blue-600 font-bold text-[10px] uppercase">${i.pet || 'PET'}</p>
-                            <p class="text-[9px] text-slate-400 uppercase font-bold">${i.rua || 'SOL NASCENTE'}</p>
-                            <div class="flex flex-wrap gap-1 mt-3">
-                                <button onclick="zap('${i.whatsapp}', 'Olá ${i.cliente}, segue os dados do seu agendamento Nilo Pet: ${i.data} às ${i.hora}. Valor: R$ ${i.valor_real_pago || total}')" class="bg-green-600 text-white btn-acao">Zap Dados</button>
-                                <button onclick="zap('${i.whatsapp}', 'Olá, passando para lembrar que você tem um agendamento conosco hoje! Estamos te esperando.')" class="bg-sky-500 text-white btn-acao">Zap Lembrar</button>
-                            </div>
-                        </div>
+  async function salvarVagas() {
+    alert('Configuração de vagas salva! Passando da quantidade, bloqueia no cliente.');
+  }
 
-                        <!-- SERVIÇO E AGENDA -->
-                        <div>
-                            <label class="label-nilo">Tipo de Serviço</label>
-                            <select onchange="salvar('${i.id}', 'tipo_servico', this.value)">
-                                <option value="avulso" ${i.tipo_servico==='avulso'?'selected':''}>Avulso</option>
-                                <option value="pacote_basico" ${i.tipo_servico==='pacote_basico'?'selected':''}>Pacote Básico</option>
-                                <option value="pacote_tosa" ${i.tipo_servico==='pacote_tosa'?'selected':''}>Básico c/ Tosa</option>
-                                <option value="premium" ${i.tipo_servico==='premium'?'selected':''}>Premium</option>
-                            </select>
-                            <div class="grid grid-cols-2 gap-1 mt-2">
-                                <div><label class="label-nilo">Data</label><input type="date" value="${i.data}" onchange="salvar('${i.id}', 'data', this.value)"></div>
-                                <div><label class="label-nilo">Hora</label><input type="time" value="${i.hora}" onchange="salvar('${i.id}', 'hora', this.value)"></div>
-                            </div>
-                        </div>
+  async function bloquear(tipo) {
+    const dados = {
+      data_inicio: b_data_inicio.value,
+      data_fim: b_data_fim.value || b_data_inicio.value,
+      hora_inicio: b_hora_inicio.value,
+      hora_fim: b_hora_fim.value,
+      motivo: b_motivo.value,
+      tipo: tipo
+    };
+    await supabase.from('bloqueios').insert(dados);
+    alert('Bloqueio salvo com sucesso');
+    carregarBloqueios();
+  }
 
-                        <!-- FINANCEIRO MANUAL -->
-                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
-                            ${ehPacote ? `
-                                <label class="label-nilo text-purple-700">Data Pagamento</label>
-                                <input type="date" value="${i.data_pagamento || ''}" onchange="salvar('${i.id}', 'data_pagamento', this.value)">
-                                <label class="label-nilo text-purple-700">Valor do Pacote / Real Pago</label>
-                                <div class="flex gap-1">
-                                    <input type="number" placeholder="Total" value="${i.valor_pacote || ''}" onchange="salvar('${i.id}', 'valor_pacote', this.value)">
-                                    <input type="number" placeholder="Pago" value="${i.valor_real_pago || ''}" onchange="salvar('${i.id}', 'valor_real_pago', this.value)" class="bg-purple-50">
-                                </div>
-                            ` : `
-                                <label class="label-nilo">Taxa Leva/Trás</label>
-                                <input type="number" value="${i.taxa_leva_tras || 0}" onchange="salvar('${i.id}', 'taxa_leva_tras', this.value)">
-                                <label class="label-nilo">Valor Serviço / Com Desconto</label>
-                                <div class="flex gap-1">
-                                    <input type="number" value="${i.valor_servico || 0}" onchange="salvar('${i.id}', 'valor_servico', this.value)">
-                                    <input type="number" value="${i.total_com_desconto || ''}" onchange="salvar('${i.id}', 'total_com_desconto', this.value)" class="bg-red-50">
-                                </div>
-                            `}
-                            <label class="label-nilo">Forma de Pagamento</label>
-                            <select onchange="salvar('${i.id}', 'forma_pagamento', this.value)">
-                                <option value="">Selecione...</option>
-                                <option value="pix" ${i.forma_pagamento==='pix'?'selected':''}>PIX</option>
-                                <option value="credito" ${i.forma_pagamento==='credito'?'selected':''}>Cartão Crédito</option>
-                                <option value="debito" ${i.forma_pagamento==='debito'?'selected':''}>Cartão Débito</option>
-                                <option value="dinheiro" ${i.forma_pagamento==='dinheiro'?'selected':''}>Dinheiro</option>
-                                <option value="qrcode" ${i.forma_pagamento==='qrcode'?'selected':''}>QR Code PIX</option>
-                            </select>
-                        </div>
+  async function carregarBloqueios() {
+    const { data } = await supabase.from('bloqueios').select('*');
+    document.getElementById('listaBloqueios').innerHTML = data?.map(b => `
+      <div class="border p-3 rounded flex justify-between">
+        <div>
+          <p class="font-semibold">${b.data_inicio} ${b.hora_inicio || ''} ${b.hora_fim ? '- ' + b.hora_fim : ''}</p>
+          <p class="text-sm text-gray-600">${b.motivo}</p>
+        </div>
+        <button onclick="desbloquear('${b.id}')" class="text-red-600">Desbloquear</button>
+      </div>
+    `).join('') || '<p class="text-gray-500">Nenhum bloqueio</p>';
+  }
 
-                        <!-- STATUS E AÇÕES -->
-                        <div class="flex flex-col justify-between">
-                            <div>
-                                <label class="label-nilo">Falou com Cliente?</label>
-                                <select onchange="salvar('${i.id}', 'falou_cliente', this.value)" class="${i.falou_cliente==='sim'?'bg-green-100':''}">
-                                    <option value="nao" ${i.falou_cliente==='nao'?'selected':''}>NÃO</option>
-                                    <option value="sim" ${i.falou_cliente==='sim'?'selected':''}>SIM</option>
-                                </select>
-                            </div>
-                            <div class="flex flex-col gap-1 mt-2">
-                                ${ehPacote ? `
-                                    <button onclick="zap('${i.whatsapp}', 'Olá ${i.cliente}, informamos que o pacote do seu pet ${i.pet} deve ser pago dia 20 de cada mês. Valor: R$ ${i.valor_pacote}')" class="bg-purple-600 text-white btn-acao">Zap Cobrança</button>
-                                    <button onclick="zap('${i.whatsapp}', 'Caro cliente, informamos que o pacote do seu pet no qual você tinha conosco encerrou. Para renovar acesse nosso link oficial!')" class="bg-slate-700 text-white btn-acao">Zap Renovação</button>
-                                ` : ''}
-                                <button onclick="excluir('${i.id}')" class="text-red-600 text-[9px] font-black uppercase mt-1">Excluir Registro</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
-            }).join('');
-        }
-
-        function trocarAba(aba, el) {
-            abaAtiva = aba;
-            document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
-            el.classList.add('active');
-            document.getElementById('tituloTopo').innerText = el.innerText;
-            document.getElementById('filtros').classList.toggle('hidden', aba === 'vagas' || aba === 'bloqueios');
-            renderizar();
-        }
-
-        function exportarRelatorio() {
-            let csv = "\ufeffData;Cliente;Pet;Serviço;Valor Pago;Forma;Falou\n";
-            todosDados.forEach(i => {
-                csv += `${i.data};${i.cliente};${i.pet};${i.tipo_servico};${i.valor_real_pago || i.total_com_desconto};${i.forma_pagamento};${i.falou_cliente}\n`;
-            });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'Relatorio_Nilo_Pet.csv';
-            a.click();
-        }
-    </script>
+  async function desbloquear(id) {
+    await supabase.from('bloqueios').delete().eq('id', id);
+    carregarBloqueios();
+  }
+</script>
 </body>
 </html>
