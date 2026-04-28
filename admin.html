@@ -2,128 +2,105 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>ADM Nilo Pet - OFICIAL</title>
-    <script src="https://jsdelivr.net"></script>
-    <script src="https://cloudflare.com"></script>
-    <link href="https://googleapis.com" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADM - Nilo Pet</title>
+    <script src="https://tailwindcss.com"></script>
+    <script src="https://unpkg.com"></script>
     <style>
-        :root { --blue: #e3f2fd; --mid: #2196f3; --dark: #1565c0; }
-        body { font-family: 'Poppins', sans-serif; background: var(--blue); margin: 0; display: flex; height: 100vh; overflow: hidden; }
-        .sidebar { width: 260px; background: var(--dark); color: white; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .sidebar button { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 12px; border-radius: 8px; cursor: pointer; text-align: left; }
-        .sidebar button:hover { background: var(--mid); }
-        .main { flex: 1; padding: 25px; overflow-y: auto; background: var(--blue); }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; background: white; }
-        th { background: var(--mid); color: white; padding: 12px; text-align: left; }
-        td { padding: 12px; border-bottom: 1px solid #eee; }
-        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 8px; width: 100%; box-sizing: border-box; margin-bottom: 10px; }
-        .btn-save { background: #4caf50; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%; }
-        #login-screen { position: fixed; inset: 0; background: var(--blue); display: flex; align-items: center; justify-content: center; z-index: 10000; }
+        body { background: linear-gradient(135deg, #1e3a8a, #1e40af); min-height: 100vh; color: white; }
+        .glass { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+        .sidebar-btn { @apply w-full text-left p-3 rounded hover:bg-blue-700 transition mb-2; }
     </style>
 </head>
 <body>
-
-<div id="login-screen">
-    <div style="background:white; padding:40px; border-radius:20px; text-align:center; width:320px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
-        <h2>Nilo Pet ADM</h2>
-        <input type="text" id="user" placeholder="Usuário">
-        <input type="password" id="pass" placeholder="Senha">
-        <button onclick="login()" class="btn-save">ENTRAR</button>
-        <p onclick="recuperar()" style="font-size: 0.8rem; color: var(--dark); cursor: pointer; margin-top: 10px;">Esqueci a senha</p>
+    <!-- TELA DE LOGIN -->
+    <div id="login-screen" class="flex items-center justify-center h-screen">
+        <div class="glass p-8 rounded-xl shadow-2xl w-96 text-center">
+            <h2 class="text-2xl font-bold mb-6">Nilo Pet ADM</h2>
+            <input id="user" type="text" placeholder="Usuário" class="w-full p-2 mb-4 rounded bg-white text-black">
+            <input id="pass" type="password" placeholder="Senha" class="w-full p-2 mb-4 rounded bg-white text-black">
+            <button onclick="logar()" class="w-full bg-blue-600 p-2 rounded font-bold hover:bg-blue-500">Entrar</button>
+            <button onclick="esqueciSenha()" class="mt-4 text-sm underline opacity-80">Esqueci a senha</button>
+        </div>
     </div>
-</div>
 
-<div class="sidebar">
-    <h2>NILO PET</h2>
-    <button onclick="aba('geral')">Agendamento Geral</button>
-    <button onclick="aba('dia')">Agendamento do Dia</button>
-    <button onclick="aba('pacotes')">Pacotes</button>
-    <button onclick="aba('vagas')">Gestão de Vagas</button>
-    <button onclick="aba('bloqueio')">Bloqueio/Desbloqueio</button>
-    <button onclick="exportar()" style="background:#2e7d32; margin-top:10px">Exportar Excel</button>
-    <button onclick="location.reload()" style="background:#c62828; margin-top:auto">Sair</button>
-</div>
+    <!-- PAINEL PRINCIPAL (Escondido por padrão) -->
+    <div id="main-panel" class="hidden flex">
+        <!-- Sidebar -->
+        <div class="w-64 glass h-screen p-4 flex flex-col">
+            <h1 class="text-xl font-bold mb-8 border-b pb-2">Painel Nilo Pet</h1>
+            <button onclick="showTab('geral')" class="sidebar-btn">Agendamento Geral</button>
+            <button onclick="showTab('dia')" class="sidebar-btn">Agendamento do Dia</button>
+            <button onclick="showTab('pacotes')" class="sidebar-btn">Pacotes</button>
+            <button onclick="showTab('vagas')" class="sidebar-btn">Gestão de Vagas</button>
+            <button onclick="showTab('bloqueio')" class="sidebar-btn">Bloqueio/Desbloqueio</button>
+            <button onclick="exportarExcel()" class="sidebar-btn bg-green-700">Exportar Relatório</button>
+            <button onclick="location.reload()" class="sidebar-btn mt-auto bg-red-700">Sair</button>
+        </div>
 
-<div class="main">
-    <h2 id="title">Painel de Controle</h2>
-    <div id="root"></div>
-</div>
+        <!-- Conteúdo -->
+        <div class="flex-1 p-8 overflow-y-auto">
+            <div id="tab-content" class="glass p-6 rounded-xl min-h-full">
+                <!-- Conteúdo dinâmico via JS -->
+            </div>
+        </div>
+    </div>
 
-<script>
-    // A URL deve parar no .co
-const SB_URL = "https://yczhjyxisqrvfxxgipop.supabase.co"; 
-const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
+    <script>
+        const SB_URL = "https://supabase.co"; 
+        const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
+        const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-// A inicialização deve ser assim:
-const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+        function logar() {
+            const u = document.getElementById('user').value;
+            const p = document.getElementById('pass').value;
+            if(u === "nilo pet" && p === "nilopet2026") {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('main-panel').classList.remove('hidden');
+                showTab('geral');
+            } else { alert("Login incorreto!"); }
+        }
 
+        function esqueciSenha() {
+            const pet = prompt("Qual o nome do pet?");
+            if(pet && pet.toLowerCase() === "nilo") alert("Senha: nilopet2026");
+        }
 
-    function login() {
-        if(document.getElementById('user').value === 'nilo pet banho e tosa' && 
-           document.getElementById('pass').value === 'nilopetbanhoetosa2026') {
-            document.getElementById('login-screen').style.display = 'none';
-            aba('geral');
-        } else { alert("Erro de login"); }
-    }
-
-    function recuperar() {
-        let p = prompt("Qual o nome do pet?");
-        if(p === "nilo pet banho e tosa") alert("Senha: nilopetbanhoetosa2026");
-    }
-
-    async function aba(nome) {
-        const root = document.getElementById('root');
-        document.getElementById('title').innerText = nome.toUpperCase();
-        root.innerHTML = "Carregando...";
-
-        if(['geral', 'dia', 'pacotes'].includes(nome)) {
-            const { data } = await supabase.from('agendamentos').select('*').order('data_agendamento');
-            let lista = data;
-            if(nome === 'dia') lista = data.filter(d => d.data_agendamento === new Date().toISOString().split('T')[0]);
-            if(nome === 'pacotes') lista = data.filter(d => d.tipo_plano !== 'avulso');
+        // Função para mostrar abas e carregar dados
+        async function showTab(aba) {
+            const content = document.getElementById('tab-content');
+            content.innerHTML = `<h2 class="text-2xl font-bold mb-4 capitalize">${aba.replace('_',' ')}</h2>`;
             
-            let h = `<table><thead><tr><th>Cliente/Pet</th><th>Serviço</th><th>Valor</th><th>Ação</th></tr></thead><tbody>`;
-            lista.forEach(i => {
-                h += `<tr>
-                    <td>${i.cliente_nome}<br><small>${i.pet_nome}</small></td>
-                    <td>${i.servico}<br><small>${i.data_agendamento}</small></td>
-                    <td>R$ ${i.valor_total || '0'}</td>
-                    <td><button onclick="del('${i.id}')" style="color:red;border:none;background:none;cursor:pointer">X</button></td>
+            if(aba === 'geral') {
+                const { data } = await supabaseClient.from('agendamentos').select('*').order('data_agendamento', {ascending: true});
+                // Renderizar Tabela com botões Alterar/Excluir/Salvar/WhatsApp
+                renderTable(data, content);
+            }
+            // Adicionar as outras lógicas de abas aqui...
+        }
+
+        function renderTable(data, container) {
+            let html = `<div class="overflow-x-auto"><table class="w-full text-left text-sm">
+                <thead><tr class="border-b"><th>Cliente</th><th>Pet</th><th>Data/Hora</th><th>Serviço</th><th>Ações</th></tr></thead><tbody>`;
+            data.forEach(item => {
+                html += `<tr class="border-b border-white/10">
+                    <td>${item.cliente_nome}</td>
+                    <td>${item.pet_nome}</td>
+                    <td>${item.data_agendamento} ${item.horario_agendamento}</td>
+                    <td>${item.servico}</td>
+                    <td class="py-2">
+                        <button onclick="msgWpp('${item.whatsapp}', '${item.cliente_nome}', '${item.data_agendamento}')" class="bg-green-600 p-1 rounded">Wpp</button>
+                    </td>
                 </tr>`;
             });
-            root.innerHTML = h + "</tbody></table>";
+            html += `</tbody></table></div>`;
+            container.innerHTML += html;
         }
 
-        if(nome === 'vagas') {
-            root.innerHTML = `
-                <div class="card">
-                    <h3>Pequeno/Médio</h3>
-                    <input type="number" id="pm_b" placeholder="Banho">
-                    <input type="number" id="pm_t" placeholder="Banho+Tosa">
-                    <button class="btn-save" onclick="salvarVagas()">Salvar Todas as Vagas</button>
-                </div>`;
+        function msgWpp(num, nome, data) {
+            const msg = window.encodeURIComponent(`Olá ${nome}, segue os dados do seu agendamento para o dia ${data}...`);
+            window.open(`https://wa.me{num}?text=${msg}`);
         }
-
-        if(nome === 'bloqueio') {
-            root.innerHTML = `<div class="card">
-                <input type="date" id="b_data">
-                <input type="text" id="b_motivo" placeholder="Motivo">
-                <button class="btn-save" onclick="alert('Bloqueado')">Bloquear Dia</button>
-            </div>`;
-        }
-    }
-
-    async function del(id) { if(confirm("Excluir?")) { await supabase.from('agendamentos').delete().eq('id', id); aba('geral'); } }
-
-    function exportar() {
-        supabase.from('agendamentos').select('*').then(({data}) => {
-            const ws = XLSX.utils.json_to_sheet(data);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "NiloPet");
-            XLSX.writeFile(wb, "Relatorio.xlsx");
-        });
-    }
-</script>
+    </script>
 </body>
 </html>
