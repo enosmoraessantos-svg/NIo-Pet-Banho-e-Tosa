@@ -1,80 +1,19 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Agendamento Nilo Pet</title>
-    <script src="https://jsdelivr.net"></script>
-    <link href="https://googleapis.com" rel="stylesheet">
-    <style>
-        body { font-family: 'Poppins', sans-serif; background: #e3f2fd; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .box { background: white; width: 90%; max-width: 450px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        .step { display: none; }
-        .active { display: block; }
-        input, select { width: 100%; padding: 12px; margin-top: 10px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; margin-top: 20px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; }
-        .btn-next { background: #2196f3; color: white; }
-    </style>
-</head>
-<body>
-<div class="box">
-    <form id="f">
-        <!-- ETAPA 1 -->
-        <div class="step active" id="s1">
-            <h2>Nilo Pet</h2>
-            <input type="text" id="c_nome" placeholder="Seu Nome" required>
-            <input type="tel" id="c_tel" placeholder="Seu WhatsApp" required>
-            <button type="button" class="btn-next" onclick="go(2)">Próximo</button>
-        </div>
-        <!-- ETAPA 2 -->
-        <div class="step" id="s2">
-            <select id="p_plano"><option value="avulso">Avulso</option><option value="basico">Básico</option></select>
-            <input type="text" id="p_nome" placeholder="Nome do Pet" required>
-            <select id="p_porte"><option>Pequeno</option><option>Grande</option></select>
-            <button type="button" onclick="go(3)" class="btn-next">Próximo</button>
-        </div>
-        <!-- ETAPA 3 -->
-        <div class="step" id="s3">
-            <input type="text" id="end" placeholder="Rua e Número" required>
-            <input type="text" value="Bairro Sol Nascente" readonly style="background:#eee">
-            <button type="button" onclick="go(4)" class="btn-next">Próximo</button>
-        </div>
-        <!-- ETAPA 4 -->
-        <div class="step" id="s4">
-            <input type="date" id="data" required>
-            <select id="hora"><option>08:00</option><option>09:00</option></select>
-            <button type="button" onclick="finalizar()" style="background:#4caf50; color:white;">FINALIZAR</button>
-        </div>
-    </form>
-</div>
+// Lógica de Etapas (Resumo)
+let etapa = 1;
+const dados = {};
 
-<script>
-   // A URL deve parar no .co
-const SB_URL = "https://yczhjyxisqrvfxxgipop.supabase.co"; 
-const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
+function proximaEtapa() {
+    // Validar se campos estão preenchidos (obrigatório)
+    // Se etapa 4: Salvar no Supabase
+    // Bloquear agenda se ultrapassar limite de gestao_vagas
+}
 
-// A inicialização deve ser assim:
-const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
-
-
-    function go(n) {
-        document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
-        document.getElementById('s'+n).classList.add('active');
+// Regra do dia 20 para liberar próximo mês
+function isAgendaLiberada(dataAlvo) {
+    const hoje = new Date();
+    const proximoMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 1);
+    if (dataAlvo >= proximoMes && hoje.getDate() < 20) {
+        return false; // Bloqueado até dia 20
     }
-
-    async function finalizar() {
-        const d = {
-            cliente_nome: document.getElementById('c_nome').value,
-            whatsapp: document.getElementById('c_tel').value,
-            pet_nome: document.getElementById('p_nome').value,
-            tipo_plano: document.getElementById('p_plano').value,
-            data_agendamento: document.getElementById('data').value,
-            horario: document.getElementById('hora').value,
-            endereco: document.getElementById('end').value + " - Sol Nascente"
-        };
-        await supabase.from('agendamentos').insert([d]);
-        alert("Agendado! Chame no Zap.");
-        location.reload();
-    }
-</script>
-</body>
-</html>
+    return true;
+}
