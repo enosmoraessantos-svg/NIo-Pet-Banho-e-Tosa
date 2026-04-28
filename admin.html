@@ -1,5 +1,74 @@
+   <!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>ADM - Nilo Pet</title>
+    <script src="https://tailwindcss.com"></script>
+    <style>
+        .sidebar { width: 260px; height: 100vh; position: fixed; background: #1e293b; color: white; }
+        .content { margin-left: 260px; padding: 20px; }
+        .menu-item { padding: 12px 20px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 600; border-left: 4px solid transparent; }
+        .menu-item.active { background: #334155; border-left-color: #ef4444; color: #ef4444; }
+        .card-pet { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 10px; }
+        .hidden { display: none; }
+        input, select { border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px; font-size: 12px; }
+    </style>
+</head>
+<body class="bg-slate-50">
+
+    <!-- LOGIN -->
+    <div id="loginArea" class="flex items-center justify-center min-h-screen">
+        <div class="w-full max-w-md p-8 bg-white rounded-2xl shadow-2xl">
+            <h1 class="text-2xl font-black text-center mb-6 text-slate-800 italic uppercase">NILO PET ADM</h1>
+            <input type="text" id="userAdm" placeholder="Usuário (nilo pet)" class="w-full mb-4 p-3 border rounded-xl">
+            <input type="password" id="senhaAdm" placeholder="Senha (nilopet2026)" class="w-full mb-4 p-3 border rounded-xl">
+            <button onclick="logar()" class="w-full bg-red-600 text-white font-black p-4 rounded-xl">ENTRAR</button>
+            <button onclick="document.getElementById('loginArea').classList.add('hidden'); document.getElementById('esqueciArea').classList.remove('hidden');" class="w-full mt-4 text-sm underline text-slate-500">Esqueci minha senha</button>
+        </div>
+    </div>
+
+    <!-- ESQUECI SENHA -->
+    <div id="esqueciArea" class="hidden flex items-center justify-center min-h-screen">
+        <div class="w-full max-w-md p-8 bg-white rounded-2xl shadow-2xl text-center">
+            <p class="mb-4 font-bold">Qual o nome do pet?</p>
+            <input type="text" id="petRecupera" placeholder="Nome do pet" class="w-full mb-4 p-3 border rounded-xl">
+            <button onclick="if(document.getElementById('petRecupera').value.toLowerCase()==='nilo') alert('Senha: nilopet2026'); else alert('Incorreto');" class="w-full bg-slate-800 text-white p-3 rounded-xl">VERIFICAR</button>
+            <button onclick="location.reload()" class="mt-4 text-xs underline">Voltar</button>
+        </div>
+    </div>
+
+    <!-- PAINEL -->
+    <div id="painelArea" class="hidden">
+        <div class="sidebar">
+            <div class="p-6 font-black italic border-b border-slate-700 uppercase">Nilo Pet Banho e Tosa</div>
+            <nav class="mt-4">
+                <div onclick="mudarFiltro('geral', this)" class="menu-item active">📊 Agendamento Geral</div>
+                <div onclick="mudarFiltro('dia', this)" class="menu-item">📅 Agendamento do Dia</div>
+                <div onclick="mudarFiltro('pacotes', this)" class="menu-item">📦 Pacotes</div>
+                <div onclick="mudarFiltro('vagas', this)" class="menu-item">🔒 Gestão de Vagas</div>
+                <div onclick="mudarFiltro('bloqueio', this)" class="menu-item">🚫 Bloqueio/Desbloqueio</div>
+                <div onclick="exportarExcel()" class="menu-item text-green-400">📥 Exportar Relatório</div>
+                <div onclick="location.reload()" class="menu-item text-slate-400 mt-10">🚪 Sair</div>
+            </nav>
+        </div>
+
+        <div class="content">
+            <header class="flex justify-between items-center mb-6">
+                <h2 id="tituloPagina" class="text-xl font-black uppercase italic">Agendamento Geral</h2>
+                <div class="flex gap-2">
+                    <input type="date" id="filtroData" onchange="carregarDados()">
+                    <select id="filtroFalou" onchange="carregarDados()">
+                        <option value="">Falou Cliente?</option>
+                        <option value="sim">Sim</option>
+                        <option value="nao">Não</option>
+                    </select>
+                </div>
+            </header>
+            <div id="containerCards" class="grid grid-cols-1 gap-4"></div>
+        </div>
+    </div>
+
     <script>
-        // CORREÇÃO 1: Fechamento das aspas na URL e remoção do ponto e vírgula interno
         const SB_URL = "https://supabase.co";
         const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
         const headers = { 
@@ -12,27 +81,23 @@
         let filtroAtual = 'geral';
 
         function logar() {
-            // CORREÇÃO 2: Garantir que minúsculas/maiúsculas não travem o login
             const user = document.getElementById('userAdm').value.toLowerCase().trim();
             const pass = document.getElementById('senhaAdm').value.trim();
-
             if(user === 'nilo pet' && pass === 'nilopet2026') {
                 document.getElementById('loginArea').classList.add('hidden');
                 document.getElementById('painelArea').classList.remove('hidden');
                 carregarDados();
-            } else { 
-                alert("Usuário ou Senha incorretos!"); 
-            }
+            } else { alert("Usuário ou Senha incorretos!"); }
         }
 
         async function carregarDados() {
+            const container = document.getElementById('containerCards');
+            container.innerHTML = "<p class='text-center font-bold'>Carregando dados...</p>";
             try {
                 const res = await fetch(`${SB_URL}/agendamentos?select=*`, { headers });
                 todosDados = await res.json();
                 renderizar();
-            } catch (e) {
-                console.error("Erro ao carregar dados:", e);
-            }
+            } catch (e) { console.error(e); }
         }
 
         async function update(id, campo, valor) {
@@ -44,32 +109,42 @@
             carregarDados();
         }
 
+        async function excluir(id) {
+            if(confirm("Deseja realmente excluir?")) {
+                await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: 'DELETE', headers });
+                carregarDados();
+            }
+        }
+
         function renderizar() {
             const container = document.getElementById('containerCards');
             const dataFiltro = document.getElementById('filtroData').value;
             const falouFiltro = document.getElementById('filtroFalou').value;
-            
-            // CORREÇÃO 3: Ajuste na captura da data de hoje para o filtro
             const hoje = new Date().toISOString().split('T')[0];
 
             let filtrados = todosDados.filter(i => {
                 if (filtroAtual === 'dia' && i.data !== hoje) return false;
-                if (filtroAtual === 'pacotes' && i.tipo_servico === 'avulso') return false;
+                if (filtroAtual === 'pacotes' && (!i.tipo_servico || i.tipo_servico === 'avulso')) return false;
                 if (dataFiltro && i.data !== dataFiltro) return false;
                 if (falouFiltro && i.falou_cliente !== falouFiltro) return false;
                 return true;
             });
 
+            if(filtrados.length === 0) {
+                container.innerHTML = "<p class='text-center text-gray-500'>Nenhum registro encontrado.</p>";
+                return;
+            }
+
             container.innerHTML = filtrados.map(item => `
                 <div class="card-pet grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
                     <div>
-                        <p class="font-black text-xs uppercase">${item.cliente || 'Sem Nome'}</p>
-                        <p class="text-[10px] text-blue-600 font-bold">${item.pet || 'Sem Pet'}</p>
-                        <p class="text-[9px] text-gray-500">${item.rua || ''}</p>
+                        <p class="font-black text-xs uppercase">${item.cliente || 'SEM NOME'}</p>
+                        <p class="text-[10px] text-blue-600 font-bold uppercase">${item.pet || 'SEM PET'}</p>
+                        <p class="text-[9px] text-gray-500 uppercase">${item.rua || 'SOL NASCENTE'}</p>
                     </div>
                     <div class="text-[10px]">
-                        <p class="font-bold">Serviço: ${item.tipo_servico || 'Avulso'}</p>
-                        <p>Data: ${item.data || '--'} - ${item.hora || '--'}</p>
+                        <p class="font-bold">SERVIÇO: ${item.tipo_servico || 'AVULSO'}</p>
+                        <p>DATA: ${item.data || '--'} - ${item.hora || '--'}</p>
                     </div>
                     <div>
                         <select onchange="update('${item.id}', 'falou_cliente', this.value)" class="w-full text-[10px]">
@@ -87,16 +162,8 @@
         }
 
         function zapLembrar(tel, nome) {
-            // CORREÇÃO 4: Link do WhatsApp estava faltando o domínio /wa.me/
             const msg = window.encodeURIComponent(`Olá ${nome}, segue os dados do seu agendamento conosco na Nilo Pet!`);
             window.open(`https://wa.me{tel}?text=${msg}`);
-        }
-
-        async function excluir(id) { 
-            if(confirm("Deseja realmente excluir este registro?")) { 
-                await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: 'DELETE', headers }); 
-                carregarDados(); 
-            } 
         }
 
         function exportarExcel() {
@@ -120,3 +187,5 @@
             renderizar();
         }
     </script>
+</body>
+</html>
