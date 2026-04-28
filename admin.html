@@ -1,247 +1,196 @@
-/* Coloque isso no seu arquivo de estilos para arrumar a bagunça */
-.container-nilo {
-  max-width: 1200px;
-  margin: 0 auto;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-.sidebar-nilo {
-  width: 250px;
-  background: #1a252f;
-  color: white;
-  height: 100vh;
-  position: fixed;
-  padding: 20px;
-}
-
-.main-content {
-  margin-left: 270px;
-  padding: 20px;
-  background: #f8f9fa;
-}
-
-.card-etapa {
-  background: white;
-  padding: 30px;
-  border-radius: 15px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  margin-top: 20px;
-}
-
-.input-nilo {
-  width: 100%;
-  padding: 12px;
-  margin: 10px 0;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  display: block;
-}
-
-.btn-nilo {
-  background: #27ae60;
-  color: white;
-  border: none;
-  padding: 15px 25px;
-  border-radius: 8px;
-  cursor: pointer;
-  width: 100%;
-  font-weight: bold;
-}
-import { useState } from 'react';
-import { useRouter } from 'next/router';
-
-export default function LoginAdmin() {
-  const [user, setUser] = useState('');
-  const [pass, setPass] = useState('');
-  const [esqueci, setEsqueci] = useState(false);
-  const [nomePet, setNomePet] = useState('');
-  const router = useRouter();
-
-  const handleLogin = () => {
-    if(user === 'nilo pet banho e tosa' && pass === 'nilopetbanhoetosa2026') {
-      localStorage.setItem('auth_nilo', 'true');
-      router.push('/admin/dashboard');
-    } else { alert('Acesso Negado'); }
-  };
-
-  const recuperarSenha = () => {
-    // Regra: Nome do pet + nome da empresa libera a senha cadastrada
-    if(nomePet.toLowerCase() === 'nilo pet banho e tosa') {
-      alert('Sua senha é: nilopetbanhoetosa2026');
-      setEsqueci(false);
-    } else { alert('Nome do pet incorreto'); }
-  };
-
-  return (
-    <div style={{ textAlign: 'center', marginTop: '100px' }}>
-      {!esqueci ? (
-        <>
-          <h2>Nilo Pet - Login ADM</h2>
-          <input type="text" placeholder="Usuário" onChange={e => setUser(e.target.value)} /><br/>
-          <input type="password" placeholder="Senha" onChange={e => setPass(e.target.value)} /><br/>
-          <button onClick={handleLogin}>Entrar</button>
-          <p onClick={() => setEsqueci(true)} style={{cursor:'pointer', color:'blue'}}>Esqueci senha</p>
-        </>
-      ) : (
-        <>
-          <h2>Recuperar Senha</h2>
-          <p>Qual o nome do pet?</p>
-          <input type="text" onChange={e => setNomePet(e.target.value)} />
-          <button onClick={recuperarSenha}>OK</button>
-        </>
-      )}
-    </div>
-  );
-}
-import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
-import * as XLSX from 'xlsx'; // Para exportar relatório (instale: npm install xlsx)
-
-export default function DashboardAdmin() {
-    const [aba, setAba] = useState('geral');
-    const [dados, setDados] = useState([]);
-    const [filtro, setFiltro] = useState({ data: '', falou: '' });
-
-    useEffect(() => {
-        buscarDados();
-    }, [aba]);
-
-    const buscarDados = async () => {
-        let query = supabase.from('agendamentos').select('*');
-        
-        if (aba === 'dia') {
-            query = query.eq('data_hora', new Date().toISOString().split('T')[0]);
-        } else if (aba === 'pacotes') {
-            query = query.eq('is_pacote', true);
-        }
-        
-        const { data, error } = await query.order('data_hora', { ascending: true });
-        if (!error) setDados(data);
-    };
-// ... dentro do seu componente DashboardAdmin
-const handleCancelar = async (item) => {
-  if (item.is_pacote) {
-    alert("CARO CLIENTE: Se você tem pacote ativo e deseja mudar a data, entre em contato com nossos atendentes.");
-  } else {
-    if(confirm(`Deseja cancelar o agendamento de ${item.pet_nome}?`)) {
-       const { error } = await supabase.from('agendamentos').delete().eq('id', item.id);
-       if(!error) {
-         alert("Agendamento cancelado e removido!");
-         buscarDados(); // Atualiza a lista na tela
-       }
-    }
-  }
-}
-
-// No seu botão da tabela, mude para:
-<button onClick={() => handleCancelar(item)} style={{color:'red'}}>Cancelar/Excluir</button>
-
-    // FUNÇÕES DE WHATSAPP
-    const enviarWhats = (item, tipo) => {
-        let msg = "";
-        const fone = item.whatsapp.replace(/\D/g, '');
-        
-        if (tipo === 'confirmacao') {
-            msg = `Olá, segue os dados do agendamento: Cliente: ${item.cliente_nome}, Pet: ${item.pet_nome}, Data: ${new Date(item.data_hora).toLocaleString()}. Valor: R$${item.valor_total}.`;
-        } else if (tipo === 'lembrete') {
-            msg = `Olá! Passando para lembrar do agendamento de ${item.pet_nome} hoje às ${new Date(item.data_hora).toLocaleTimeString()}.`;
-        } else if (tipo === 'cobranca') {
-            msg = `Olá, informamos que o pacote do seu pet ${item.pet_nome} deve ser pago dia 20 de cada mês. Valor: R$${item.valor_total}.`;
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADM - Nilo Pet</title>
+    <script src="https://jsdelivr.net"></script>
+    <script src="https://cloudflare.com"></script>
+    <link href="https://googleapis.com" rel="stylesheet">
+    <style>
+        :root {
+            --azul-claro: #e3f2fd;
+            --azul-medio: #2196f3;
+            --azul-escuro: #1565c0;
+            --branco: #ffffff;
+            --cinza: #f5f5f5;
         }
 
-        window.open(`https://whatsapp.com{fone}&text=${encodeURIComponent(msg)}`);
-    };
+        body { font-family: 'Poppins', sans-serif; background-color: var(--azul-claro); margin: 0; display: flex; }
+        
+        /* Login Overlay */
+        #login-screen {
+            position: fixed; inset: 0; background: var(--azul-claro);
+            display: flex; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .login-card { background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 350px; }
+        
+        /* Dashboard Layout */
+        #admin-panel { display: none; width: 100%; height: 100vh; flex-direction: row; }
+        
+        .sidebar {
+            width: 260px; background: var(--azul-escuro); color: white;
+            padding: 20px; display: flex; flex-direction: column; gap: 10px;
+        }
+        
+        .sidebar button {
+            background: transparent; border: 1px solid rgba(255,255,255,0.2);
+            color: white; padding: 12px; border-radius: 8px; cursor: pointer;
+            text-align: left; transition: 0.3s;
+        }
+        
+        .sidebar button:hover { background: var(--azul-medio); }
+        
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; background: var(--azul-claro); }
+        
+        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: var(--azul-medio); color: white; border-radius: 4px; }
 
-    // EXPORTAR EXCEL
-    const exportarExcel = () => {
-        const ws = XLSX.utils.json_to_sheet(dados);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Relatorio");
-        XLSX.writeFile(wb, `Relatorio_NiloPet_${aba}.xlsx`);
-    };
+        .btn-zap { background: #25d366; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px; width: 100%; box-sizing: border-box; }
+        .grid-vagas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+    </style>
+</head>
+<body>
 
-    const atualizarCampo = async (id, campo, valor) => {
-        const { error } = await supabase.from('agendamentos').update({ [campo]: valor }).eq('id', id);
-        if (!error) buscarDados();
-    };
-
-    return (
-        <div style={{ display: 'flex', minHeight: '100vh', fontFamily: 'Arial' }}>
-            {/* MENU LATERAL */}
-            <div style={{ width: '250px', background: '#2c3e50', color: 'white', padding: '20px' }}>
-                <h3>Nilo Pet ADM</h3>
-                <nav style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <button onClick={() => setAba('geral')}>Agendamento Geral</button>
-                    <button onClick={() => setAba('dia')}>Agendamento do Dia</button>
-                    <button onClick={() => setAba('pacotes')}>Pacotes</button>
-                    <button onClick={() => setAba('vagas')}>Gestão de Vagas</button>
-                    <button onClick={() => setAba('bloqueio')}>Bloqueio/Desbloqueio</button>
-                    <button onClick={exportarExcel}>Exportar Relatório</button>
-                    <button onClick={() => window.location.href='/admin/login'} style={{marginTop:'20px', background:'red'}}>Sair</button>
-                </nav>
-            </div>
-
-            {/* CONTEÚDO PRINCIPAL */}
-            <div style={{ flex: 1, padding: '20px', background: '#f4f7f6' }}>
-                <h1>{aba.toUpperCase()}</h1>
-                
-                {/* ÁREA DE FILTROS */}
-                {(aba === 'geral' || aba === 'pacotes') && (
-                    <div style={{ marginBottom: '20px' }}>
-                        <input type="date" onChange={(e) => setFiltro({...filtro, data: e.target.value})} />
-                        <select onChange={(e) => setFiltro({...filtro, falou: e.target.value})}>
-                            <option value="">Falou com cliente?</option>
-                            <option value="true">Sim</option>
-                            <option value="false">Não</option>
-                        </select>
-                    </div>
-                )}
-
-                <table border="1" style={{ width: '100%', borderCollapse: 'collapse', background: 'white' }}>
-                    <thead>
-                        <tr style={{ background: '#eee' }}>
-                            <th>Cliente/Pet</th>
-                            <th>Serviço/Tipo</th>
-                            <th>Data/Hora</th>
-                            <th>Financeiro (Manual)</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {dados.map(item => (
-                            <tr key={item.id}>
-                                <td>{item.cliente_nome} <br/> <b>Pet:</b> {item.pet_nome}</td>
-                                <td>{item.servico_tipo} <br/> ({item.servico_detalhe})</td>
-                                <td>{new Date(item.data_hora).toLocaleString()}</td>
-                                <td>
-                                    Valor: <input type="number" defaultValue={item.valor_total} onBlur={(e) => atualizarCampo(item.id, 'valor_total', e.target.value)} style={{width:'60px'}} />
-                                    <br/>
-                                    Pgto: <select defaultValue={item.forma_pagamento} onChange={(e) => atualizarCampo(item.id, 'forma_pagamento', e.target.value)}>
-                                        <option value="pix">Pix</option>
-                                        <option value="credito">Crédito</option>
-                                        <option value="dinheiro">Dinheiro</option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <button onClick={() => enviarWhats(item, 'confirmacao')}>Confirmar ✅</button>
-                                    <button onClick={() => enviarWhats(item, 'lembrete')}>Lembrete ⏰</button>
-                                    {aba === 'pacotes' && <button onClick={() => enviarWhats(item, 'cobranca')}>Cobrança 💰</button>}
-                                    <button onClick={async () => { if(confirm('Excluir?')) { await supabase.from('agendamentos').delete().eq('id', item.id); buscarDados(); } }} style={{color:'red'}}>X</button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+    <!-- TELA DE LOGIN -->
+    <div id="login-screen">
+        <div class="login-card" id="card-auth">
+            <h2 style="color: var(--azul-escuro)">Nilo Pet ADM</h2>
+            <input type="text" id="user" placeholder="Usuário">
+            <input type="password" id="pass" placeholder="Senha">
+            <button onclick="login()" style="width: 100%; padding: 12px; background: var(--azul-medio); color: white; border: none; border-radius: 8px; cursor: pointer;">Entrar</button>
+            <p onclick="mostrarEsqueciSenha()" style="text-align: center; color: var(--azul-escuro); cursor: pointer; margin-top: 15px; font-size: 0.9rem;">Esqueci minha senha</p>
         </div>
-    );
-}
-// Lógica para controle de quantidade que trava o index
-const salvarVagas = async (config) => {
-    const { error } = await supabase.from('gestao_vagas').upsert(config);
-    if(!error) alert("Limites de vagas atualizados!");
-};
+        
+        <div class="login-card" id="card-esqueci" style="display: none;">
+            <h3>Recuperar Senha</h3>
+            <p>Qual o nome do pet?</p>
+            <input type="text" id="resp-pet" placeholder="Nome do pet">
+            <button onclick="recuperarSenha()" style="width: 100%; padding: 12px; background: var(--azul-medio); color: white; border: none; border-radius: 8px;">Verificar</button>
+            <button onclick="voltarLogin()" style="background: none; border: none; width: 100%; margin-top: 10px;">Voltar</button>
+        </div>
+    </div>
 
-// Exemplo de estrutura de dados para esta tela:
-// { especie: 'Cachorro', porte: 'Pequeno/Médio', servico: 'Banho', quantidade_maxima: 5 }
+    <!-- PAINEL PRINCIPAL -->
+    <div id="admin-panel">
+        <div class="sidebar">
+            <h3 style="text-align: center;">Nilo Pet</h3>
+            <button onclick="showSection('geral')">Agendamento Geral</button>
+            <button onclick="showSection('dia')">Agendamento do Dia</button>
+            <button onclick="showSection('pacotes')">Pacotes</button>
+            <button onclick="showSection('vagas')">Gestão de Vagas</button>
+            <button onclick="showSection('bloqueio')">Bloqueio/Desbloqueio</button>
+            <button onclick="exportarExcel()">Exportar Relatório</button>
+            <button onclick="location.reload()" style="margin-top: auto; background: #e74c3c;">Sair</button>
+        </div>
 
+        <div class="main-content">
+            <!-- As seções serão injetadas aqui via JS -->
+            <div id="content-area"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configurações Iniciais
+        const SB_URL = "https://supabase.co";
+        const SB_KEY = "SUA_KEY_AQUI"; // Use a service_role ou anon key configurada corretamente
+        const supabase = supabase.createClient(SB_URL, SB_KEY);
+
+        // LOGIN LOGIC
+        function login() {
+            const u = document.getElementById('user').value;
+            const p = document.getElementById('pass').value;
+            if(u === 'nilo pet banho e tosa' && p === 'nilopetbanhoetosa2026') {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('admin-panel').style.display = 'flex';
+                showSection('geral');
+            } else { alert('Acesso negado'); }
+        }
+
+        function mostrarEsqueciSenha() {
+            document.getElementById('card-auth').style.display = 'none';
+            document.getElementById('card-esqueci').style.display = 'block';
+        }
+
+        function recuperarSenha() {
+            const resp = document.getElementById('resp-pet').value.toLowerCase();
+            if(resp === 'nilo pet banho e tosa') {
+                alert('Sua senha é: nilopetbanhoetosa2026');
+                voltarLogin();
+            } else { alert('Resposta incorreta'); }
+        }
+
+        function voltarLogin() {
+            document.getElementById('card-auth').style.display = 'block';
+            document.getElementById('card-esqueci').style.display = 'none';
+        }
+
+        // NAVEGAÇÃO E SEÇÕES
+        async function showSection(section) {
+            const area = document.getElementById('content-area');
+            area.innerHTML = `<h2>Carregando ${section}...</h2>`;
+
+            if(section === 'geral') {
+                const { data } = await supabase.from('agendamentos').select('*').order('data_agendamento', { ascending: true });
+                renderGeral(data);
+            }
+            // Implementar as outras seções seguindo a mesma lógica
+        }
+
+        function renderGeral(dados) {
+            let html = `
+                <div class="card">
+                    <h2>Agendamento Geral</h2>
+                    <div style="display:flex; gap:10px; margin-bottom: 20px;">
+                        <input type="date" id="filtro-data" onchange="filtrar()">
+                        <select id="filtro-status"><option>Todos</option><option>Falou com cliente</option></select>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Cliente/Pet</th>
+                                <th>Serviço</th>
+                                <th>Data/Hora</th>
+                                <th>Pagamento</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${dados.map(item => `
+                                <tr>
+                                    <td>${item.cliente_nome}<br><small>${item.pet_nome}</small></td>
+                                    <td>${item.servico} (${item.tipo_plano})</td>
+                                    <td>${item.data_agendamento}<br>${item.horario}</td>
+                                    <td>R$ ${item.valor_total || '0,00'}</td>
+                                    <td>
+                                        <button class="btn-zap" onclick="enviarZap('${item.whatsapp}', 'confirmacao')">Confirmar</button>
+                                        <button onclick="excluir('${item.id}')" style="background:red; color:white; border:none; border-radius:5px;">X</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            document.getElementById('content-area').innerHTML = html;
+        }
+
+        // WHATSAPP LOGIC
+        function enviarZap(num, tipo) {
+            let msg = "";
+            if(tipo === 'confirmacao') msg = "Olá, segue os dados do seu agendamento...";
+            window.open(`https://wa.me{num.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`);
+        }
+
+        // EXPORTAR EXCEL
+        function exportarExcel() {
+            // Lógica para pegar os dados da tabela e converter usando a lib XLSX
+            alert('Gerando relatório...');
+        }
+    </script>
+</body>
+</html>
