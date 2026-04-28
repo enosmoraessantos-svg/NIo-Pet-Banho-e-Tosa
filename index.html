@@ -1,193 +1,72 @@
-/* Coloque isso no seu arquivo de estilos para arrumar a bagunça */
-.container-nilo {
-  max-width: 1200px;
-  margin: 0 auto;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
+import { useState } from 'react';
+import { createClient } from '@supabase/supabase-js';
 
-.sidebar-nilo {
-  width: 250px;
-  background: #1a252f;
-  color: white;
-  height: 100vh;
-  position: fixed;
-  padding: 20px;
-}
+const supabase = createClient("https://supabase.co", "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm");
 
-.main-content {
-  margin-left: 270px;
-  padding: 20px;
-  background: #f8f9fa;
-}
-
-.card-etapa {
-  background: white;
-  padding: 30px;
-  border-radius: 15px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  margin-top: 20px;
-}
-
-.input-nilo {
-  width: 100%;
-  padding: 12px;
-  margin: 10px 0;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  display: block;
-}
-
-.btn-nilo {
-  background: #27ae60;
-  color: white;
-  border: none;
-  padding: 15px 25px;
-  border-radius: 8px;
-  cursor: pointer;
-  width: 100%;
-  font-weight: bold;
-}
-import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-
-export default function AgendamentoCliente() {
+export default function AgendamentoNilo() {
   const [etapa, setEtapa] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({
-    cliente_nome: '', whatsapp: '', pets_qtd: 1, especie: 'Cachorro',
-    pet_nome: '', servico_tipo: 'Avulso', servico_detalhe: 'Banho',
-    porte: 'Pequeno/Médio', alergia: '', endereco: 'Sol Nascente',
-    data_hora: '', datas_pacote: []
-  });
+  const [form, setForm] = useState({ cliente_nome: '', whatsapp: '', pet_nome: '', endereco: 'Sol Nascente', data_hora: '', servico_tipo: 'Avulso' });
 
-  // Regra: Bloqueio do mês seguinte até o dia 20
-  const [dataMinima, setDataMinima] = useState('');
-  useEffect(() => {
-    const hoje = new Date();
-    const diaAtual = hoje.getDate();
-    if (diaAtual < 20) {
-      // Bloqueia escolha de datas para o próximo mês
-      const ultimoDiaMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).toISOString().split('T')[0];
-      setDataMinima(ultimoDiaMes);
-    }
-  }, []);
+  const inputStyle = { width: '100%', padding: '12px', margin: '10px 0', borderRadius: '8px', border: '1px solid #ccc', boxSizing: 'border-box' };
+  const cardStyle = { maxWidth: '450px', margin: '40px auto', padding: '30px', background: 'white', borderRadius: '15px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', fontFamily: 'Arial' };
+  const btnStyle = { width: '100%', padding: '15px', background: '#27ae60', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', marginTop: '10px' };
 
-  const proximaEtapa = () => {
-    if (etapa === 1 && (!form.cliente_nome || !form.whatsapp)) return alert("Preencha todos os campos");
-    if (etapa === 2 && !form.pet_nome) return alert("Dados do pet são obrigatórios");
-    setEtapa(etapa + 1);
-  };
-
-  const finalizarAgendamento = async () => {
-    setLoading(true);
-    const { error } = await supabase.from('agendamentos').insert([{
-      ...form,
-      is_pacote: form.servico_tipo !== 'Avulso',
-      status: 'pendente'
-    }]);
-
+  const finalizar = async () => {
+    const { error } = await supabase.from('agendamentos').insert([form]);
     if (!error) {
-      alert("AGENDADO! Em breve nossa equipe entrará em contato. Mande foto do seu pet para adiantar o atendimento!");
-      window.location.reload();
-    } else {
-      alert("Erro ao agendar. Verifique as vagas.");
-    }
-    setLoading(false);
+      setEtapa(5);
+    } else { alert("Erro ao salvar. Verifique os dados."); }
   };
 
   return (
-    <div style={{ maxWidth: '500px', margin: 'auto', padding: '20px', fontFamily: 'sans-serif' }}>
-      <h2 style={{ color: '#2c3e50' }}>Nilo Pet - Agendamento</h2>
-      
-      {/* ETAPA 1: DADOS DO CLIENTE */}
-      {etapa === 1 && (
-        <div>
-          <h3>Etapa 1: Seus Dados</h3>
-          <input type="text" placeholder="Seu Nome completo" onChange={e => setForm({...form, cliente_nome: e.target.value})} style={inputStyle} required />
-          <input type="tel" placeholder="WhatsApp (DDD + Número)" onChange={e => setForm({...form, whatsapp: e.target.value})} style={inputStyle} required />
-          <label>Quantidade de Pets (até 4):</label>
-          <select onChange={e => setForm({...form, pets_qtd: e.target.value})} style={inputStyle}>
-            {[1,2,3,4].map(n => <option key={n} value={n}>{n}</option>)}
-          </select>
-          <button onClick={proximaEtapa} style={btnStyle}>Próximo</button>
-        </div>
-      )}
+    <div style={{ background: '#f0f2f5', minHeight: '100vh', padding: '10px' }}>
+      <div style={cardStyle}>
+        <h2 style={{ textAlign: 'center', color: '#1a252f' }}>Nilo Pet 🐾</h2>
+        <p style={{ textAlign: 'center', color: '#7f8c8d' }}>Etapa {etapa} de 4</p>
 
-      {/* ETAPA 2: DADOS DO PET E SERVIÇO */}
-      {etapa === 2 && (
-        <div>
-          <h3>Etapa 2: Dados do Pet</h3>
-          <select onChange={e => setForm({...form, especie: e.target.value})} style={inputStyle}>
-            <option value="Cachorro">Cachorro</option>
-            <option value="Gato">Gato</option>
-          </select>
-          <input type="text" placeholder="Nome do Pet" onChange={e => setForm({...form, pet_nome: e.target.value})} style={inputStyle} required />
-          
-          <label>Escolha o Plano:</label>
-          <select onChange={e => setForm({...form, servico_tipo: e.target.value})} style={inputStyle}>
-            <option value="Avulso">Avulso</option>
-            <option value="Básico">Básico (2 datas)</option>
-            <option value="Básico + Tosa">Básico + Tosa (2 datas)</option>
-            <option value="Premium">Premium (4/5 semanas)</option>
-          </select>
+        {etapa === 1 && (
+          <div>
+            <input style={inputStyle} placeholder="Seu nome" onChange={e => setForm({...form, cliente_nome: e.target.value})} />
+            <input style={inputStyle} placeholder="WhatsApp" onChange={e => setForm({...form, whatsapp: e.target.value})} />
+            <button style={btnStyle} onClick={() => setEtapa(2)}>Próximo</button>
+          </div>
+        )}
 
-          <label>Serviço:</label>
-          <select onChange={e => setForm({...form, servico_detalhe: e.target.value})} style={inputStyle}>
-            <option value="Banho">Apenas Banho</option>
-            <option value="Banho + Tosa">Banho + Tosa Geral</option>
-            <option value="Banho + Tosa Higiênica">Banho + Tosa Higiênica</option>
-          </select>
-
-          {form.especie === 'Cachorro' && (
-            <select onChange={e => setForm({...form, porte: e.target.value})} style={inputStyle}>
-              <option value="Pequeno/Médio">Pequeno / Médio</option>
-              <option value="Grande Peludo">Grande Peludo</option>
-              <option value="Grande Pelo Curto">Grande Pelo Curto</option>
+        {etapa === 2 && (
+          <div>
+            <input style={inputStyle} placeholder="Nome do Pet" onChange={e => setForm({...form, pet_nome: e.target.value})} />
+            <select style={inputStyle} onChange={e => setForm({...form, servico_tipo: e.target.value})}>
+              <option value="Avulso">Avulso</option>
+              <option value="Pacote">Pacote</option>
             </select>
-          )}
+            <button style={btnStyle} onClick={() => setEtapa(3)}>Próximo</button>
+          </div>
+        )}
 
-          <textarea placeholder="Possui alergia? (Descreva)" onChange={e => setForm({...form, alergia: e.target.value})} style={inputStyle} />
-          <button onClick={proximaEtapa} style={btnStyle}>Próximo</button>
-        </div>
-      )}
+        {etapa === 3 && (
+          <div>
+            <input style={inputStyle} type="datetime-local" onChange={e => setForm({...form, data_hora: e.target.value})} />
+            <input style={inputStyle} value="Sol Nascente" disabled />
+            <button style={btnStyle} onClick={() => setEtapa(4)}>Revisar</button>
+          </div>
+        )}
 
-      {/* ETAPA 3: LOCAL E DATA */}
-      {etapa === 3 && (
-        <div>
-          <h3>Etapa 3: Local e Data</h3>
-          <label>Bairro:</label>
-          <input type="text" value="Sol Nascente" disabled style={{...inputStyle, background: '#eee'}} />
-          <input type="text" placeholder="Endereço Completo (Rua, Número, Quadra)" onChange={e => setForm({...form, endereco: 'Sol Nascente - ' + e.target.value})} style={inputStyle} required />
-          
-          <label>Escolha a Data e Horário:</label>
-          <input type="datetime-local" onChange={e => setForm({...form, data_hora: e.target.value})} style={inputStyle} required />
-          
-          {form.servico_tipo !== 'Avulso' && (
-            <p style={{fontSize: '12px', color: 'red'}}>* Para pacotes, as datas adicionais serão combinadas no WhatsApp.</p>
-          )}
-          <button onClick={proximaEtapa} style={btnStyle}>Revisar Agendamento</button>
-        </div>
-      )}
+        {etapa === 4 && (
+          <div>
+            <p><b>Cliente:</b> {form.cliente_nome}</p>
+            <p><b>Pet:</b> {form.pet_nome}</p>
+            <p><b>Data:</b> {form.data_hora}</p>
+            <button style={{...btnStyle, background: '#2c3e50'}} onClick={finalizar}>CONFIRMAR AGENDAMENTO</button>
+          </div>
+        )}
 
-      {/* ETAPA 4: REVISÃO FINAL */}
-      {etapa === 4 && (
-        <div style={{background: '#fff3cd', padding: '15px', borderRadius: '8px'}}>
-          <h3>Etapa 4: Conferir Dados</h3>
-          <p><b>Cliente:</b> {form.cliente_nome}</p>
-          <p><b>Pet:</b> {form.pet_nome} ({form.especie})</p>
-          <p><b>Serviço:</b> {form.servico_tipo} - {form.servico_detalhe}</p>
-          <p><b>Data:</b> {new Date(form.data_hora).toLocaleString()}</p>
-          <p><b>Endereço:</b> {form.endereco}</p>
-          <hr/>
-          <button onClick={finalizarAgendamento} disabled={loading} style={{...btnStyle, background: 'green'}}>
-            {loading ? 'Salvando...' : 'CONFIRMAR AGENDAMENTO'}
-          </button>
-          <button onClick={() => setEtapa(3)} style={{...btnStyle, background: '#ccc', color: '#000'}}>Voltar e Corrigir</button>
-        </div>
-      )}
+        {etapa === 5 && (
+          <div style={{ textAlign: 'center' }}>
+            <h3 style={{ color: '#27ae60' }}>✅ Agendado!</h3>
+            <p>Em breve nossa equipe entrará em contato.</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
-
-const inputStyle = { width: '100%', padding: '10px', margin: '8px 0', borderRadius: '5px', border: '1px solid #ccc' };
-const btnStyle = { width: '100%', padding: '12px', background: '#2c3e50', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', marginTop: '10px' };
