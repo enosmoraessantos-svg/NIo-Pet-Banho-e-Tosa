@@ -2,63 +2,52 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADM Nilo Pet - Premium</title>
+    <title>ADM Nilo Pet - OFICIAL</title>
     <script src="https://jsdelivr.net"></script>
     <script src="https://cloudflare.com"></script>
     <link href="https://googleapis.com" rel="stylesheet">
     <style>
-        :root { --azul-fundo: #e3f2fd; --azul-m: #2196f3; --azul-e: #1565c0; }
-        body { font-family: 'Poppins', sans-serif; background: var(--azul-fundo); margin: 0; display: flex; height: 100vh; overflow: hidden; }
-        
-        /* Sidebar */
-        .sidebar { width: 260px; background: var(--azul-e); color: white; padding: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 10; }
-        .sidebar button { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 12px; border-radius: 8px; cursor: pointer; text-align: left; transition: 0.2s; }
-        .sidebar button:hover { background: var(--azul-m); }
-        
-        /* Main Content */
-        .main { flex: 1; padding: 25px; overflow-y: auto; position: relative; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        
-        /* Tabelas */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
-        th { background: var(--azul-m); color: white; padding: 12px; text-align: left; position: sticky; top: 0; }
+        :root { --blue: #e3f2fd; --mid: #2196f3; --dark: #1565c0; }
+        body { font-family: 'Poppins', sans-serif; background: var(--blue); margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        .sidebar { width: 260px; background: var(--dark); color: white; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .sidebar button { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 12px; border-radius: 8px; cursor: pointer; text-align: left; }
+        .sidebar button:hover { background: var(--mid); }
+        .main { flex: 1; padding: 25px; overflow-y: auto; background: var(--blue); }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th { background: var(--mid); color: white; padding: 12px; text-align: left; }
         td { padding: 12px; border-bottom: 1px solid #eee; }
-        
-        /* Formulários */
-        .grid-vagas { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 8px; width: 100%; box-sizing: border-box; }
-        .btn-salvar { background: #4caf50; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%; margin-top: 10px; }
-        
-        /* Login */
-        #login-screen { position: fixed; inset: 0; background: var(--azul-fundo); display: flex; align-items: center; justify-content: center; z-index: 10000; }
+        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 8px; width: 100%; box-sizing: border-box; margin-bottom: 10px; }
+        .btn-save { background: #4caf50; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%; }
+        #login-screen { position: fixed; inset: 0; background: var(--blue); display: flex; align-items: center; justify-content: center; z-index: 10000; }
     </style>
 </head>
 <body>
 
 <div id="login-screen">
     <div style="background:white; padding:40px; border-radius:20px; text-align:center; width:320px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
-        <h2 style="color:var(--azul-e)">Nilo Pet ADM</h2>
+        <h2>Nilo Pet ADM</h2>
         <input type="text" id="user" placeholder="Usuário">
-        <input type="password" id="pass" placeholder="Senha" style="margin-top:10px">
-        <button onclick="login()" class="btn-salvar" style="margin-top:20px">ENTRAR</button>
+        <input type="password" id="pass" placeholder="Senha">
+        <button onclick="login()" class="btn-save">ENTRAR</button>
+        <p onclick="recuperar()" style="font-size: 0.8rem; color: var(--dark); cursor: pointer; margin-top: 10px;">Esqueci a senha</p>
     </div>
 </div>
 
 <div class="sidebar">
-    <h2 style="text-align:center; font-size:1.2rem">NILO PET</h2>
-    <button onclick="mudarAba('geral')">Agendamento Geral</button>
-    <button onclick="mudarAba('dia')">Agendamento do Dia</button>
-    <button onclick="mudarAba('pacotes')">Pacotes</button>
-    <button onclick="mudarAba('vagas')">Gestão de Vagas</button>
-    <button onclick="mudarAba('bloqueio')">Bloqueio/Desbloqueio</button>
-    <button onclick="exportarRelatorio()" style="background:#2e7d32; margin-top:10px">Exportar Relatório</button>
+    <h2>NILO PET</h2>
+    <button onclick="aba('geral')">Agendamento Geral</button>
+    <button onclick="aba('dia')">Agendamento do Dia</button>
+    <button onclick="aba('pacotes')">Pacotes</button>
+    <button onclick="aba('vagas')">Gestão de Vagas</button>
+    <button onclick="aba('bloqueio')">Bloqueio/Desbloqueio</button>
+    <button onclick="exportar()" style="background:#2e7d32; margin-top:10px">Exportar Excel</button>
     <button onclick="location.reload()" style="background:#c62828; margin-top:auto">Sair</button>
 </div>
 
 <div class="main">
-    <h2 id="titulo-pagina" style="color:var(--azul-e)">Bem-vindo</h2>
-    <div id="conteudo">Selecione uma opção ao lado para começar.</div>
+    <h2 id="title">Painel de Controle</h2>
+    <div id="root"></div>
 </div>
 
 <script>
@@ -69,124 +58,71 @@ const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
 // A inicialização deve ser assim:
 const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-    let dadosAgendamentos = [];
 
     function login() {
         if(document.getElementById('user').value === 'nilo pet banho e tosa' && 
            document.getElementById('pass').value === 'nilopetbanhoetosa2026') {
             document.getElementById('login-screen').style.display = 'none';
-            mudarAba('geral');
-        } else { alert("Login ou Senha incorretos!"); }
+            aba('geral');
+        } else { alert("Erro de login"); }
     }
 
-    async function mudarAba(aba) {
-        const container = document.getElementById('conteudo');
-        const titulo = document.getElementById('titulo-pagina');
-        titulo.innerText = "Carregando...";
-        container.innerHTML = `<div style="text-align:center; padding:50px;">Aguarde, processando dados...</div>`;
+    function recuperar() {
+        let p = prompt("Qual o nome do pet?");
+        if(p === "nilo pet banho e tosa") alert("Senha: nilopetbanhoetosa2026");
+    }
 
-        try {
-            if (['geral', 'dia', 'pacotes'].includes(aba)) {
-                const { data, error } = await supabase.from('agendamentos').select('*').order('data_agendamento', {ascending: true});
-                if(error) throw error;
-                dadosAgendamentos = data;
-                
-                let lista = data;
-                if(aba === 'dia') {
-                    const hoje = new Date().toLocaleDateString('en-CA');
-                    lista = data.filter(a => a.data_agendamento === hoje);
-                    titulo.innerText = "Agendamentos de Hoje";
-                } else if(aba === 'pacotes') {
-                    lista = data.filter(a => a.tipo_plano !== 'avulso');
-                    titulo.innerText = "Gestão de Pacotes";
-                } else {
-                    titulo.innerText = "Agendamento Geral";
-                }
-                renderTabela(lista);
-            } 
-            else if (aba === 'vagas') {
-                titulo.innerText = "Gestão de Vagas";
-                renderVagas();
-            } 
-            else if (aba === 'bloqueio') {
-                titulo.innerText = "Bloqueio e Desbloqueio";
-                renderBloqueio();
-            }
-        } catch (e) {
-            container.innerHTML = "Erro ao carregar: " + e.message;
+    async function aba(nome) {
+        const root = document.getElementById('root');
+        document.getElementById('title').innerText = nome.toUpperCase();
+        root.innerHTML = "Carregando...";
+
+        if(['geral', 'dia', 'pacotes'].includes(nome)) {
+            const { data } = await supabase.from('agendamentos').select('*').order('data_agendamento');
+            let lista = data;
+            if(nome === 'dia') lista = data.filter(d => d.data_agendamento === new Date().toISOString().split('T')[0]);
+            if(nome === 'pacotes') lista = data.filter(d => d.tipo_plano !== 'avulso');
+            
+            let h = `<table><thead><tr><th>Cliente/Pet</th><th>Serviço</th><th>Valor</th><th>Ação</th></tr></thead><tbody>`;
+            lista.forEach(i => {
+                h += `<tr>
+                    <td>${i.cliente_nome}<br><small>${i.pet_nome}</small></td>
+                    <td>${i.servico}<br><small>${i.data_agendamento}</small></td>
+                    <td>R$ ${i.valor_total || '0'}</td>
+                    <td><button onclick="del('${i.id}')" style="color:red;border:none;background:none;cursor:pointer">X</button></td>
+                </tr>`;
+            });
+            root.innerHTML = h + "</tbody></table>";
+        }
+
+        if(nome === 'vagas') {
+            root.innerHTML = `
+                <div class="card">
+                    <h3>Pequeno/Médio</h3>
+                    <input type="number" id="pm_b" placeholder="Banho">
+                    <input type="number" id="pm_t" placeholder="Banho+Tosa">
+                    <button class="btn-save" onclick="salvarVagas()">Salvar Todas as Vagas</button>
+                </div>`;
+        }
+
+        if(nome === 'bloqueio') {
+            root.innerHTML = `<div class="card">
+                <input type="date" id="b_data">
+                <input type="text" id="b_motivo" placeholder="Motivo">
+                <button class="btn-save" onclick="alert('Bloqueado')">Bloquear Dia</button>
+            </div>`;
         }
     }
 
-    function renderTabela(lista) {
-        let html = `<table><thead><tr><th>Cliente/Pet</th><th>Serviço/Data</th><th>Financeiro</th><th>Ação</th></tr></thead><tbody>`;
-        lista.forEach(item => {
-            html += `<tr>
-                <td><strong>${item.cliente_nome}</strong><br>${item.pet_nome}</td>
-                <td>${item.servico}<br>${item.data_agendamento} ${item.horario}</td>
-                <td>R$ ${item.valor_total || '0,00'}<br><small>${item.falou_com_cliente ? '✅ Falou' : '❌ Não falou'}</small></td>
-                <td><button onclick="excluir('${item.id}')" style="color:red; cursor:pointer; border:none; background:none;">Excluir</button></td>
-            </tr>`;
+    async function del(id) { if(confirm("Excluir?")) { await supabase.from('agendamentos').delete().eq('id', id); aba('geral'); } }
+
+    function exportar() {
+        supabase.from('agendamentos').select('*').then(({data}) => {
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "NiloPet");
+            XLSX.writeFile(wb, "Relatorio.xlsx");
         });
-        document.getElementById('conteudo').innerHTML = lista.length ? html + "</tbody></table>" : "Nenhum registro encontrado.";
-    }
-
-    function renderVagas() {
-        document.getElementById('conteudo').innerHTML = `
-            <div class="card">
-                <h3>Porte Pequeno / Médio</h3>
-                <div class="grid-vagas">
-                    <input type="number" id="v_p_banho" placeholder="Qtd Banho">
-                    <input type="number" id="v_p_tosa" placeholder="Qtd Banho+Tosa">
-                    <input type="number" id="v_p_higi" placeholder="Qtd Tosa Higiênica">
-                </div>
-                <h3 style="margin-top:20px">Grande Peludo</h3>
-                <div class="grid-vagas">
-                    <input type="number" id="v_gl_banho" placeholder="Qtd Banho">
-                    <input type="number" id="v_gl_tosa" placeholder="Qtd Banho+Tosa">
-                    <input type="number" id="v_gl_higi" placeholder="Qtd Tosa Higiênica">
-                </div>
-                <h3 style="margin-top:20px">Grande Pelo Curto</h3>
-                <div class="grid-vagas">
-                    <input type="number" id="v_gc_banho" placeholder="Qtd Banho">
-                    <input type="number" id="v_gc_tosa" placeholder="Qtd Banho+Tosa">
-                    <input type="number" id="v_gc_higi" placeholder="Qtd Tosa Higiênica">
-                </div>
-                <h3 style="margin-top:20px">Gatos</h3>
-                <div class="grid-vagas">
-                    <input type="number" id="v_gato_banho" placeholder="Qtd Banho Somente">
-                </div>
-                <button class="btn-salvar" onclick="alert('Vagas Salvas com Sucesso!')">SALVAR CONFIGURAÇÃO DE VAGAS</button>
-            </div>
-        `;
-    }
-
-    function renderBloqueio() {
-        document.getElementById('conteudo').innerHTML = `
-            <div class="card">
-                <h3>Bloquear Novo Horário/Dia</h3>
-                <input type="date" id="block_date">
-                <input type="text" id="block_motivo" placeholder="Motivo do bloqueio" style="margin-top:10px">
-                <div style="display:flex; gap:10px; margin-top:10px">
-                    <button class="btn-salvar" style="background:#e67e22" onclick="alert('Bloqueado!')">BLOQUEAR</button>
-                    <button class="btn-salvar" style="background:#3498db" onclick="alert('Todos os horários liberados!')">DESBLOQUEAR TUDO</button>
-                </div>
-            </div>
-        `;
-    }
-
-    async function excluir(id) {
-        if(confirm("Deseja excluir?")) {
-            await supabase.from('agendamentos').delete().eq('id', id);
-            mudarAba('geral');
-        }
-    }
-
-    function exportarRelatorio() {
-        if(dadosAgendamentos.length === 0) return alert("Não há dados para exportar.");
-        const ws = XLSX.utils.json_to_sheet(dadosAgendamentos);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Relatório Nilo Pet");
-        XLSX.writeFile(wb, "Relatorio_NiloPet.xlsx");
     }
 </script>
 </body>
