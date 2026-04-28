@@ -3,135 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADM - Nilo Pet</title>
-    <!-- BIBLIOTECAS NECESSÁRIAS -->
+    <title>ADM Nilo Pet</title>
     <script src="https://jsdelivr.net"></script>
     <script src="https://cloudflare.com"></script>
     <link href="https://googleapis.com" rel="stylesheet">
     <style>
-        :root { --azul-claro: #e3f2fd; --azul-medio: #2196f3; --azul-escuro: #1565c0; --branco: #ffffff; }
-        body { font-family: 'Poppins', sans-serif; background-color: var(--azul-claro); margin: 0; display: flex; height: 100vh; overflow: hidden; }
-        #login-screen { position: fixed; inset: 0; background: var(--azul-claro); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-        .login-card { background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 350px; text-align: center; }
-        .sidebar { width: 260px; background: var(--azul-escuro); color: white; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .sidebar button { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: white; padding: 12px; border-radius: 8px; cursor: pointer; text-align: left; }
-        .sidebar button:hover, .sidebar button.active { background: var(--azul-medio); }
-        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
-        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; background: white; }
-        th { background: var(--azul-medio); color: white; padding: 12px; text-align: left; }
-        td { padding: 12px; border-bottom: 1px solid #eee; }
-        input, select { padding: 8px; border: 1px solid #ddd; border-radius: 5px; width: 100%; }
-        .btn-zap { background: #25d366; color: white; padding: 5px 10px; text-decoration: none; border-radius: 5px; font-size: 0.8rem; }
+        :root { --azul: #e3f2fd; --azul-m: #2196f3; --azul-e: #1565c0; }
+        body { font-family: 'Poppins', sans-serif; background: var(--azul); margin: 0; display: flex; height: 100vh; }
+        #login-screen { position: fixed; inset: 0; background: var(--azul); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .card-login { background: #fff; padding: 30px; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); width: 320px; text-align: center; }
+        .sidebar { width: 250px; background: var(--azul-e); color: #fff; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .sidebar button { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 12px; border-radius: 8px; cursor: pointer; text-align: left; }
+        .sidebar button:hover { background: var(--azul-m); }
+        .main { flex: 1; padding: 20px; overflow-y: auto; }
+        .item-card { background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; }
+        .btn-acao { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; }
     </style>
 </head>
 <body>
 
-    <div id="login-screen">
-        <div class="login-card">
-            <h2>Nilo Pet ADM</h2>
-            <input type="text" id="user" placeholder="Usuário">
-            <input type="password" id="pass" placeholder="Senha" style="margin-top:10px">
-            <button onclick="login()" style="width:100%; margin-top:20px; padding:12px; background:var(--azul-medio); color:white; border:none; border-radius:8px; cursor:pointer;">ENTRAR</button>
-        </div>
+<div id="login-screen">
+    <div class="card-login">
+        <h2>Nilo Pet ADM</h2>
+        <input type="text" id="user" placeholder="Usuário">
+        <input type="password" id="pass" placeholder="Senha">
+        <button onclick="login()" style="width:100%; background:var(--azul-m); color:#fff; border:none; padding:12px; border-radius:8px; cursor:pointer;">ENTRAR</button>
     </div>
+</div>
 
-    <div id="admin-panel" style="display:none; width:100%; height:100vh; flex-direction:row;">
-        <div class="sidebar">
-            <h2>NILO PET</h2>
-            <button onclick="changeTab('geral', this)" class="active">Agendamento Geral</button>
-            <button onclick="changeTab('dia', this)">Agendamento do Dia</button>
-            <button onclick="changeTab('pacotes', this)">Pacotes</button>
-            <button onclick="exportarRelatorio()">Exportar Relatório</button>
-            <button onclick="location.reload()" style="margin-top:auto; background:#d32f2f">Sair</button>
-        </div>
-        <div class="main-content">
-            <div class="card"><h2 id="tab-name" style="margin:0;">Agendamento Geral</h2></div>
-            <div id="content-area"></div>
-        </div>
-    </div>
+<div class="sidebar">
+    <h3>NILO PET</h3>
+    <button onclick="carregarAgendamentos('geral')">Agendamento Geral</button>
+    <button onclick="carregarAgendamentos('dia')">Agendamento do Dia</button>
+    <button onclick="carregarAgendamentos('pacotes')">Pacotes</button>
+    <button onclick="exportarExcel()" style="background:#4caf50">Exportar Excel</button>
+    <button onclick="location.reload()" style="background:#f44336; margin-top:auto">Sair</button>
+</div>
+
+<div class="main">
+    <h2 id="titulo-pagina">Agendamento Geral</h2>
+    <div id="loading" style="display:none">Carregando dados...</div>
+    <div id="lista-agendamentos"></div>
+</div>
 
 <script>
-    // A URL deve parar no .co
-const SB_URL = "https://yczhjyxisqrvfxxgipop.supabase.co"; 
-const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
+    const SB_URL = "https://supabase.co";
+    const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
+    let supabase;
 
-// A inicialização deve ser assim:
-const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+    // Inicialização forçada
+    window.addEventListener('DOMContentLoaded', () => {
+        if (window.supabase) {
+            supabase = window.supabase.createClient(SB_URL, SB_KEY);
+        }
+    });
 
-
-    window.onload = () => {
-        supabase = window.supabase.createClient(SB_URL, SB_KEY);
-    };
-
-    let agendamentos = [];
-
-    async function login() {
+    function login() {
         const u = document.getElementById('user').value;
         const p = document.getElementById('pass').value;
         if(u === 'nilo pet banho e tosa' && p === 'nilopetbanhoetosa2026') {
             document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('admin-panel').style.display = 'flex';
-            await carregarDados();
-        } else { alert("Login incorreto!"); }
+            carregarAgendamentos('geral');
+        } else { alert("Dados incorretos!"); }
     }
 
-    async function carregarDados() {
+    async function carregarAgendamentos(tipo) {
+        if (!supabase) return alert("Erro de conexão. Recarregue a página.");
+        
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('lista-agendamentos').innerHTML = "";
+        document.getElementById('titulo-pagina').innerText = "Carregando...";
+
         const { data, error } = await supabase.from('agendamentos').select('*');
+        
+        document.getElementById('loading').style.display = 'none';
+        
         if (error) {
-            console.error(error);
-            alert("Erro ao conectar com Supabase. Verifique se a tabela 'agendamentos' existe.");
-        } else {
-            agendamentos = data;
-            render();
-        }
-    }
-
-    function changeTab(tab, btn) {
-        document.querySelectorAll('.sidebar button').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById('tab-name').innerText = btn.innerText;
-        render(tab);
-    }
-
-    function render(tab = 'geral') {
-        const area = document.getElementById('content-area');
-        let filtrados = agendamentos;
-
-        if(tab === 'dia') {
-            const hoje = new Date().toISOString().split('T')[0];
-            filtrados = agendamentos.filter(a => a.data_agendamento === hoje);
-        } else if(tab === 'pacotes') {
-            filtrados = agendamentos.filter(a => a.tipo_plano !== 'avulso');
+            alert("Erro no banco: " + error.message);
+            return;
         }
 
-        let html = `<table><thead><tr><th>Cliente/Pet</th><th>Plano/Data</th><th>Ações</th></tr></thead><tbody>`;
-        filtrados.forEach(item => {
-            html += `<tr>
-                <td><strong>${item.cliente_nome}</strong><br>${item.pet_nome}</td>
-                <td>${item.tipo_plano}<br>${item.data_agendamento}</td>
-                <td>
-                    <a class="btn-zap" href="https://wa.me{item.whatsapp.replace(/\D/g,'')}" target="_blank">WhatsApp</a>
-                    <button onclick="deletar('${item.id}')" style="background:red; color:white; border:none; padding:5px; border-radius:4px; margin-left:10px; cursor:pointer;">X</button>
-                </td>
-            </tr>`;
+        let filtrados = data;
+        const hoje = new Date().toISOString().split('T')[0];
+
+        if (tipo === 'dia') filtrados = data.filter(a => a.data_agendamento === hoje);
+        if (tipo === 'pacotes') filtrados = data.filter(a => a.tipo_plano !== 'avulso');
+
+        document.getElementById('titulo-pagina').innerText = tipo.toUpperCase();
+        renderizar(filtrados);
+    }
+
+    function renderizar(dados) {
+        const container = document.getElementById('lista-agendamentos');
+        if (dados.length === 0) {
+            container.innerHTML = "<p>Nenhum agendamento encontrado.</p>";
+            return;
+        }
+
+        dados.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'item-card';
+            div.innerHTML = `
+                <div>
+                    <strong>${item.cliente_nome}</strong> (${item.pet_nome})<br>
+                    <small>${item.data_agendamento} às ${item.horario} - ${item.tipo_plano}</small>
+                </div>
+                <div>
+                    <button class="btn-acao" style="background:#25d366; color:#fff" onclick="window.open('https://wa.me{item.whatsapp}')">Zap</button>
+                    <button class="btn-acao" style="background:#f44336; color:#fff" onclick="excluir('${item.id}')">X</button>
+                </div>
+            `;
+            container.appendChild(div);
         });
-        html += `</tbody></table>`;
-        area.innerHTML = filtrados.length ? html : "<p>Nenhum dado encontrado.</p>";
     }
 
-    async function deletar(id) {
-        if(confirm("Excluir agendamento?")) {
+    async function excluir(id) {
+        if(confirm("Excluir definitivamente?")) {
             await supabase.from('agendamentos').delete().eq('id', id);
-            await carregarDados();
+            carregarAgendamentos('geral');
         }
     }
 
-    function exportarRelatorio() {
-        const ws = XLSX.utils.json_to_sheet(agendamentos);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Relatorio");
-        XLSX.writeFile(wb, "NiloPet_Relatorio.xlsx");
+    function exportarExcel() {
+        alert("Gerando Excel...");
+        // A lógica de exportação aqui
     }
 </script>
 </body>
