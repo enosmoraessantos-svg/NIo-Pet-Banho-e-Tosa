@@ -2,71 +2,183 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>ADM Nilo Pet</title>
-    <script src="https://jsdelivr.net"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADM - Nilo Pet</title>
+    <script src="https://tailwindcss.com"></script>
     <style>
-        body { font-family: sans-serif; background: #e0f2fe; margin: 0; display: flex; }
-        #login { position: fixed; inset: 0; background: #e0f2fe; display: flex; align-items: center; justify-content: center; z-index: 100; }
-        nav { width: 220px; background: #1e293b; color: white; height: 100vh; padding: 20px; }
-        main { flex: 1; padding: 20px; background: white; overflow-y: auto; }
-        button { cursor: pointer; padding: 10px; margin: 5px 0; width: 100%; border-radius: 5px; border: none; background: #0284c7; color: white; font-weight: bold; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background: #0284c7; color: white; }
+        body { background-color: #f8fafc; font-family: sans-serif; overflow-x: hidden; }
+        .sidebar { width: 260px; height: 100vh; position: fixed; left: 0; top: 0; background: #1e293b; color: white; transition: 0.3s; z-index: 1000; }
+        .content { margin-left: 260px; padding: 20px; transition: 0.3s; }
+        .menu-item { padding: 15px 20px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 600; border-left: 4px solid transparent; }
+        .menu-item:hover { background: #334155; }
+        .menu-item.active { background: #334155; border-left-color: #ef4444; color: #ef4444; }
+        .card-pet { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 15px; }
+        .hidden { display: none; }
+        .input-edit { background: transparent; border: 1px solid transparent; transition: 0.2s; width: 100%; }
+        .input-edit:hover, .input-edit:focus { background: #f1f5f9; border-color: #cbd5e1; border-radius: 4px; padding: 2px; }
+        @media (max-width: 768px) { .sidebar { left: -260px; } .content { margin-left: 0; } .sidebar.open { left: 0; } }
     </style>
 </head>
 <body>
 
-<div id="login">
-    <div style="background:white; padding:30px; border-radius:10px; width:280px shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
-        <h2 style="text-align:center">Nilo Pet Login</h2>
-        <input type="text" id="user" placeholder="Usuário" style="width:100%; margin-bottom:10px; padding:8px;">
-        <input type="password" id="pass" placeholder="Senha" style="width:100%; margin-bottom:10px; padding:8px;">
-        <button onclick="logar()">Entrar</button>
+    <div id="loginArea" class="flex items-center justify-center min-h-screen bg-slate-100">
+        <div class="w-full max-w-md p-8 bg-white rounded-2xl shadow-2xl text-center">
+            <h1 class="text-3xl font-black text-slate-800 uppercase italic">Nilo Pet</h1>
+            <input type="password" id="senhaAdm" placeholder="Senha de acesso" class="w-full p-4 border-2 rounded-xl mb-4 text-center">
+            <button onclick="logar()" class="w-full bg-red-600 text-white font-black p-4 rounded-xl">ENTRAR</button>
+        </div>
     </div>
-</div>
 
-<nav>
-    <h2>Nilo Pet</h2>
-    <button onclick="listar()">Agendamento Geral</button>
-    <button onclick="alert('Funcionalidade em breve')" style="background:#64748b">Vagas</button>
-    <button onclick="location.reload()" style="background:#ef4444">Sair</button>
-</nav>
+    <div id="painelArea" class="hidden">
+        <div class="sidebar">
+            <div class="p-6 border-b border-slate-700"><h2 class="font-black text-xl uppercase italic">Nilo Pet ADM</h2></div>
+            <nav class="mt-4">
+                <div onclick="mudarFiltro('geral', this)" class="menu-item active">📊 Agendamentos Geral</div>
+                <div onclick="mudarFiltro('dia', this)" class="menu-item">📅 Agendamentos do Dia</div>
+                <div onclick="mudarFiltro('pacotes', this)" class="menu-item">📦 Controle de Pacotes</div>
+                <div onclick="mudarFiltro('vagas', this)" class="menu-item text-orange-400">🔒 Gestão de Vagas</div>
+                <div onclick="location.reload()" class="menu-item text-slate-400 mt-2">🚪 Sair</div>
+            </nav>
+        </div>
 
-<main>
-    <h2 id="status">Selecione uma opção</h2>
-    <div id="tabela"></div>
-</main>
+        <div class="content">
+            <header class="flex justify-between items-center mb-8">
+                <h2 id="tituloPagina" class="text-2xl font-black text-slate-800 uppercase italic">Agendamentos Geral</h2>
+                <div class="flex gap-2">
+                    <button onclick="novoAgendamento()" class="bg-green-600 text-white p-3 rounded-xl shadow-sm font-bold text-xs uppercase">+ NOVO</button>
+                    <button onclick="carregarDados()" class="bg-white border p-3 rounded-xl shadow-sm font-bold text-xs uppercase italic">Sincronizar ↻</button>
+                </div>
+            </header>
+            <div id="containerCards" class="grid grid-cols-1 gap-4"></div>
+        </div>
+    </div>
 
-<script>
-    const client = supabase.createClient("https://supabase.co", "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm");
-
-    function logar() {
-        if(user.value === 'nilo pet' && pass.value === 'nilopet2026') document.getElementById('login').style.display = 'none';
-        else alert("Senha errada!");
-    }
-
-    async function listar() {
-        status.innerText = "Carregando...";
-        const { data, error } = await client.from('agendamentos').select('*');
-        if(error) return alert("Erro no banco!");
+    <script>
+        const SB_URL = "https://supabase.co";
+        const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
+        const headers = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json", "Prefer": "return=minimal" };
         
-        let html = `<table><tr><th>Cliente</th><th>Pet</th><th>Serviço</th><th>Ações</th></tr>`;
-        data.forEach(i => {
-            html += `<tr><td>${i.cliente_nome}</td><td>${i.pet_nome}</td><td>${i.tipo_servico}</td>
-            <td><button onclick="excluir('${i.id}')" style="background:red; padding:4px;">X</button></td></tr>`;
-        });
-        document.getElementById('tabela').innerHTML = html + `</table>`;
-        status.innerText = "Agendamento Geral";
-    }
+        let todosDados = [];
+        let filtroAtual = 'geral';
 
-    async function excluir(id) {
-        if(confirm("Excluir agendamento?")) {
-            await client.from('agendamentos').delete().eq('id', id);
-            listar();
+        function logar() {
+            const senhaInput = document.getElementById('senhaAdm').value;
+            if(senhaInput === 'nilopet2024') {
+                document.getElementById('loginArea').classList.add('hidden');
+                document.getElementById('painelArea').classList.remove('hidden');
+                carregarDados();
+            } else { 
+                alert("Senha incorreta!"); 
+            }
         }
-    }
-</script>
+
+        async function carregarDados() {
+            const container = document.getElementById('containerCards');
+            container.innerHTML = "Carregando...";
+            try {
+                const endpoint = filtroAtual === 'vagas' ? "/configuracoes_agenda" : "/agendamentos";
+                const res = await fetch(`${SB_URL}${endpoint}?select=*`, { headers });
+                todosDados = await res.json();
+                renderizar();
+            } catch (e) { 
+                alert("Erro ao carregar banco!"); 
+            }
+        }
+
+        async function updateDB(id, campo, valor) {
+            await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: "PATCH", headers, body: JSON.stringify({ [campo]: valor }) });
+        }
+
+        async function upVaga(id, campo, valor) {
+            const v = (campo === 'bloqueado') ? valor : (parseInt(valor) || 0);
+            await fetch(`${SB_URL}/configuracoes_agenda?id=eq.${id}`, { method: "PATCH", headers, body: JSON.stringify({ [campo]: v }) });
+        }
+
+        async function novoAgendamento() {
+            const nome = prompt("Nome do Cliente:");
+            if(!nome) return;
+            await fetch(`${SB_URL}/agendamentos`, { method: "POST", headers, body: JSON.stringify({ cliente: nome.toUpperCase(), tipo_servico: 'avulso', data: new Date().toISOString().split('T')[0] }) });
+            carregarDados();
+        }
+
+        async function excluirRegistro(id) {
+            if(confirm("Excluir registro?")) {
+                await fetch(`${SB_URL}/agendamentos?id=eq.${id}`, { method: "DELETE", headers });
+                carregarDados();
+            }
+        }
+
+        function mudarFiltro(tipo, el) {
+            filtroAtual = tipo;
+            document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('tituloPagina').innerText = el.innerText;
+            carregarDados();
+        }
+
+        function renderizar() {
+            const container = document.getElementById('containerCards');
+            if(filtroAtual === 'vagas' && typeof renderVagas === 'function') return renderVagas(container);
+
+            const hoje = new Date().toISOString().split('T')[0];
+            let filtrados = [...todosDados];
+
+            if(filtroAtual === 'dia') {
+                filtrados = todosDados.filter(i => i.data === hoje);
+            } else if (filtroAtual === 'pacotes') {
+                filtrados = todosDados.filter(i => i.tipo_servico && i.tipo_servico !== 'avulso');
+                filtrados.sort((a, b) => (a.cliente || '').localeCompare(b.cliente || ''));
+            } else {
+                filtrados.sort((a, b) => new Date(b.data) - new Date(a.data));
+            }
+
+            container.innerHTML = filtrados.map(item => {
+                const total = (parseFloat(item.valor_servico) || 0) + (parseFloat(item.taxa_leva_tras) || 0);
+                const ehPacote = item.tipo_servico && item.tipo_servico !== 'avulso';
+
+                return `
+                <div class="card-pet shadow-sm border-l-4 ${ehPacote ? 'border-purple-600' : 'border-red-600'}">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <input type="text" value="${item.cliente || ''}" onchange="updateDB('${item.id}', 'cliente', this.value)" class="input-edit font-black text-lg text-slate-800 uppercase italic">
+                            <input type="text" value="${item.whatsapp || ''}" onchange="updateDB('${item.id}', 'whatsapp', this.value)" class="input-edit text-[10px] text-slate-500 font-bold" placeholder="WHATSAPP">
+                            <input type="text" value="${item.rua || ''}" onchange="updateDB('${item.id}', 'rua', this.value)" class="input-edit text-[10px] text-slate-500 font-bold uppercase" placeholder="ENDEREÇO">
+                        </div>
+                        <div>
+                            <input type="date" value="${item.data || ''}" onchange="updateDB('${item.id}', 'data', this.value)" class="input-edit text-xs font-bold">
+                            <select onchange="updateDB('${item.id}', 'tipo_servico', this.value)" class="input-edit text-[10px] font-black uppercase italic mt-1">
+                                <option value="avulso" ${item.tipo_servico === 'avulso' ? 'selected' : ''}>Avulso</option>
+                                <option value="pacote_basico" ${item.tipo_servico === 'pacote_basico' ? 'selected' : ''}>Pacote Básico</option>
+                                <option value="pacote_tosa" ${item.tipo_servico === 'pacote_tosa' ? 'selected' : ''}>Básico c/ Tosa</option>
+                                <option value="pacote_premium" ${item.tipo_servico === 'pacote_premium' ? 'selected' : ''}>Pacote Premium</option>
+                            </select>
+                            ${ehPacote ? `
+                                <div class="mt-2 p-2 bg-purple-50 rounded border border-purple-100">
+                                    <input type="date" value="${item.vencimento_pacote || ''}" onchange="updateDB('${item.id}', 'vencimento_pacote', this.value)" class="text-[9px] w-full bg-transparent">
+                                    <input type="number" value="${item.valor_real_pago || 0}" onchange="updateDB('${item.id}', 'valor_real_pago', this.value)" class="text-[9px] font-black w-full bg-transparent" placeholder="VALOR PAGO">
+                                </div>` : ''}
+                        </div>
+                        <div class="bg-slate-50 p-2 rounded border border-slate-200">
+                            <div class="grid grid-cols-2 gap-1 text-[9px] font-black uppercase">
+                                <span>Valor Serv:</span> <input type="number" value="${item.valor_servico || 0}" onchange="updateDB('${item.id}', 'valor_servico', this.value)" class="bg-white border rounded">
+                                <span>Leva/Trás:</span> <input type="number" value="${item.taxa_leva_tras || 0}" onchange="updateDB('${item.id}', 'taxa_leva_tras', this.value)" class="bg-white border rounded text-orange-600">
+                                <span class="text-red-600 mt-1">Total: R$ ${total.toFixed(2)}</span>
+                                <input type="number" placeholder="Desconto" value="${item.total_com_desconto || 0}" onchange="updateDB('${item.id}', 'total_com_desconto', this.value)" class="bg-white border rounded px-1">
+                            </div>
+                            <select onchange="updateDB('${item.id}', 'forma_pagamento', this.value)" class="w-full text-[9px] font-black uppercase mt-2 p-1 border rounded bg-white font-bold">
+                                <option value="">Pagamento...</option>
+                                <option value="pix" ${item.forma_pagamento === 'pix' ? 'selected' : ''}>PIX</option>
+                                <option value="credito" ${item.forma_pagamento === 'credito' ? 'selected' : ''}>Cartão Crédito</option>
+                                <option value="debito" ${item.forma_pagamento === 'debito' ? 'selected' : ''}>Cartão Débito</option>
+                                <option value="dinheiro" ${item.forma_pagamento === 'dinheiro' ? 'selected' : ''}>Dinheiro</option>
+                                <option value="qrcode" ${item.forma_pagamento === 'qrcode' ? 'selected' : ''}>QR Code PIX</option>
+                            </select>
+                            <button onclick="excluirRegistro('${item.id}')" class="w-full mt-2 text-red-500 text-[8px] font-bold uppercase">Excluir</button>
+                        </div>
+                    </div>
+                </div>`).join('');
+        }
+    </script>
+    <script src="regras-adm.js"></script>
 </body>
 </html>
-
