@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Agendamento - Nilo Pet</title>
+    <script src="https://jsdelivr.net"></script>
+    <style>
+        body { background: #e0f2fe; font-family: sans-serif; display: flex; justify-content: center; padding: 20px; }
+        .box { background: white; padding: 20px; border-radius: 12px; width: 100%; max-width: 450px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .step { display: none; }
+        .active { display: block; }
+        input, select, button { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        button { background: #0284c7; color: white; border: none; font-weight: bold; cursor: pointer; }
+        .readonly { background: #f1f5f9; color: #64748b; }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h2 style="text-align:center; color:#0284c7">Nilo Pet Agendamento</h2>
+    
+    <form id="fAgendar" onsubmit="enviar(event)">
+        <!-- ETAPA 1 -->
+        <div id="s1" class="step active">
+            <h3>Etapa 1: Dados do Cliente</h3>
+            <input type="text" id="cliente" placeholder="Seu Nome" required>
+            <input type="number" id="pets" placeholder="Quantos pets? (Máx 4)" min="1" max="4" required>
+            <button type="button" onclick="go(2)">Próximo</button>
+        </div>
+
+        <!-- ETAPA 2 -->
+        <div id="s2" class="step">
+            <h3>Etapa 2: Pacote e Pet</h3>
+            <select id="pacote" required>
+                <option value="Avulso">Avulso</option>
+                <option value="Básico">Básico (2 datas)</option>
+                <option value="Básico + Tosa">Básico + Tosa (2 datas)</option>
+                <option value="Premium">Premium (4 datas)</option>
+            </select>
+            <input type="text" id="pet_nome" placeholder="Nome do Pet" required>
+            <select id="porte" required>
+                <option value="Pequeno">Pequeno/Médio</option>
+                <option value="Grande">Grande</option>
+                <option value="Gato">Gato</option>
+            </select>
+            <button type="button" onclick="go(3)">Próximo</button>
+        </div>
+
+        <!-- ETAPA 3 -->
+        <div id="s3" class="step">
+            <h3>Etapa 3: Endereço</h3>
+            <input type="tel" id="zap" placeholder="Seu WhatsApp" required>
+            <input type="text" value="Bairro Sol Nascente" class="readonly" readonly>
+            <input type="text" id="end" placeholder="Rua e Número" required>
+            <button type="button" onclick="go(4)">Próximo</button>
+        </div>
+
+        <!-- ETAPA 4 -->
+        <div id="s4" class="step">
+            <h3>Etapa 4: Finalizar</h3>
+            <div id="datas-container">
+                <input type="datetime-local" id="data1" required>
+            </div>
+            <button type="submit">Confirmar Agendamento</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    const SB_URL = "https://yczhjyxisqrvfxxgipop.supabase.co"; 
+    const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
+    const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+
+    function go(n) {
+        document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+        document.getElementById('s' + n).classList.add('active');
+    }
+
+    async function enviar(e) {
+        e.preventDefault();
+        const { error } = await supabaseClient.from('agendamentos').insert([{
+            cliente_nome: cliente.value,
+            pet_nome: pet_nome.value,
+            tipo_servico: pacote.value,
+            endereco: "Sol Nascente, " + end.value
+        }]);
+
+        if(!error) {
+            alert("AGENDADO! Mande uma foto do pet no WhatsApp para adiantar.");
+            location.reload();
+        }
+    }
+</script>
+</body>
+</html>
