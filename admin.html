@@ -69,6 +69,23 @@ export default function DashboardAdmin() {
         const { data, error } = await query.order('data_hora', { ascending: true });
         if (!error) setDados(data);
     };
+// ... dentro do seu componente DashboardAdmin
+const handleCancelar = async (item) => {
+  if (item.is_pacote) {
+    alert("CARO CLIENTE: Se você tem pacote ativo e deseja mudar a data, entre em contato com nossos atendentes.");
+  } else {
+    if(confirm(`Deseja cancelar o agendamento de ${item.pet_nome}?`)) {
+       const { error } = await supabase.from('agendamentos').delete().eq('id', item.id);
+       if(!error) {
+         alert("Agendamento cancelado e removido!");
+         buscarDados(); // Atualiza a lista na tela
+       }
+    }
+  }
+}
+
+// No seu botão da tabela, mude para:
+<button onClick={() => handleCancelar(item)} style={{color:'red'}}>Cancelar/Excluir</button>
 
     // FUNÇÕES DE WHATSAPP
     const enviarWhats = (item, tipo) => {
