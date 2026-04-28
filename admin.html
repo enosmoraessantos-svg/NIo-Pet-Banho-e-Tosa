@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>ADM - Nilo Pet</title>
+    <script src="https://jsdelivr.net"></script>
+    <script src="https://cloudflare.com"></script>
+    <style>
+        :root { --blue: #0284c7; --light: #e0f2fe; --dark: #1e293b; }
+        body { font-family: sans-serif; margin: 0; background: var(--light); display: flex; height: 100vh; }
+        #login-box { position: fixed; inset: 0; background: var(--light); display: flex; align-items: center; justify-content: center; z-index: 999; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 300px; }
+        nav { width: 250px; background: var(--dark); color: white; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        main { flex: 1; padding: 20px; overflow-y: auto; background: white; }
+        input, select, button { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 6px; }
+        button { background: var(--blue); color: white; border: none; cursor: pointer; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #eee; padding: 12px; text-align: left; font-size: 14px; }
+        th { background: var(--blue); color: white; }
+    </style>
+</head>
+<body>
+
+<div id="login-box">
+    <div class="card">
+        <h2 style="text-align:center; color:var(--blue)">Nilo Pet ADM</h2>
+        <input type="text" id="u" placeholder="Usuário">
+        <input type="password" id="p" placeholder="Senha">
+        <button onclick="login()">Entrar</button>
+        <p onclick="forgot()" style="font-size:12px; cursor:pointer; text-align:center; color:gray">Esqueci a senha</p>
+    </div>
+</div>
+
+<nav id="menu" style="display:none">
+    <h3>Nilo Pet Shop</h3>
+    <button onclick="tab('geral')">Agendamento Geral</button>
+    <button onclick="tab('pacotes')">Pacotes</button>
+    <button onclick="tab('vagas')">Gestão de Vagas</button>
+    <button onclick="exportar()" style="background:#10b981">Exportar Excel</button>
+    <button onclick="location.reload()" style="background:#ef4444; margin-top:auto">Sair</button>
+</nav>
+
+<main id="app" style="display:none">
+    <h2 id="title">Agendamento Geral</h2>
+    <div id="content"></div>
+</main>
+
+<script>
+    const SB_URL = "https://yczhjyxisqrvfxxgipop.supabase.co"; 
+    const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
+    const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+
+    function login() {
+        if(u.value === 'nilo pet' && p.value === 'nilopet2026') {
+            document.getElementById('login-box').style.display = 'none';
+            document.getElementById('menu').style.display = 'flex';
+            document.getElementById('app').style.display = 'block';
+            tab('geral');
+        } else { alert("Incorreto"); }
+    }
+
+    function forgot() {
+        let resp = prompt("Qual o nome do pet?");
+        if(resp && resp.toLowerCase() === 'nilo') alert("Senha: nilopet2026");
+    }
+
+    async function tab(name) {
+        title.innerText = name.toUpperCase();
+        const content = document.getElementById('content');
+        content.innerHTML = "Carregando...";
+
+        if(name === 'geral') {
+            const { data } = await supabaseClient.from('agendamentos').select('*');
+            let html = `<table><tr><th>Cliente/Pet</th><th>Serviço</th><th>Ações</th></tr>`;
+            data?.forEach(i => {
+                html += `<tr><td>${i.cliente_nome}<br><b>${i.pet_nome}</b></td><td>${i.tipo_servico}</td>
+                <td><button onclick="del('${i.id}')" style="background:red">Excluir</button></td></tr>`;
+            });
+            content.innerHTML = html + `</table>`;
+        }
+    }
+
+    async function del(id) {
+        if(confirm("Excluir?")) {
+            await supabaseClient.from('agendamentos').delete().eq('id', id);
+            tab('geral');
+        }
+    }
+
+    async function exportar() {
+        const { data } = await supabaseClient.from('agendamentos').select('*');
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Dados");
+        XLSX.writeFile(wb, "Relatorio_NiloPet.xlsx");
+    }
+</script>
+</body>
+</html>
