@@ -89,7 +89,12 @@
     const qtd = document.getElementById('c_qtd_pets').value;
     const whats = document.getElementById('c_whatsapp').value.trim();
     const end = document.getElementById('c_endereco').value.trim();
-    if (!nome || !qtd || !whats || !end) { alert('Preencha todos os campos'); return; }
+    
+    if (!nome || !qtd || !whats || !end) {
+      alert('Preencha todos os campos');
+      return;
+    }
+    
     document.getElementById('etapa1').style.display = 'none';
     document.getElementById('etapa2').style.display = 'block';
     document.getElementById('etapaAtual').innerText = '2';
@@ -97,7 +102,11 @@
 
   function irEtapa3() {
     const pacote = document.getElementById('c_pacote').value;
-    if (!pacote) { alert('Selecione um pacote'); return; }
+    if (!pacote) {
+      alert('Selecione um pacote');
+      return;
+    }
+    
     const qtd = parseInt(document.getElementById('c_qtd_pets').value);
     let html = '';
     for(let i = 0; i < qtd; i++) {
@@ -118,6 +127,7 @@
       </div>`;
     }
     document.getElementById('petsContainer').innerHTML = html;
+    
     document.getElementById('etapa2').style.display = 'none';
     document.getElementById('etapa3').style.display = 'block';
     document.getElementById('etapaAtual').innerText = '3';
@@ -125,13 +135,20 @@
 
   function irEtapa4() {
     let ok = true;
-    document.querySelectorAll('#petsContainer select, #petsContainer input').forEach(i => { if(!i.value) ok = false; });
-    if(!ok) { alert('Preencha todos os dados dos pets'); return; }
+    document.querySelectorAll('#petsContainer select, #petsContainer input').forEach(i => { 
+      if(!i.value) ok = false; 
+    });
+    if(!ok) {
+      alert('Preencha todos os dados dos pets');
+      return;
+    }
+    
     document.getElementById('resumo').innerHTML = `
       <p><b>Cliente:</b> ${document.getElementById('c_nome').value}</p>
       <p><b>WhatsApp:</b> ${document.getElementById('c_whatsapp').value}</p>
       <p><b>Pacote:</b> ${document.getElementById('c_pacote').value}</p>
     `;
+    
     document.getElementById('etapa3').style.display = 'none';
     document.getElementById('etapa4').style.display = 'block';
     document.getElementById('etapaAtual').innerText = '4';
@@ -145,7 +162,7 @@
         nome: div.querySelector('.pet_nome').value,
         porte: div.querySelector('.pet_porte').value,
         servico: div.querySelector('.pet_servico').value,
-        alergia: "Nenhuma"
+        alergia: "Nenhuma" // Adicionado campo esperado pelo banco
       });
     });
 
@@ -157,7 +174,7 @@
       pacote: document.getElementById('c_pacote').value,
       pets: pets,
       status: 'confirmado',
-      datas_agendadas: []
+      datas_agendadas: [] // Adicionado campo esperado pelo banco
     });
     
     if(!error) {
