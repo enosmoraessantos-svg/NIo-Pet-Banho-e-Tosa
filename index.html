@@ -72,11 +72,10 @@
   </div>
 
 <script>
-  // CORRIGIDO: não usa mais 'supabase' como nome da variável
-  const client = window.supabase.createClient(
-    "https://yczhjyxisqrvfxxgipop.supabase.co",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljemhqeXhpc3FydmZ4eGdpcG9wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcxNDAzMTUsImV4cCI6MjA2MjcxNjMxNX0.qzZrTz1gP8nMfEaGx4Rm5m5v5n5v5n5v5n5v"
-  );
+  const SUPABASE_URL = "https://yczhjyxisqrvfxxgipop.supabase.co";
+  const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
+  
+  const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   function irEtapa1() {
     document.getElementById('etapa1').style.display = 'block';
@@ -181,7 +180,7 @@
       document.getElementById('etapa4').style.display = 'none';
       document.getElementById('sucesso').style.display = 'block';
     } else { 
-      alert('Erro: ' + error.message);
+      alert('Erro ao salvar: ' + error.message);
     }
   }
 </script>
