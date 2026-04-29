@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nilo Pet Teste</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-blue-50 p-4">
+  <div class="max-w-xl mx-auto bg-white p-6 rounded-xl">
+    <h1 class="text-2xl font-bold mb-4">Teste Nilo Pet</h1>
+    
+    <div id="p1">
+      <h3 class="font-bold mb-2">Etapa 1</h3>
+      <input id="nome" placeholder="Nome" class="w-full border p-2 mb-2 rounded">
+      <input id="whats" placeholder="WhatsApp" class="w-full border p-2 mb-2 rounded">
+      <button onclick="proximo()" class="w-full bg-blue-600 text-white p-2 rounded">Próximo</button>
+    </div>
+
+    <div id="p2" style="display:none;">
+      <h3 class="font-bold mb-2">Etapa 2 - FUNCIONOU!</h3>
+      <p>Se você tá vendo isso, o botão funcionou.</p>
+      <button onclick="voltar()" class="w-full bg-gray-300 p-2 rounded mt-2">Voltar</button>
+    </div>
+  </div>
+
+<script>
+  function proximo() {
+    const nome = document.getElementById('nome').value;
+    const whats = document.getElementById('whats').value;
+    
+    if (!nome || !whats) {
+      alert('Preenche nome e whatsapp');
+      return;
+    }
+    
+    document.getElementById('p1').style.display = 'none';
+    document.getElementById('p2').style.display = 'block';
+  }
+  
+  function voltar() {
+    document.getElementById('p1').style.display = 'block';
+    document.getElementById('p2').style.display = 'none';
+  }
+</script>
+</body>
+</html>
