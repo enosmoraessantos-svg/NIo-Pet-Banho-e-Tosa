@@ -72,10 +72,10 @@
   </div>
 
 <script>
-  // Declara UMA vez só
-  const db = window.supabase.createClient(
+  // CORRIGIDO: não usa mais 'supabase' como nome da variável
+  const client = window.supabase.createClient(
     "https://yczhjyxisqrvfxxgipop.supabase.co",
-    "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm"
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljemhqeXhpc3FydmZ4eGdpcG9wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcxNDAzMTUsImV4cCI6MjA2MjcxNjMxNX0.qzZrTz1gP8nMfEaGx4Rm5m5v5n5v5n5v5n5v"
   );
 
   function irEtapa1() {
@@ -167,7 +167,7 @@
       });
     });
 
-    const { error } = await db.from('agendamentos').insert({
+    const { error } = await client.from('agendamentos').insert({
       cliente: document.getElementById('c_nome').value,
       whatsapp: document.getElementById('c_whatsapp').value,
       endereco: document.getElementById('c_endereco').value + ', Sol Nascente',
