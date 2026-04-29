@@ -4,17 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Nilo Pet - Agendamento</title>
-  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
-  <script>
-    tailwind.config = {
-      corePlugins: { preflight: false }
-    }
-  </script>
-  <style>
-    /* Reset básico já que desativei o preflight */
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: system-ui, -apple-system, sans-serif; }
-  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-blue-50 min-h-screen">
   <div class="max-w-3xl mx-auto p-4">
@@ -37,12 +27,12 @@
         <input id="c_whatsapp" placeholder="WhatsApp (11) 99999-9999" class="w-full border p-3 rounded mb-3">
         <input id="c_endereco" placeholder="Endereço completo" class="w-full border p-3 rounded mb-3">
         <input value="Bairro: Sol Nascente" class="w-full border p-3 rounded mb-4 bg-gray-100" disabled>
-        <button id="btnEtapa1" class="w-full bg-blue-600 text-white p-3 rounded font-semibold hover:bg-blue-700">Próximo</button>
+        <button onclick="proximaEtapa(2)" class="w-full bg-blue-600 text-white p-3 rounded font-semibold hover:bg-blue-700">Próximo</button>
       </div>
 
       <div id="etapa2" class="etapa hidden">
         <h3 class="font-semibold mb-4">2. Escolha o Pacote</h3>
-        <select id="c_pacote" class="w-full border p-3 rounded mb-4">
+        <select id="c_pacote" onchange="mostrarCamposPacote()" class="w-full border p-3 rounded mb-4">
           <option value="">Selecione o pacote</option>
           <option value="Avulso">Avulso</option>
           <option value="Básico">Básico - 1 Banho + 1 Banho/Tosa Higiênica</option>
@@ -51,8 +41,8 @@
         </select>
         <div id="camposPacote"></div>
         <div class="flex gap-2 mt-4">
-          <button id="btnVoltar2" class="w-1/2 bg-gray-300 p-3 rounded">Voltar</button>
-          <button id="btnEtapa2" class="w-1/2 bg-blue-600 text-white p-3 rounded">Próximo</button>
+          <button onclick="proximaEtapa(1)" class="w-1/2 bg-gray-300 p-3 rounded">Voltar</button>
+          <button onclick="proximaEtapa(3)" class="w-1/2 bg-blue-600 text-white p-3 rounded">Próximo</button>
         </div>
       </div>
 
@@ -60,8 +50,8 @@
         <h3 class="font-semibold mb-4">3. Dados dos Pets</h3>
         <div id="petsContainer"></div>
         <div class="flex gap-2 mt-4">
-          <button id="btnVoltar3" class="w-1/2 bg-gray-300 p-3 rounded">Voltar</button>
-          <button id="btnEtapa3" class="w-1/2 bg-blue-600 text-white p-3 rounded">Próximo</button>
+          <button onclick="proximaEtapa(2)" class="w-1/2 bg-gray-300 p-3 rounded">Voltar</button>
+          <button onclick="proximaEtapa(4)" class="w-1/2 bg-blue-600 text-white p-3 rounded">Próximo</button>
         </div>
       </div>
 
@@ -70,8 +60,8 @@
         <div id="resumoAgendamento" class="bg-gray-50 p-4 rounded mb-4 text-sm"></div>
         <p class="text-xs text-gray-600 mb-4">Ao confirmar, você concorda que todos os dados estão corretos.</p>
         <div class="flex gap-2">
-          <button id="btnVoltar4" class="w-1/2 bg-gray-300 p-3 rounded">Voltar</button>
-          <button id="btnFinalizar" class="w-1/2 bg-green-600 text-white p-3 rounded font-bold">Confirmar Agendamento</button>
+          <button onclick="proximaEtapa(3)" class="w-1/2 bg-gray-300 p-3 rounded">Voltar</button>
+          <button onclick="finalizarAgendamento()" class="w-1/2 bg-green-600 text-white p-3 rounded font-bold">Confirmar Agendamento</button>
         </div>
       </div>
 
@@ -83,8 +73,8 @@
       </div>
 
       <div class="mt-6 border-t pt-4 text-center">
-        <button id="btnCancelarAvulso" class="text-red-600 text-sm hover:underline mr-4">Cancelar serviço avulso</button>
-        <button id="btnCancelarPacote" class="text-red-600 text-sm hover:underline">Cancelar pacote</button>
+        <button onclick="cancelarAvulso()" class="text-red-600 text-sm hover:underline mr-4">Cancelar serviço avulso</button>
+        <button onclick="cancelarPacote()" class="text-red-600 text-sm hover:underline">Cancelar pacote</button>
       </div>
     </div>
   </div>
@@ -98,24 +88,6 @@
   
   let etapa = 1;
   let dadosAgendamento = {};
-
-  document.getElementById('btnEtapa1').addEventListener('click', () => proximaEtapa(2));
-  document.getElementById('btnEtapa2').addEventListener('click', () => proximaEtapa(3));
-  document.getElementById('btnEtapa3').addEventListener('click', () => proximaEtapa(4));
-  document.getElementById('btnVoltar2').addEventListener('click', () => proximaEtapa(1));
-  document.getElementById('btnVoltar3').addEventListener('click', () => proximaEtapa(2));
-  document.getElementById('btnVoltar4').addEventListener('click', () => proximaEtapa(3));
-  document.getElementById('btnFinalizar').addEventListener('click', finalizarAgendamento);
-  document.getElementById('c_pacote').addEventListener('change', mostrarCamposPacote);
-  
-  document.getElementById('btnCancelarAvulso').addEventListener('click', () => {
-    const nome = prompt('Digite seu nome para cancelar:');
-    if(nome) alert('Agendamento cancelado. Caso precise deve fazer um novo agendamento.');
-  });
-  
-  document.getElementById('btnCancelarPacote').addEventListener('click', () => {
-    alert('Caro cliente, se vc tem pacote ativo e deseja mudar data do seu agendamento entre em contato com nossos atendentes para mudar o horário do seu agendamento.');
-  });
 
   function proximaEtapa(n) {
     if(n > etapa && !validarEtapa()) { 
@@ -132,16 +104,19 @@
 
   function validarEtapa() {
     if(etapa === 1) {
-      return document.getElementById('c_nome').value && 
-             document.getElementById('c_qtd_pets').value && 
-             document.getElementById('c_whatsapp').value && 
-             document.getElementById('c_endereco').value;
+      const nome = document.getElementById('c_nome').value.trim();
+      const qtd = document.getElementById('c_qtd_pets').value;
+      const whats = document.getElementById('c_whatsapp').value.trim();
+      const end = document.getElementById('c_endereco').value.trim();
+      return nome !== '' && qtd !== '' && whats !== '' && end !== '';
     }
-    if(etapa === 2) return document.getElementById('c_pacote').value;
+    if(etapa === 2) {
+      return document.getElementById('c_pacote').value !== '';
+    }
     if(etapa === 3) {
       let ok = true;
       document.querySelectorAll('#petsContainer input, #petsContainer select').forEach(i => { 
-        if(!i.value) ok = false; 
+        if(i.value.trim() === '') ok = false; 
       });
       return ok;
     }
@@ -225,4 +200,21 @@
       <p><b>Cliente:</b> ${dadosAgendamento.cliente}</p>
       <p><b>WhatsApp:</b> ${dadosAgendamento.whatsapp}</p>
       <p><b>Endereço:</b> ${dadosAgendamento.endereco}</p>
-      <p><b>Pac
+      <p><b>Pacote:</b> ${dadosAgendamento.pacote}</p>
+      <p><b>Pets:</b><br>${dadosAgendamento.pets.map(p=>`${p.nome} - ${p.especie} - ${p.porte} - ${p.servico}`).join('<br>')}</p>
+    `;
+  }
+
+  async function finalizarAgendamento() {
+    const { error } = await supabaseClient.from('agendamentos').insert({
+      cliente: dadosAgendamento.cliente,
+      whatsapp: dadosAgendamento.whatsapp,
+      endereco: dadosAgendamento.endereco,
+      qtd_pets: parseInt(dadosAgendamento.qtd_pets),
+      pacote: dadosAgendamento.pacote,
+      pets: dadosAgendamento.pets,
+      status: 'confirmado'
+    });
+    if(!error) {
+      document.querySelectorAll('.etapa').forEach(e => e.classList.add('hidden'));
+      document.get
