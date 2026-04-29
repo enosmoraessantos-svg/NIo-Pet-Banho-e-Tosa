@@ -162,7 +162,7 @@
         nome: div.querySelector('.pet_nome').value,
         porte: div.querySelector('.pet_porte').value,
         servico: div.querySelector('.pet_servico').value,
-        alergia: "Nenhuma" // Adicionado campo esperado pelo banco
+        alergia: "Nenhuma" // Adicionado para cumprir a estrutura da tabela
       });
     });
 
@@ -174,7 +174,7 @@
       pacote: document.getElementById('c_pacote').value,
       pets: pets,
       status: 'confirmado',
-      datas_agendadas: [] // Adicionado campo esperado pelo banco
+      datas_agendadas: [] // Adicionado campo obrigatório tipo jsonb
     });
     
     if(!error) {
