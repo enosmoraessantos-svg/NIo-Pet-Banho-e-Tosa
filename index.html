@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nilo Pet - Agendamento Online</title>
+  <title>Nilo Pet - Agendamento</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
@@ -11,75 +11,69 @@
   <div class="max-w-3xl mx-auto p-4">
     <header class="bg-white rounded-xl shadow-md p-6 mb-6 text-center">
       <h1 class="text-3xl font-bold text-blue-800">Nilo Pet Banho e Tosa</h1>
-      <p class="text-gray-600 mt-2">Agendamento em 4 etapas - Todos os campos obrigatórios</p>
+      <p class="text-gray-600">Agende online em 4 etapas</p>
     </header>
 
     <div class="bg-white rounded-xl shadow-lg p-6">
-      <div class="text-sm mb-6 font-semibold">Etapa <span id="etapaAtual">1</span> de 4</div>
-
-      <!-- ETAPA 1: DADOS CLIENTE -->
+      <div class="text-sm mb-4">Etapa <span id="etapaAtual">1</span> de 4</div>
+      
       <div id="etapa1" class="etapa">
-        <h3 class="font-bold text-lg mb-4">1. Dados do Cliente</h3>
-        <input id="c_nome" placeholder="Nome do cliente" class="w-full border-2 p-3 rounded mb-3" required>
-        <select id="c_qtd_pets" class="w-full border-2 p-3 rounded mb-3" required>
-          <option value="">Quantidade de pets deseja agendar</option>
-          <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
+        <h3 class="font-semibold mb-4">1. Seus dados</h3>
+        <input id="c_nome" placeholder="Nome completo" class="w-full border p-3 rounded mb-3">
+        <select id="c_qtd_pets" class="w-full border p-3 rounded mb-3">
+          <option value="">Quantos pets deseja agendar?</option>
+          <option value="1">1</option><option value="2">2</option>
+          <option value="3">3</option><option value="4">4</option>
         </select>
-        <input id="c_whatsapp" placeholder="WhatsApp (11) 99999-9999" class="w-full border-2 p-3 rounded mb-3" required>
-        <input id="c_endereco" placeholder="Endereço completo" class="w-full border-2 p-3 rounded mb-3" required>
-        <input value="Bairro: Sol Nascente" class="w-full border-2 p-3 rounded mb-4 bg-gray-100" disabled>
-        <button onclick="proximaEtapa(2)" class="w-full bg-blue-600 text-white p-3 rounded font-bold">Próximo</button>
+        <input id="c_whatsapp" placeholder="WhatsApp (11) 99999-9999" class="w-full border p-3 rounded mb-3">
+        <input id="c_endereco" placeholder="Endereço completo" class="w-full border p-3 rounded mb-3">
+        <input value="Bairro: Sol Nascente" class="w-full border p-3 rounded mb-4 bg-gray-100" disabled>
+        <button id="btnEtapa1" class="w-full bg-blue-600 text-white p-3 rounded font-semibold">Próximo</button>
       </div>
 
-      <!-- ETAPA 2: PACOTE -->
       <div id="etapa2" class="etapa hidden">
-        <h3 class="font-bold text-lg mb-4">2. Escolha o Pacote</h3>
-        <select id="c_pacote" class="w-full border-2 p-3 rounded mb-4" required onchange="mostrarCamposPacote()">
-          <option value="">Escolha o pacote</option>
+        <h3 class="font-semibold mb-4">2. Escolha o Pacote</h3>
+        <select id="c_pacote" class="w-full border p-3 rounded mb-4">
+          <option value="">Selecione o pacote</option>
           <option value="Avulso">Avulso</option>
           <option value="Básico">Básico - 1 Banho + 1 Banho/Tosa Higiênica</option>
           <option value="Básico com Tosa">Básico com Tosa - 1 Banho + 1 Banho/Tosa</option>
-          <option value="Premium">Premium - 3 Banhos + 1 Tosa/Higiênica</option>
+          <option value="Premium">Premium - 4 serviços no mês</option>
         </select>
-        <div id="camposPacote" class="space-y-3"></div>
+        <div id="camposPacote" class="space-y-2"></div>
         <div class="flex gap-2 mt-4">
-          <button onclick="proximaEtapa(1)" class="w-1/2 bg-gray-300 p-3 rounded font-semibold">Voltar</button>
-          <button onclick="proximaEtapa(3)" class="w-1/2 bg-blue-600 text-white p-3 rounded font-bold">Próximo</button>
+          <button id="btnVoltar2" class="w-1/2 bg-gray-300 p-3 rounded">Voltar</button>
+          <button id="btnEtapa2" class="w-1/2 bg-blue-600 text-white p-3 rounded">Próximo</button>
         </div>
       </div>
 
-      <!-- ETAPA 3: PETS -->
       <div id="etapa3" class="etapa hidden">
-        <h3 class="font-bold text-lg mb-4">3. Dados dos Pets</h3>
+        <h3 class="font-semibold mb-4">3. Dados dos Pets</h3>
         <div id="petsContainer"></div>
         <div class="flex gap-2 mt-4">
-          <button onclick="proximaEtapa(2)" class="w-1/2 bg-gray-300 p-3 rounded font-semibold">Voltar</button>
-          <button onclick="proximaEtapa(4)" class="w-1/2 bg-blue-600 text-white p-3 rounded font-bold">Próximo</button>
+          <button id="btnVoltar3" class="w-1/2 bg-gray-300 p-3 rounded">Voltar</button>
+          <button id="btnEtapa3" class="w-1/2 bg-blue-600 text-white p-3 rounded">Próximo</button>
         </div>
       </div>
 
-      <!-- ETAPA 4: CONFIRMAR -->
       <div id="etapa4" class="etapa hidden">
-        <h3 class="font-bold text-lg mb-4">4. Conferir e Finalizar</h3>
-        <div id="resumoAgendamento" class="bg-blue-50 p-4 rounded mb-4 text-sm border-2 border-blue-200"></div>
+        <h3 class="font-semibold mb-4">4. Confirmar Agendamento</h3>
+        <div id="resumoAgendamento" class="bg-gray-50 p-4 rounded mb-4 text-sm"></div>
         <div class="flex gap-2">
-          <button onclick="proximaEtapa(3)" class="w-1/2 bg-gray-300 p-3 rounded font-semibold">Voltar</button>
-          <button onclick="finalizarAgendamento()" class="w-1/2 bg-green-600 text-white p-3 rounded font-bold">OK - Confirmar</button>
+          <button id="btnVoltar4" class="w-1/2 bg-gray-300 p-3 rounded">Voltar</button>
+          <button id="btnFinalizar" class="w-1/2 bg-green-600 text-white p-3 rounded font-bold">Confirmar</button>
         </div>
       </div>
 
       <div id="msgSucesso" class="hidden text-center p-6">
-        <h3 class="text-3xl font-bold text-green-600 mb-3">Agendado!</h3>
+        <h3 class="text-2xl font-bold text-green-600 mb-2">Agendado com sucesso!</h3>
         <p class="mb-4">Em breve nossa equipe vai entrar em contato.</p>
-        <p class="font-bold text-lg">De imediato mande foto do seu pet para adiantar o seu atendimento.</p>
-        <a href="https://wa.me/5511999999999?text=Olá! Acabei de agendar e segue foto do meu pet" target="_blank" class="inline-block mt-4 bg-green-500 text-white px-8 py-3 rounded font-bold">Enviar Foto no WhatsApp</a>
-        <button onclick="location.reload()" class="block mx-auto mt-4 text-blue-600 underline">Fazer novo agendamento</button>
+        <p class="font-semibold">De imediato mande foto do seu pet para adiantar o atendimento.</p>
       </div>
 
-      <div class="mt-8 border-t-2 pt-4">
-        <p class="font-semibold mb-2">Cancelar agendamento:</p>
-        <button onclick="cancelarAvulso()" class="text-red-600 text-sm hover:underline mr-4 block mb-1">Cancelar serviço avulso</button>
-        <button onclick="alert('Caro cliente, se vc tem pacote ativo e deseja mudar data do seu agendamento entre em contato com nossos atendentes para mudar o horário do seu agendamento.')" class="text-red-600 text-sm hover:underline block">Cancelar pacote</button>
+      <div class="mt-6 border-t pt-4 text-center">
+        <button id="btnCancelAvulso" class="text-red-600 text-sm hover:underline mr-4">Cancelar serviço avulso</button>
+        <button id="btnCancelPacote" class="text-red-600 text-sm hover:underline">Cancelar pacote</button>
       </div>
     </div>
   </div>
@@ -88,138 +82,120 @@
   const SB_URL = "https://yczhjyxisqrvfxxgipop.supabase.co";
   const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
   const supabase = window.supabase.createClient(SB_URL, SB_KEY);
+  
+  let etapa = 1;
+  let dadosAgendamento = {};
 
-  let etapa = 1, dadosAgendamento = {}, datasBloqueadas = [];
-
-  // Carregar bloqueios e agenda fechada
-  async function carregarBloqueios() {
-    const { data } = await supabase.from('bloqueios').select('*').eq('ativo', true);
-    datasBloqueadas = data || [];
-  }
-  carregarBloqueios();
+  // EVENT LISTENERS - isso que destrava os botões
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('btnEtapa1').addEventListener('click', () => proximaEtapa(2));
+    document.getElementById('btnEtapa2').addEventListener('click', () => proximaEtapa(3));
+    document.getElementById('btnEtapa3').addEventListener('click', () => proximaEtapa(4));
+    document.getElementById('btnVoltar2').addEventListener('click', () => proximaEtapa(1));
+    document.getElementById('btnVoltar3').addEventListener('click', () => proximaEtapa(2));
+    document.getElementById('btnVoltar4').addEventListener('click', () => proximaEtapa(3));
+    document.getElementById('btnFinalizar').addEventListener('click', finalizarAgendamento);
+    document.getElementById('c_pacote').addEventListener('change', mostrarCamposPacote);
+    document.getElementById('btnCancelAvulso').addEventListener('click', cancelarAvulso);
+    document.getElementById('btnCancelPacote').addEventListener('click', () => {
+      alert('Caro cliente, se vc tem pacote ativo e deseja mudar data do seu agendamento entre em contato com nossos atendentes para mudar o horário do seu agendamento.');
+    });
+  });
 
   function proximaEtapa(n) {
-    if(n > etapa &&!validarEtapa()) {
-      alert('Preenchimento de todos os dados é obrigatório');
-      return;
+    if(n > etapa && !validarEtapa()) { 
+      alert('Preencha todos os campos obrigatórios'); 
+      return; 
     }
     document.querySelectorAll('.etapa').forEach(e => e.classList.add('hidden'));
     document.getElementById(`etapa${n}`).classList.remove('hidden');
-    etapa = n;
+    etapa = n; 
     document.getElementById('etapaAtual').textContent = n;
     if(n === 3) gerarCamposPets();
     if(n === 4) mostrarResumo();
   }
 
   function validarEtapa() {
-    if(etapa === 1) return c_nome.value && c_qtd_pets.value && c_whatsapp.value && c_endereco.value;
-    if(etapa === 2) {
-      if(!c_pacote.value) return false;
-      let ok = true;
-      document.querySelectorAll('#camposPacote input[required], #camposPacote select[required]').forEach(i => { if(!i.value) ok = false; });
-      return ok;
+    if(etapa === 1) {
+      return document.getElementById('c_nome').value && 
+             document.getElementById('c_qtd_pets').value && 
+             document.getElementById('c_whatsapp').value && 
+             document.getElementById('c_endereco').value;
     }
+    if(etapa === 2) return document.getElementById('c_pacote').value;
     if(etapa === 3) {
       let ok = true;
-      document.querySelectorAll('#petsContainer input[required], #petsContainer select[required]').forEach(i => { if(!i.value) ok = false; });
+      document.querySelectorAll('#petsContainer input, #petsContainer select').forEach(i => { 
+        if(!i.value) ok = false; 
+      });
       return ok;
     }
     return true;
   }
 
   function gerarCamposPets() {
-    const qtd = parseInt(c_qtd_pets.value);
+    const qtd = parseInt(document.getElementById('c_qtd_pets').value); 
     let html = '';
     for(let i = 0; i < qtd; i++) {
-      html += `<div class="border-2 border-blue-200 p-4 rounded mb-4 bg-blue-50">
-        <h4 class="font-bold mb-3">Pet ${i+1}</h4>
-        <select class="pet_especie w-full border-2 p-2 rounded mb-2" required onchange="atualizarServicos(this, ${i})">
-          <option value="">Pet espécie - Cachorro ou Gato</option>
-          <option>Cachorro</option><option>Gato</option>
+      html += `<div class="border p-4 rounded mb-4 bg-blue-50">
+        <h4 class="font-semibold mb-2">Pet ${i+1}</h4>
+        <select class="pet_especie w-full border p-2 rounded mb-2">
+          <option value="">Espécie</option><option>Cachorro</option><option>Gato</option>
         </select>
-        <input placeholder="Nome do pet" class="pet_nome w-full border-2 p-2 rounded mb-2" required>
-        <select class="pet_porte w-full border-2 p-2 rounded mb-2" required>
-          <option value="">Porte</option>
-          <option>Pequeno/Médio</option>
-          <option>Grande Peludo</option>
-          <option>Grande Pelo Curto</option>
+        <input placeholder="Nome do pet" class="pet_nome w-full border p-2 rounded mb-2">
+        <select class="pet_porte w-full border p-2 rounded mb-2">
+          <option value="">Porte</option><option>Pequeno/Médio</option>
+          <option>Grande Peludo</option><option>Grande Pelo Curto</option>
         </select>
-        <select class="pet_servico w-full border-2 p-2 rounded mb-2" required id="servico_${i}">
-          <option value="">Serviço</option>
+        <select class="pet_servico w-full border p-2 rounded mb-2">
+          <option value="">Serviço</option><option>Banho</option>
+          <option>Banho + Tosa Higiênica</option><option>Banho + Tosa</option>
         </select>
-        <select class="pet_alergia w-full border-2 p-2 rounded" required>
+        <select class="pet_alergia w-full border p-2 rounded">
           <option value="">Possui alergia?</option><option>Não</option><option>Sim</option>
         </select>
       </div>`;
     }
-    petsContainer.innerHTML = html;
-  }
-
-  function atualizarServicos(selectEspecie, idx) {
-    const servicoSelect = document.getElementById(`servico_${idx}`);
-    if(selectEspecie.value === 'Gato') {
-      servicoSelect.innerHTML = '<option value="">Serviço</option><option>Banho somente</option>';
-    } else {
-      servicoSelect.innerHTML = '<option value="">Serviço</option><option>Banho</option><option>Banho + Tosa Higiênica</option><option>Banho + Tosa</option>';
-    }
+    document.getElementById('petsContainer').innerHTML = html;
   }
 
   function mostrarCamposPacote() {
-    const tipo = c_pacote.value;
+    const tipo = document.getElementById('c_pacote').value; 
     let html = '';
     if(tipo === 'Avulso') {
-      html = `<label class="text-sm font-semibold">Data e Horário</label>
-              <input type="date" id="p_data1" class="w-full border-2 p-2 rounded mb-2" required>
-              <select id="p_hora1" class="w-full border-2 p-2 rounded" required>
+      html = `<input type="date" id="p_data1" class="w-full border p-2 rounded mb-2">
+              <select id="p_hora1" class="w-full border p-2 rounded">
                 <option value="">Horário</option><option>09:00</option><option>10:00</option>
-                <option>11:00</option><option>14:00</option><option>15:00</option><option>16:00</option><option>17:00</option>
+                <option>11:00</option><option>14:00</option><option>15:00</option><option>16:00</option>
               </select>`;
     } else if(tipo === 'Básico') {
-      html = `<p class="text-sm font-semibold text-red-600 mb-2">As duas datas são obrigatórias</p>
-              <label class="text-sm font-semibold">1ª Data - Banho</label>
-              <input type="date" id="p_data1" class="w-full border-2 p-2 rounded mb-2" required>
-              <label class="text-sm font-semibold">2ª Data - Banho + Tosa Higiênica</label>
-              <input type="date" id="p_data2" class="w-full border-2 p-2 rounded" required>`;
+      html = `<label class="text-sm">Data 1 - Banho</label><input type="date" id="p_data1" class="w-full border p-2 rounded mb-2">
+              <label class="text-sm">Data 2 - Banho + Tosa Higiênica</label><input type="date" id="p_data2" class="w-full border p-2 rounded">`;
     } else if(tipo === 'Básico com Tosa') {
-      html = `<p class="text-sm font-semibold text-red-600 mb-2">As duas datas são obrigatórias</p>
-              <label class="text-sm font-semibold">1ª Data - Banho</label>
-              <input type="date" id="p_data1" class="w-full border-2 p-2 rounded mb-2" required>
-              <label class="text-sm font-semibold">2ª Data - Banho + Tosa</label>
-              <input type="date" id="p_data2" class="w-full border-2 p-2 rounded" required>`;
+      html = `<label class="text-sm">Data 1 - Banho</label><input type="date" id="p_data1" class="w-full border p-2 rounded mb-2">
+              <label class="text-sm">Data 2 - Banho + Tosa</label><input type="date" id="p_data2" class="w-full border p-2 rounded">`;
     } else if(tipo === 'Premium') {
-      html = `<p class="text-sm font-semibold text-red-600 mb-2">As 4 semanas o preenchimento é obrigatório</p>
-              <select id="p_tipo_tosa" class="w-full border-2 p-2 rounded mb-2" required>
-                <option value="">Este mês vc deseja fazer:</option>
+      html = `<select id="p_tipo_tosa" class="w-full border p-2 rounded mb-2">
+                <option value="">Este mês deseja fazer:</option>
                 <option>Banho + Tosa</option><option>Banho + Tosa Higiênica</option>
               </select>
-              <label class="text-xs">Semana 1 - Banho</label>
-              <input type="date" placeholder="Semana 1" class="w-full border-2 p-2 rounded mb-1" required>
-              <label class="text-xs">Semana 2 - Banho</label>
-              <input type="date" placeholder="Semana 2" class="w-full border-2 p-2 rounded mb-1" required>
-              <label class="text-xs">Semana 3 - Banho</label>
-              <input type="date" placeholder="Semana 3" class="w-full border-2 p-2 rounded mb-1" required>
-              <label class="text-xs">Semana 4 - Tosa ou Higiênica</label>
-              <input type="date" placeholder="Semana 4" class="w-full border-2 p-2 rounded mb-1" required>
-              <p class="text-xs text-gray-600 mt-2">5ª semana se o mês tiver: Banho</p>`;
+              <input type="date" placeholder="Semana 1 - Banho" class="w-full border p-2 rounded mb-1">
+              <input type="date" placeholder="Semana 2 - Banho" class="w-full border p-2 rounded mb-1">
+              <input type="date" placeholder="Semana 3 - Banho" class="w-full border p-2 rounded mb-1">
+              <input type="date" placeholder="Semana 4 - Tosa/Higiênica" class="w-full border p-2 rounded mb-1">`;
     }
-    camposPacote.innerHTML = html;
+    document.getElementById('camposPacote').innerHTML = html;
   }
 
   function mostrarResumo() {
     dadosAgendamento = {
-      cliente: c_nome.value,
-      qtd_pets: c_qtd_pets.value,
-      whatsapp: c_whatsapp.value,
-      endereco: c_endereco.value + ', Sol Nascente',
-      pacote: c_pacote.value,
-      pets: [],
-      datas: []
+      cliente: document.getElementById('c_nome').value, 
+      qtd_pets: document.getElementById('c_qtd_pets').value,
+      whatsapp: document.getElementById('c_whatsapp').value, 
+      endereco: document.getElementById('c_endereco').value + ', Sol Nascente',
+      pacote: document.getElementById('c_pacote').value, 
+      pets: []
     };
-
-    document.querySelectorAll('#camposPacote input[type="date"]').forEach(i => {
-      if(i.value) dadosAgendamento.datas.push(i.value);
-    });
-
     document.querySelectorAll('#petsContainer > div').forEach(div => {
       dadosAgendamento.pets.push({
         especie: div.querySelector('.pet_especie').value,
@@ -229,21 +205,11 @@
         alergia: div.querySelector('.pet_alergia').value
       });
     });
-
-    resumoAgendamento.innerHTML = `
-      <p><b>Nome do cliente:</b> ${dadosAgendamento.cliente}</p>
+    document.getElementById('resumoAgendamento').innerHTML = `
+      <p><b>Cliente:</b> ${dadosAgendamento.cliente}</p>
       <p><b>WhatsApp:</b> ${dadosAgendamento.whatsapp}</p>
-      <p><b>Endereço:</b> ${dadosAgendamento.endereco}</p>
       <p><b>Pacote:</b> ${dadosAgendamento.pacote}</p>
-      <p><b>Quantidade de pets:</b> ${dadosAgendamento.qtd_pets}</p>
-      <hr class="my-2">
-      ${dadosAgendamento.pets.map((p,i)=>`
-        <p class="mt-2"><b>Pet ${i+1}:</b> ${p.nome}</p>
-        <p class="text-xs">Espécie: ${p.especie} | Porte: ${p.porte}</p>
-        <p class="text-xs">Serviço: ${p.servico} | Alergia: ${p.alergia}</p>
-      `).join('')}
-      <hr class="my-2">
-      <p><b>Datas agendadas:</b> ${dadosAgendamento.datas.join(', ') || 'Conforme pacote'}</p>
+      <p><b>Pets:</b><br>${dadosAgendamento.pets.map(p=>`${p.nome} - ${p.especie} - ${p.porte} - ${p.servico}`).join('<br>')}</p>
     `;
   }
 
@@ -255,25 +221,20 @@
       qtd_pets: parseInt(dadosAgendamento.qtd_pets),
       pacote: dadosAgendamento.pacote,
       pets: dadosAgendamento.pets,
-      datas_agendadas: dadosAgendamento.datas,
       status: 'confirmado'
     });
     if(!error) {
       document.querySelectorAll('.etapa').forEach(e => e.classList.add('hidden'));
-      msgSucesso.classList.remove('hidden');
-    } else {
-      alert('Erro ao agendar. Tente novamente.');
+      document.getElementById('msgSucesso').classList.remove('hidden');
+    } else { 
+      alert('Erro ao agendar. Tente novamente.'); 
       console.error(error);
     }
   }
 
-  async function cancelarAvulso() {
-    const nome = prompt('Digite seu nome:');
-    const data = prompt('Digite a data do agendamento (DD/MM/AAAA):');
-    const pet = prompt('Digite o nome do pet:');
-    if(nome && data && pet) {
-      alert('Agendamento cancelado. Caso precise deve fazer um novo agendamento.');
-    }
+  function cancelarAvulso() {
+    const nome = prompt('Digite seu nome para cancelar:');
+    if(nome) alert('Agendamento cancelado. Caso precise deve fazer um novo agendamento.');
   }
 </script>
 </body>
