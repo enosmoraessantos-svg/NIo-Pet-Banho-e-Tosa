@@ -73,17 +73,9 @@
 
 <script>
   const SUPABASE_URL = "https://yczhjyxisqrvfxxgipop.supabase.co";
-  const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm"; 
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljemhqeXhpc3FydmZ4eGdpcG9wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjg2OTQsImV4cCI6MjA5MDg0NDY5NH0.aYeASSFKHOxW912U8Iuu13wfnS60xmuUTRaZk42Vdv0";
   
-  // Só cria o client quando a página terminar de carregar
-  let client;
-  document.addEventListener('DOMContentLoaded', function() {
-    if (typeof window.supabase === 'undefined') {
-      alert('Erro: Supabase não carregou. Verifique sua internet.');
-      return;
-    }
-    client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  });
+  const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   function irEtapa1() {
     document.getElementById('etapa1').style.display = 'block';
@@ -164,11 +156,6 @@
   }
 
   async function salvar() {
-    if(!client) {
-      alert('Aguarde 2 segundos e tente novamente. Supabase ainda carregando.');
-      return;
-    }
-    
     const pets = [];
     document.querySelectorAll('#petsContainer > div').forEach(div => {
       pets.push({
