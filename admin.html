@@ -3,10 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nilo Pet - Painel Admin</title>
+  <title>Nilo Pet - Admin</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body class="bg-gray-100">
   <div id="loginScreen" class="fixed inset-0 bg-blue-900 bg-opacity-95 z-50 flex items-center justify-center">
@@ -14,8 +12,8 @@
       <h2 class="text-2xl font-bold mb-6 text-center text-blue-800">Painel Nilo Pet</h2>
       <input id="loginUser" type="text" placeholder="Login" class="w-full border p-3 rounded mb-3" value="nilo pet">
       <input id="loginPass" type="password" placeholder="Senha" class="w-full border p-3 rounded mb-3">
-      <button id="btnLogin" class="w-full bg-blue-600 text-white p-3 rounded font-semibold mb-2 hover:bg-blue-700">Entrar</button>
-      <button id="btnEsqueci" class="text-sm text-blue-600 hover:underline">Esqueci senha</button>
+      <button onclick="fazerLogin()" class="w-full bg-blue-600 text-white p-3 rounded font-semibold mb-2 hover:bg-blue-700">Entrar</button>
+      <button onclick="esqueciSenha()" class="text-sm text-blue-600 hover:underline">Esqueci senha</button>
       <div id="msgLogin" class="text-red-600 text-sm mt-2 hidden"></div>
     </div>
   </div>
@@ -24,108 +22,65 @@
     <header class="bg-white shadow-md p-4">
       <div class="max-w-7xl mx-auto flex justify-between items-center">
         <h1 class="text-2xl font-bold text-blue-800">Painel Nilo Pet</h1>
-        <button id="btnSair" class="text-red-600 hover:underline font-semibold">Sair</button>
+        <button onclick="sair()" class="text-red-600 hover:underline font-semibold">Sair</button>
       </div>
     </header>
 
     <div class="max-w-7xl mx-auto p-4 flex gap-4">
       <div class="w-64 bg-white rounded-xl shadow-lg p-4 h-fit">
-        <button class="menu-btn w-full text-left p-3 rounded hover:bg-blue-50 mb-1 bg-blue-50 font-semibold" data-aba="geral">Agendamento Geral</button>
-        <button class="menu-btn w-full text-left p-3 rounded hover:bg-blue-50 mb-1" data-aba="dia">Agendamento do Dia</button>
-        <button class="menu-btn w-full text-left p-3 rounded hover:bg-blue-50 mb-1" data-aba="pacotes">Pacotes</button>
-        <button class="menu-btn w-full text-left p-3 rounded hover:bg-blue-50 mb-1" data-aba="vagas">Gestão de Vagas</button>
-        <button class="menu-btn w-full text-left p-3 rounded hover:bg-blue-50 mb-1" data-aba="bloqueio">Bloqueio/Desbloqueio</button>
-        <button class="menu-btn w-full text-left p-3 rounded hover:bg-blue-50 mb-1" data-aba="relatorio">Exportar Relatório</button>
+        <button onclick="mostrarAba('geral')" class="menu-btn w-full text-left p-3 rounded hover:bg-blue-50 mb-1 bg-blue-50 font-semibold">Agendamento Geral</button>
+        <button onclick="mostrarAba('dia')" class="menu-btn w-full text-left p-3 rounded hover:bg-blue-50 mb-1">Agendamento do Dia</button>
+        <button onclick="mostrarAba('pacotes')" class="menu-btn w-full text-left p-3 rounded hover:bg-blue-50 mb-1">Pacotes</button>
+        <button onclick="mostrarAba('vagas')" class="menu-btn w-full text-left p-3 rounded hover:bg-blue-50 mb-1">Gestão de Vagas</button>
+        <button onclick="mostrarAba('bloqueio')" class="menu-btn w-full text-left p-3 rounded hover:bg-blue-50 mb-1">Bloqueio/Desbloqueio</button>
+        <button onclick="mostrarAba('relatorio')" class="menu-btn w-full text-left p-3 rounded hover:bg-blue-50 mb-1">Exportar Relatório</button>
       </div>
 
       <div class="flex-1 bg-white rounded-xl shadow-lg p-6">
         <div id="aba-geral" class="aba">
           <h2 class="text-xl font-bold mb-4">Agendamento Geral</h2>
-          <div class="flex gap-2 mb-4 flex-wrap">
+          <div class="flex gap-2 mb-4">
             <input type="date" id="filtroData" class="border p-2 rounded">
-            <select id="filtroFalou" class="border p-2 rounded">
-              <option value="">Falou com cliente?</option><option value="true">Sim</option><option value="false">Não</option>
-            </select>
-            <button id="btnFiltrar" class="bg-blue-600 text-white px-4 rounded hover:bg-blue-700">Filtrar</button>
+            <button onclick="carregarGeral()" class="bg-blue-600 text-white px-4 rounded hover:bg-blue-700">Filtrar</button>
           </div>
           <div id="listaGeral" class="space-y-3"></div>
         </div>
 
-        <div id="aba-dia" class="aba hidden">
-          <h2 class="text-xl font-bold mb-4">Agendamento do Dia</h2>
-          <div id="listaDia" class="space-y-3"></div>
-        </div>
-
-        <div id="aba-pacotes" class="aba hidden">
-          <h2 class="text-xl font-bold mb-4">Pacotes</h2>
-          <div id="listaPacotes" class="space-y-3"></div>
-        </div>
-
-        <div id="aba-vagas" class="aba hidden">
-          <h2 class="text-xl font-bold mb-4">Gestão de Vagas</h2>
-          <p class="text-sm text-gray-600 mb-4">Defina quantas vagas por serviço. Passando da quantidade, bloqueia no link do cliente.</p>
-          <div id="configVagas" class="space-y-4"></div>
-          <button id="btnSalvarVagas" class="mt-4 bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">Salvar Configurações</button>
-        </div>
-
+        <div id="aba-dia" class="aba hidden"><h2 class="text-xl font-bold mb-4">Agendamento do Dia</h2><div id="listaDia"></div></div>
+        <div id="aba-pacotes" class="aba hidden"><h2 class="text-xl font-bold mb-4">Pacotes</h2><div id="listaPacotes"></div></div>
+        <div id="aba-vagas" class="aba hidden"><h2 class="text-xl font-bold mb-4">Gestão de Vagas</h2><div id="configVagas"></div></div>
         <div id="aba-bloqueio" class="aba hidden">
           <h2 class="text-xl font-bold mb-4">Bloqueio/Desbloqueio</h2>
-          <div class="grid grid-cols-2 gap-4 mb-4">
-            <div><label class="text-sm">Data</label><input type="date" id="b_data" class="w-full border p-2 rounded"></div>
-            <div><label class="text-sm">Motivo</label><input id="b_motivo" placeholder="Ex: Feriado" class="w-full border p-2 rounded"></div>
-          </div>
-          <div class="grid grid-cols-2 gap-4 mb-4">
-            <div><label class="text-sm">Hora início</label><input type="time" id="b_hora_inicio" class="w-full border p-2 rounded"></div>
-            <div><label class="text-sm">Hora fim</label><input type="time" id="b_hora_fim" class="w-full border p-2 rounded"></div>
-          </div>
-          <button id="btnBloqHorario" class="bg-red-600 text-white px-4 py-2 rounded mr-2 hover:bg-red-700">Bloquear Horário</button>
-          <button id="btnBloqDia" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Fechar Dia Todo</button>
+          <input type="date" id="b_data" class="border p-2 rounded mb-2">
+          <input id="b_motivo" placeholder="Motivo" class="border p-2 rounded mb-2 w-full">
+          <button onclick="bloquearDia()" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Fechar Dia</button>
           <div id="listaBloqueios" class="mt-6"></div>
         </div>
-
         <div id="aba-relatorio" class="aba hidden">
           <h2 class="text-xl font-bold mb-4">Exportar Relatório</h2>
-          <button id="btnExpDia" class="bg-green-600 text-white px-4 py-2 rounded mr-2 hover:bg-green-700">Exportar Dia</button>
-          <button id="btnExpSemana" class="bg-green-600 text-white px-4 py-2 rounded mr-2 hover:bg-green-700">Exportar Semana</button>
-          <button id="btnExpMes" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Exportar Mês</button>
+          <button onclick="exportarExcel()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Exportar Excel</button>
         </div>
       </div>
     </div>
   </div>
 
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-  const SB_URL = "https://yczhjyxisqrvfxxgipop.supabase.co";
-  const SB_KEY = "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm";
-  const supabase = window.supabase.createClient(SB_URL, SB_KEY);
+  const supabase = window.supabase.createClient(
+    "https://yczhjyxisqrvfxxgipop.supabase.co",
+    "sb_publishable_6SmMDIymguOi59WrVb1QQA_wSykUdUm"
+  );
   const SENHA = "nilopet2026";
   const NOME_PET = "nilo";
 
-  // EVENT LISTENERS - isso destrava o login
-  document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('btnLogin').addEventListener('click', fazerLogin);
-    document.getElementById('btnEsqueci').addEventListener('click', esqueciSenha);
-    document.getElementById('btnSair').addEventListener('click', sair);
-    document.getElementById('btnFiltrar').addEventListener('click', carregarGeral);
-    document.getElementById('btnSalvarVagas').addEventListener('click', salvarVagas);
-    document.getElementById('btnBloqHorario').addEventListener('click', bloquearHorario);
-    document.getElementById('btnBloqDia').addEventListener('click', bloquearDia);
-    document.getElementById('btnExpDia').addEventListener('click', () => exportarExcel('dia'));
-    document.getElementById('btnExpSemana').addEventListener('click', () => exportarExcel('semana'));
-    document.getElementById('btnExpMes').addEventListener('click', () => exportarExcel('mes'));
-    
-    document.querySelectorAll('.menu-btn').forEach(btn => {
-      btn.addEventListener('click', function() { mostrarAba(this.dataset.aba); });
-    });
-  });
-
-  function fazerLogin() {
+  window.fazerLogin = function() {
     const user = document.getElementById('loginUser').value;
     const pass = document.getElementById('loginPass').value;
     if(user === 'nilo pet' && pass === SENHA) {
       document.getElementById('loginScreen').classList.add('hidden');
       document.getElementById('painel').classList.remove('hidden');
       carregarGeral();
-      carregarBloqueios();
     } else {
       const msg = document.getElementById('msgLogin');
       msg.textContent = 'Login ou senha incorretos';
@@ -133,87 +88,55 @@
     }
   }
 
-  function esqueciSenha() {
+  window.esqueciSenha = function() {
     const nomePet = prompt('Qual o nome do pet?');
-    if(nomePet?.toLowerCase() === NOME_PET) {
-      alert(`Sua senha é: ${SENHA}`);
-    } else {
-      alert('Nome do pet incorreto');
-    }
+    if(nomePet?.toLowerCase() === NOME_PET) alert(`Sua senha é: ${SENHA}`);
+    else alert('Nome incorreto');
   }
 
-  function sair() { location.reload(); }
+  window.sair = function() { location.reload(); }
 
-  function mostrarAba(nome) {
+  window.mostrarAba = function(nome) {
     document.querySelectorAll('.aba').forEach(a => a.classList.add('hidden'));
     document.getElementById('aba-' + nome).classList.remove('hidden');
     document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('bg-blue-50', 'font-semibold'));
-    document.querySelector(`[data-aba="${nome}"]`).classList.add('bg-blue-50', 'font-semibold');
-    if(nome === 'dia') carregarDia();
-    if(nome === 'pacotes') carregarPacotes();
-    if(nome === 'vagas') carregarVagas();
+    event.target.classList.add('bg-blue-50', 'font-semibold');
   }
 
-  async function carregarGeral() {
+  window.carregarGeral = async function() {
     const { data, error } = await supabase.from('agendamentos').select('*').order('data_criacao', {ascending: false});
-    if(error) { console.error(error); return; }
+    if(error) { console.log(error); return; }
     document.getElementById('listaGeral').innerHTML = data?.map(a => `
-      <div class="border p-4 rounded-lg hover:shadow-md">
-        <div class="flex justify-between items-start">
-          <div class="flex-1">
-            <p class="font-bold text-lg">${a.cliente} - ${a.whatsapp}</p>
-            <p class="text-sm text-gray-600">${a.pacote} | ${a.endereco}</p>
-            <div class="mt-2 text-sm">${a.pets.map(p => `<span class="bg-blue-100 px-2 py-1 rounded mr-1">${p.nome} - ${p.servico}</span>`).join('')}</div>
-          </div>
-          <div class="flex flex-col gap-2">
-            <button onclick="enviarWhats('${a.whatsapp}','${a.cliente}')" class="text-green-600 text-sm hover:underline">WhatsApp</button>
-            <button onclick="excluirAgendamento('${a.id}')" class="text-red-600 text-sm hover:underline">Excluir</button>
-          </div>
-        </div>
+      <div class="border p-4 rounded-lg">
+        <p class="font-bold">${a.cliente} - ${a.whatsapp}</p>
+        <p class="text-sm">${a.pacote}</p>
+        <button onclick="excluirAgendamento('${a.id}')" class="text-red-600 text-sm hover:underline">Excluir</button>
       </div>
-    `).join('') || '<p class="text-gray-500">Nenhum agendamento encontrado</p>';
+    `).join('') || '<p>Nenhum agendamento</p>';
   }
 
-  async function excluirAgendamento(id) {
-    if(confirm('Excluir este agendamento?')) {
+  window.excluirAgendamento = async function(id) {
+    if(confirm('Excluir?')) {
       await supabase.from('agendamentos').delete().eq('id', id);
       carregarGeral();
     }
   }
 
-  function enviarWhats(numero, nome) {
-    const msg = `Olá ${nome}, segue os dados do seu agendamento na Nilo Pet Banho e Tosa. Em breve entramos em contato!`;
-    window.open(`https://wa.me/55${numero.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, '_blank');
+  window.bloquearDia = async function() {
+    const data = document.getElementById('b_data').value;
+    const motivo = document.getElementById('b_motivo').value;
+    if(!data) { alert('Selecione uma data'); return; }
+    await supabase.from('bloqueios').insert({ tipo: 'dia_todo', data_inicio: data, motivo: motivo });
+    alert('Dia bloqueado!');
   }
 
-  async function carregarDia() {
-    const hoje = new Date().toISOString().split('T')[0];
-    const { data } = await supabase.from('agendamentos').select('*').gte('data_criacao', hoje);
-    document.getElementById('listaDia').innerHTML = data?.map(a => `
-      <div class="border p-4 rounded-lg"><p class="font-bold">${a.cliente} - ${a.whatsapp}</p><p class="text-sm">${a.pets.map(p=>p.nome + ' - ' + p.servico).join(', ')}</p></div>
-    `).join('') || '<p class="text-gray-500">Nenhum agendamento hoje</p>';
+  window.exportarExcel = async function() {
+    const { data } = await supabase.from('agendamentos').select('*');
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Agendamentos");
+    XLSX.writeFile(wb, `relatorio_nilo_pet.xlsx`);
   }
-
-  async function carregarPacotes() {
-    const { data } = await supabase.from('agendamentos').select('*').neq('pacote', 'Avulso');
-    document.getElementById('listaPacotes').innerHTML = data?.map(a => `
-      <div class="border p-4 rounded-lg"><p class="font-bold">${a.cliente} - ${a.pacote}</p><p class="text-sm">${a.pets.map(p=>p.nome).join(', ')}</p></div>
-    `).join('') || '<p class="text-gray-500">Nenhum pacote ativo</p>';
-  }
-
-  async function carregarVagas() {
-    const { data } = await supabase.from('vagas_config').select('*').order('dia_semana');
-    document.getElementById('configVagas').innerHTML = data?.map(v => `
-      <div class="border p-3 rounded flex justify-between items-center">
-        <span>${v.dia_semana} - ${v.especie} - ${v.porte} - ${v.servico}</span>
-        <input type="number" value="${v.quantidade}" class="border p-1 rounded w-20 text-center" data-id="${v.id}">
-      </div>
-    `).join('') || 'Configuração de vagas não encontrada';
-  }
-
-  async function salvarVagas() {
-    const inputs = document.querySelectorAll('#configVagas input');
-    for(let input of inputs) {
-      await supabase.from('vagas_config').update({quantidade: parseInt(input.value)}).eq('id', input.dataset.id);
-    }
-    alert('Vagas atualizadas! O link do cliente já vai respeitar os novos
+</script>
+</body>
+</html>
