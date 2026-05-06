@@ -4,3 +4,7 @@ git commit -m "primeiro commit nilo pet"
 git branch -M main
 git remote add origin https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git
 git push -u origin main
+git rm -r --cached dist
+git rm -r --cached node_modules
+git commit -m "remove dist e node_modules do git"
+git push -u origin main
